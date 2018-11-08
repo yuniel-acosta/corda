@@ -107,6 +107,17 @@ sealed class LocalTypeInformation {
     }
 
     /**
+     * Gets the superclass for types that have one (interfaces do not) or null.
+     */
+    val superClassOrNull: LocalTypeInformation? get() = when(this) {
+        is LocalTypeInformation.Composable -> superclass
+        is LocalTypeInformation.Abstract -> superclass
+        is LocalTypeInformation.Opaque -> wrapped.superClassOrNull
+        is LocalTypeInformation.NonComposable -> superclass
+        else -> null
+    }
+
+    /**
      * Obtain a multi-line, recursively-indented representation of this type information.
      *
      * @param simplifyClassNames By default, class names are printed as their "simple" class names, i.e. "String" instead

@@ -157,3 +157,9 @@ task runSeller(type: JavaExec, dependsOn: jar) {
     args '--role'
     args 'SELLER'
 }
+
+task printClasspath {
+    doFirst{
+        tasks["integrationTest"].classpath.each { println it }
+    }
+}
