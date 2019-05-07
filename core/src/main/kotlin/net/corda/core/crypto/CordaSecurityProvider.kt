@@ -38,14 +38,3 @@ private fun provideNonDeterministic(provider: Provider) {
     provider["Alg.Alias.KeyFactory.OID.$COMPOSITE_KEY"] = CompositeKey.KEY_ALGORITHM
 }
 
-@KeepForDJVM
-object CordaObjectIdentifier {
-    // UUID-based OID
-    // TODO define and use an official Corda OID in [CordaOID]. We didn't do yet for backwards compatibility purposes,
-    //      because key.encoded (serialised version of keys) and [PublicKey.hash] for already stored [CompositeKey]s
-    //      will not match.
-    @JvmField
-    val COMPOSITE_KEY = ASN1ObjectIdentifier("2.25.30086077608615255153862931087626791002")
-    @JvmField
-    val COMPOSITE_SIGNATURE = ASN1ObjectIdentifier("2.25.30086077608615255153862931087626791003")
-}

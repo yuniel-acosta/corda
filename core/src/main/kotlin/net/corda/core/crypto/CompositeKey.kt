@@ -32,7 +32,7 @@ import java.util.*
 @KeepForDJVM
 class CompositeKey private constructor(val threshold: Int, children: List<NodeAndWeight>) : PublicKey {
     companion object {
-        const val KEY_ALGORITHM = "COMPOSITE"
+        const val KEY_ALGORITHM = BasicCrypto.algorithms.CompositeKeyAlgorithm
         /**
          * Build a composite key from a DER encoded form.
          */

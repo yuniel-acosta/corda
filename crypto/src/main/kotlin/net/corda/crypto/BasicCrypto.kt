@@ -1,7 +1,5 @@
 package net.corda.crypto
 
-import net.corda.core.crypto.CompositeKey
-import net.corda.core.crypto.CompositeSignature
 import net.corda.core.crypto.CordaObjectIdentifier
 import net.corda.core.crypto.SignatureScheme
 import net.corda.crypto.internal.*
@@ -28,6 +26,10 @@ import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 
 object BasicCrypto {
+    object algorithms {
+        const val CompositeSignatureAlgorithm = "COMPOSITESIG"
+        const val CompositeKeyAlgorithm = "COMPOSITE"
+    }
     @JvmStatic
     fun decodePublicKey(encodedKey: ByteArray): PublicKey {
         val subjectPublicKeyInfo = SubjectPublicKeyInfo.getInstance(encodedKey)
@@ -227,8 +229,8 @@ object BasicCrypto {
             AlgorithmIdentifier(CordaObjectIdentifier.COMPOSITE_KEY),
             emptyList(),
             cordaSecurityProvider.name,
-            CompositeKey.KEY_ALGORITHM,
-            CompositeSignature.SIGNATURE_ALGORITHM,
+            algorithms.CompositeKeyAlgorithm,
+            algorithms.CompositeSignatureAlgorithm,
             null,
             null,
             "Composite keys composed from individual public keys"
