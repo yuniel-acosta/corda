@@ -1,0 +1,30 @@
+Signature-Version: 1.0
+SHA-256-Digest-Manifest-Main-Attributes: htzgd+qyYV6ecgJoITQlZejt7u3CT
+ r27cTLPzXnZqp4=
+SHA-256-Digest-Manifest: nc3AFAHWe4CetV8A7MFwbazQbZ9L9LOgMdkB/pRKGIw=
+Created-By: 1.8.0_191 (Oracle Corporation)
+
+Name: com/r3/corda/sgx/poc/TheContract.class
+SHA-256-Digest: o8eJD5STD+1JenVoqQcWrADADgdOeCl3PnitPlL0R5Y=
+
+Name: com/r3/corda/sgx/poc/TheContract$TheCommand$Transfer.class
+SHA-256-Digest: sjlGVNoBLBzMbstPq0pDDnqSWbdtcZ34CrtQecmQiq4=
+
+Name: com/r3/corda/sgx/poc/TheContract$TheCommand.class
+SHA-256-Digest: T9iX4mhgMlxDp+TC/FfDN2msD6oHGUQfQ9ptaLlQUOc=
+
+Name: META-INF/contracts-kotlin.kotlin_module
+SHA-256-Digest: ZcaHmiOh915cAj2H6FlgYtjMiqCSyuPi7AosAKru4Ho=
+
+Name: com/r3/corda/sgx/poc/TheContract$TheCommand$Issue.class
+SHA-256-Digest: CbuHcFeRDfpi+sveiwvEM0MZY5DhGCiIMaqItceVsb4=
+
+Name: com/r3/corda/sgx/poc/TheContract$Companion.class
+SHA-256-Digest: TknbZVLS6oTV3A0ZcWfEHjMHCd3o6pkh6H/CZ5hFHZc=
+
+Name: com/r3/corda/sgx/poc/SecretToken.class
+SHA-256-Digest: KkXY5YpJTQ/GhSXmz3+cQQ8ASxDp8rrHoVd4DZiLlvg=
+
+Name: com/r3/corda/sgx/poc/TransactionView.class
+SHA-256-Digest: EylVhqNqfSzyHbBHB8s2nzRND+p/N1lHyich8KBtuyU=
+

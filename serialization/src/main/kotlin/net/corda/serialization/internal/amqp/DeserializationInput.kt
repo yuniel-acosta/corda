@@ -103,7 +103,8 @@ class DeserializationInput constructor(
         } catch (nse: NotSerializableException) {
             throw nse
         } catch (e: Exception) {
-            throw NotSerializableException("Internal deserialization failure: ${e.javaClass.name}: ${e.message}").apply { initCause(e) }
+            throw e
+//            throw NotSerializableException("Internal deserialization failure: ${e.javaClass.name}: ${e.message}").apply { initCause(e) }
         } finally {
             objectHistory.clear()
         }

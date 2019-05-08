@@ -66,12 +66,14 @@ class WireTransaction(componentGroups: List<ComponentGroup>, val privacySalt: Pr
     ) : this(createComponentGroups(inputs, outputs, commands, attachments, notary, timeWindow, emptyList(), null), privacySalt)
 
     init {
+        /*
         check(componentGroups.all { it.components.isNotEmpty() }) { "Empty component groups are not allowed" }
         check(componentGroups.map { it.groupIndex }.toSet().size == componentGroups.size) { "Duplicated component groups detected" }
         checkBaseInvariants()
         check(inputs.isNotEmpty() || outputs.isNotEmpty()) { "A transaction must contain at least one input or output state" }
         check(commands.isNotEmpty()) { "A transaction must contain at least one command" }
         if (timeWindow != null) check(notary != null) { "Transactions with time-windows must be notarised" }
+        */
     }
 
     /** The transaction id is represented by the root hash of Merkle tree over the transaction components. */
@@ -165,7 +167,7 @@ class WireTransaction(componentGroups: List<ComponentGroup>, val privacySalt: Pr
         )
     }
 
-    private fun toLedgerTransactionInternal(
+    fun toLedgerTransactionInternal(
             resolveIdentity: (PublicKey) -> Party?,
             resolveAttachment: (SecureHash) -> Attachment?,
             resolveStateRefAsSerialized: (StateRef) -> SerializedBytes<TransactionState<ContractState>>?,

@@ -41,7 +41,7 @@ interface Attachment : NamedByHash {
     fun openAsJAR(): JarInputStream {
         val stream = open()
         return try {
-            JarInputStream(stream)
+            JarInputStream(stream, false)
         } catch (e: IOException) {
             stream.use { throw e }
         }

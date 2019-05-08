@@ -1,0 +1,90 @@
+import java.text.SimpleDateFormat
+
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm'
+    id 'com.r3.sgx.host'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compile project(":sgx:sgx-common")
+    compile "com.r3.sgx:api-core-common:$sgxjvm_version"
+    compile "com.r3.sgx:api-core-enclave:$sgxjvm_version"
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testImplementation "com.r3.sgx:enclave-testing:$sgxjvm_version"
+    testImplementation "com.r3.sgx:enclave-dynamic-testing:$sgxjvm_version"
+    testCompile project(":sgx:sgx-host")
+
+}
+
+    docker {
+        registryCredentials {
+            url = "localhost:5000"
+            username = "username"
+            password = "password"
+        }
+    }
+
+shadowJar {
+    archiveBaseName = 'tx-verifying-enclave'
+    archiveClassifier = ''
+    zip64 = true
+
+    manifest {
+        attributes("Enclave-Class": "com.r3.corda.sgx.enclave.TransactionVerifyingEnclavelet")
+    }
+}
+
+jar {
+    archiveClassifier = 'ignore'
+}
+
+def publicDummyKey = file("$buildDir/dummy.public.pem")
+def dummySignature = file("$buildDir/Simulation/signature.bin")
+
+enclaveImageDebug {
+    publishImageName = "com.r3.corda.sgx/tx-verifying-enclave"
+}
+
+// We plug in an explicit signing step here
+enclaveSimulation {
+    shouldUseDummyKey = false
+    mrsignerPublicKey = publicDummyKey
+    mrsignerSignature = dummySignature
+    signatureDate = (new SimpleDateFormat("yyyymmdd")).parse("20190301")
+}
+
+task getPublicDummyKey(type: Exec) {
+    dependsOn createDummyKey
+    def publicKey = publicDummyKey
+    commandLine '/usr/bin/env', 'openssl', 'rsa',
+            '-pubout',
+            '-in', createDummyKey.outputKey.get(),
+            '-out', publicKey
+    outputs.file(publicKey)
+}
+
+task signWithDummyKey(type: Exec) {
+    dependsOn getEnclaveSigningMaterialSimulation, createDummyKey
+    inputs.file(getEnclaveSigningMaterialSimulation.outputSigningMaterial)
+
+    commandLine '/usr/bin/env', 'openssl', 'dgst', '-sha256',
+            '-sign', createDummyKey.outputKey.get(),
+            '-out', dummySignature,
+            getEnclaveSigningMaterialSimulation.outputSigningMaterial.get()
+    outputs.file(dummySignature)
+}
+
+addEnclaveSignatureSimulation {
+    dependsOn signWithDummyKey, getPublicDummyKey
+}
+
+test {
+    dependsOn addEnclaveSignatureSimulation
+    systemProperty('com.r3.sgx.enclave.path', addEnclaveSignatureSimulation.signedEnclavePath)
+}

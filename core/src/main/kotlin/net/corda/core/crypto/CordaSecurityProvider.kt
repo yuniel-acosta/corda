@@ -4,6 +4,7 @@ import net.corda.core.KeepForDJVM
 import net.corda.core.StubOutForDJVM
 import net.corda.core.crypto.CordaObjectIdentifier.COMPOSITE_KEY
 import net.corda.core.crypto.CordaObjectIdentifier.COMPOSITE_SIGNATURE
+import net.corda.core.crypto.CordaObjectIdentifier.ENCLAVE_ATTESTATION
 import net.corda.core.crypto.internal.PlatformSecureRandomService
 import org.bouncycastle.asn1.ASN1ObjectIdentifier
 import java.security.Provider
@@ -36,6 +37,12 @@ private fun provideNonDeterministic(provider: Provider) {
     provider["KeyFactory.${CompositeKey.KEY_ALGORITHM}"] = CompositeKeyFactory::class.java.name
     provider["Alg.Alias.KeyFactory.$COMPOSITE_KEY"] = CompositeKey.KEY_ALGORITHM
     provider["Alg.Alias.KeyFactory.OID.$COMPOSITE_KEY"] = CompositeKey.KEY_ALGORITHM
+
+    /*
+    provider["KeyFactory.${EnclaveIdentity.KEY_ALGORITHM}"] = EnclaveIdentity.FactorySpi::class.java.name
+    provider["Alg.Alias.KeyFactory.$ENCLAVE_ATTESTATION"] = EnclaveIdentity.KEY_ALGORITHM
+    provider["Alg.Alias.KeyFactory.OID.$ENCLAVE_ATTESTATION"] = EnclaveIdentity.KEY_ALGORITHM
+    */
 }
 
 @KeepForDJVM
@@ -48,4 +55,6 @@ object CordaObjectIdentifier {
     val COMPOSITE_KEY = ASN1ObjectIdentifier("2.25.30086077608615255153862931087626791002")
     @JvmField
     val COMPOSITE_SIGNATURE = ASN1ObjectIdentifier("2.25.30086077608615255153862931087626791003")
+    @JvmField
+    val ENCLAVE_ATTESTATION = ASN1ObjectIdentifier("2.25.30086077608615255153862931087626791004")
 }

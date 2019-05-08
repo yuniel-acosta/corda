@@ -1,5 +1,5 @@
 plugins {
-    id 'com.bmuschko.docker-remote-api' version '3.4.4'
+    id 'com.bmuschko.docker-remote-api'
 }
 
 evaluationDependsOn(":node:capsule")
@@ -85,19 +85,19 @@ task buildOfficialCorrettoDockerImage(type: DockerBuildImage, dependsOn: [buildD
 }
 
 task pushZuluTimeStampedTag('type': DockerPushImage, dependsOn: [buildOfficialZuluDockerImage]){
-    imageName = zuluBuildTags[0]
+//    imageName = zuluBuildTags[0]
 }
 
 task pushZuluLatestTag('type': DockerPushImage, dependsOn: [buildOfficialZuluDockerImage]){
-    imageName = zuluBuildTags[1]
+//    imageName = zuluBuildTags[1]
 }
 
 task pushCorrettoTimeStampedTag('type': DockerPushImage, dependsOn: [buildOfficialCorrettoDockerImage]){
-    imageName = correttoBuildTags[0]
+ //   imageName = correttoBuildTags[0]
 }
 
 task pushCorrettoLatestTag('type': DockerPushImage, dependsOn: [buildOfficialCorrettoDockerImage]){
-    imageName = correttoBuildTags[1]
+ //   imageName = correttoBuildTags[1]
 }
 
 task pushOfficialImages(dependsOn: [pushZuluTimeStampedTag, pushZuluLatestTag, pushCorrettoTimeStampedTag, pushCorrettoLatestTag])

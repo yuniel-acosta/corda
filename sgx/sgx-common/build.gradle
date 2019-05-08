@@ -1,0 +1,21 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.8
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compile project(":serialization")
+    compile project(":core")
+    compile "com.r3.sgx:api-core-common:$sgxjvm_version"
+    compile "com.r3.sgx:api-core-enclave:$sgxjvm_version"
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+

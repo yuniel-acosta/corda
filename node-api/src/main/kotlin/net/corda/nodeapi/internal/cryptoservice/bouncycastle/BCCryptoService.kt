@@ -2,7 +2,6 @@ package net.corda.nodeapi.internal.cryptoservice.bouncycastle
 
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SignatureScheme
-import net.corda.core.crypto.internal.cordaBouncyCastleProvider
 import net.corda.core.crypto.newSecureRandom
 import net.corda.core.crypto.sha256
 import net.corda.nodeapi.internal.config.CertificateStore
@@ -65,7 +64,7 @@ class BCCryptoService(private val legalName: X500Principal, private val certific
 
     private fun signWithAlgorithm(alias: String, data: ByteArray, signAlgorithm: String): ByteArray {
             val privateKey = certificateStore.query { getPrivateKey(alias, certificateStore.entryPassword) }
-            val signature = Signature.getInstance(signAlgorithm, cordaBouncyCastleProvider)
+            val signature = Signature.getInstance(signAlgorithm, Crypto.cordaBouncyCastleProvider)
             signature.initSign(privateKey, newSecureRandom())
             signature.update(data)
             return signature.sign()

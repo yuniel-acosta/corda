@@ -11,13 +11,16 @@ import net.corda.core.internal.*
 import net.corda.core.internal.cordapp.targetPlatformVersion
 import net.corda.core.node.NetworkParameters
 import net.corda.core.serialization.*
-import net.corda.core.serialization.internal.AttachmentURLStreamHandlerFactory.toUrl
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.debug
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.net.*
+import java.nio.ByteBuffer
+import java.security.CodeSigner
+import java.security.CodeSource
+import java.security.SecureClassLoader
 import java.util.*
 
 /**
@@ -32,19 +35,43 @@ import java.util.*
  *           this tx may be stale, that is, classloading might be triggered by the verification of some other transaction
  *           if not all code is invoked every time, however we want a txid for errors in case of attachment bogusness.
  */
-class AttachmentsClassLoader(attachments: List<Attachment>,
+open class MemoryClassLoader(private val attachment: Attachment, parent: ClassLoader?): SecureClassLoader(parent) {
+
+    private val url = AttachmentURLStreamHandlerFactory.toUrl(attachment)
+
+    @Throws(ClassNotFoundException::class)
+    override fun findClass(name: String): Class<*> {
+        System.out.println("Searching for class " + name);
+        val connection = attachment.openAsJAR()
+        connection.use { jar ->
+            val resourceName = name.replace('.', '/') + ".class"
+            while (true) {
+                val entry = jar.nextJarEntry ?: break
+                if (resourceName == entry.name) {
+                    val byteCode = ByteBuffer.wrap(jar.readBytes())
+                    val c = defineClass(name, byteCode, CodeSource(url, arrayOf<CodeSigner>()))
+                    return c
+                }
+            }
+        }
+        throw ClassNotFoundException(name)
+    }
+
+}
+
+class AttachmentsClassLoader(private val attachments: List<Attachment>,
                              val params: NetworkParameters,
                              private val sampleTxId: SecureHash,
                              isAttachmentTrusted: (Attachment) -> Boolean,
                              parent: ClassLoader = ClassLoader.getSystemClassLoader()) :
-        URLClassLoader(attachments.map(::toUrl).toTypedArray(), parent) {
+        MemoryClassLoader(attachments.single(), parent) {
 
     companion object {
         private val log = contextLogger()
 
         init {
             // Apply our own URLStreamHandlerFactory to resolve attachments
-            setOrDecorateURLStreamHandlerFactory()
+            //setOrDecorateURLStreamHandlerFactory()
         }
 
         // Jolokia and Json-simple are dependencies that were bundled by mistake within contract jars.
@@ -60,6 +87,7 @@ class AttachmentsClassLoader(attachments: List<Attachment>,
             }
         }
 
+        /*
         /**
          * Apply our custom factory either directly, if `URL.setURLStreamHandlerFactory` has not been called yet,
          * or use a decorator and reflection to bypass the single-call-per-JVM restriction otherwise.
@@ -103,6 +131,7 @@ class AttachmentsClassLoader(attachments: List<Attachment>,
                 }
             }
         }
+        */
     }
 
     init {
@@ -139,7 +168,7 @@ class AttachmentsClassLoader(attachments: List<Attachment>,
         attachment.openAsJAR().use { jar ->
             while (true) {
                 val entry = jar.nextJarEntry ?: return false
-                if(entry.name.endsWith(".class", ignoreCase = true)) return true
+                if (entry.name.endsWith(".class", ignoreCase = true)) return true
             }
         }
         return false
@@ -190,7 +219,7 @@ class AttachmentsClassLoader(attachments: List<Attachment>,
         // attacks on externally connected systems that only consider type names, we allow people to formally
         // claim their parts of the Java package namespace via registration with the zone operator.
 
-        val classLoaderEntries = mutableMapOf<String, Attachment>()
+        val classLoaderEntries = mutableMapOf<String, SecureHash.SHA256>()
         for (attachment in attachments) {
             // We may have been given an attachment loaded from the database in which case, important info like
             // signers is already calculated.
@@ -251,21 +280,26 @@ class AttachmentsClassLoader(attachments: List<Attachment>,
                     // Some files don't need overlap checking because they don't affect the way the code runs.
                     if (!shouldCheckForNoOverlap(path, targetPlatformVersion)) continue
 
-                    // If 2 entries have the same content hash, it means the same file is present in both attachments, so that is ok.
-                    if (path in classLoaderEntries.keys) {
-                        val contentHash = readAttachment(attachment, path).sha256()
-                        val originalAttachment = classLoaderEntries[path]!!
-                        val originalContentHash = readAttachment(originalAttachment, path).sha256()
-                        if (contentHash == originalContentHash) {
-                            log.debug { "Duplicate entry $path has same content hash $contentHash" }
-                            continue
-                        } else {
+                    // This calculates the hash of the current entry because the JarInputStream returns only the current entry.
+                    fun entryHash() = ByteArrayOutputStream().use {
+                        jar.copyTo(it)
+                        it.toByteArray()
+                    }.sha256()
+
+                    // If 2 entries are identical, it means the same file is present in both attachments, so that is ok.
+                    val currentHash = entryHash()
+                    val previousFileHash = classLoaderEntries[path]
+                    when {
+                        previousFileHash == null -> {
+                            log.debug { "Adding new entry for $path" }
+                            classLoaderEntries[path] = currentHash
+                        }
+                        currentHash == previousFileHash -> log.debug { "Duplicate entry $path has same content hash $currentHash" }
+                        else -> {
                             log.debug { "Content hash differs for $path" }
                             throw OverlappingAttachmentsException(sampleTxId, path)
                         }
                     }
-                    log.debug { "Adding new entry for $path" }
-                    classLoaderEntries[path] = attachment
                 }
             }
             log.debug { "${classLoaderEntries.size} classloaded entries for $attachment" }
@@ -276,12 +310,13 @@ class AttachmentsClassLoader(attachments: List<Attachment>,
      * Required to prevent classes that were excluded from the no-overlap check from being loaded by contract code.
      * As it can lead to non-determinism.
      */
+    /*
     override fun loadClass(name: String?): Class<*> {
         if (ignorePackages.any { name!!.startsWith(it) }) {
             throw ClassNotFoundException(name)
         }
         return super.loadClass(name)
-    }
+    }*/
 }
 
 /**
@@ -317,10 +352,11 @@ object AttachmentsClassLoaderBuilder {
         val serializationContext = cache.computeIfAbsent(Key(attachmentIds, params)) {
             // Create classloader and load serializers, whitelisted classes
             val transactionClassLoader = AttachmentsClassLoader(attachments, params, txId, isAttachmentTrusted, parent)
-            val serializers = createInstancesOfClassesImplementing(transactionClassLoader, SerializationCustomSerializer::class.java)
+                    //           val serializers = createInstancesOfClassesImplementing(transactionClassLoader, SerializationCustomSerializer::class.java)
+            /*
             val whitelistedClasses = ServiceLoader.load(SerializationWhitelist::class.java, transactionClassLoader)
                     .flatMap { it.whitelist }
-                    .toList()
+                    .toList() */
 
             // Create a new serializationContext for the current transaction. In this context we will forbid
             // deserialization of objects from the future, i.e. disable forwards compatibility. This is to ensure
@@ -329,8 +365,8 @@ object AttachmentsClassLoaderBuilder {
             SerializationFactory.defaultFactory.defaultContext
                     .withPreventDataLoss()
                     .withClassLoader(transactionClassLoader)
-                    .withWhitelist(whitelistedClasses)
-                    .withCustomSerializers(serializers)
+                    //.withWhitelist(whitelistedClasses)
+//                    .withCustomSerializers(serializers)
                     .withoutCarpenter()
         }
 
@@ -345,6 +381,7 @@ object AttachmentsClassLoaderBuilder {
  * Registers a new internal "attachment" protocol.
  * This will not be exposed as an API.
  */
+
 object AttachmentURLStreamHandlerFactory : URLStreamHandlerFactory {
     private const val attachmentScheme = "attachment"
 
@@ -372,6 +409,9 @@ object AttachmentURLStreamHandlerFactory : URLStreamHandlerFactory {
     }
 
     private class AttachmentURLConnection(url: URL, private val attachment: Attachment) : URLConnection(url) {
+        init {
+            useCaches = false
+        }
         override fun getContentLengthLong(): Long = attachment.size.toLong()
         override fun getInputStream(): InputStream = attachment.open()
         override fun connect() {
