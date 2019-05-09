@@ -15,7 +15,11 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     
     compile project(":basic-types")
+    compile project(":crypto")
 
+    // Bouncy castle support needed for X509 certificate manipulation
+    compile "org.bouncycastle:bcprov-jdk15on:${bouncycastle_version}"
+    compile "org.bouncycastle:bcpkix-jdk15on:${bouncycastle_version}"
 }
 
 compileKotlin {

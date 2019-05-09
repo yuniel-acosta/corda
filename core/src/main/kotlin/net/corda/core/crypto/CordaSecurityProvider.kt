@@ -5,7 +5,6 @@ import net.corda.core.StubOutForDJVM
 import net.corda.core.crypto.CordaObjectIdentifier.COMPOSITE_KEY
 import net.corda.core.crypto.CordaObjectIdentifier.COMPOSITE_SIGNATURE
 import net.corda.crypto.internal.PlatformSecureRandomService
-import org.bouncycastle.asn1.ASN1ObjectIdentifier
 import java.security.Provider
 
 @KeepForDJVM

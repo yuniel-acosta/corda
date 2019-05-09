@@ -207,3 +207,10 @@ fun <T : Any> serializedHash(x: T): SecureHash = x.serialize(context = Serializa
  * @return SHA256(SHA256(privacySalt || groupIndex || internalIndex))
  */
 fun computeNonce(privacySalt: PrivacySalt, groupIndex: Int, internalIndex: Int) = SecureHash.sha256Twice(privacySalt.bytes + ByteBuffer.allocate(8).putInt(groupIndex).putInt(internalIndex).array())
+
+/**
+ * Return a [Set] of the contained leaf keys if this is a [CompositeKey].
+ * Otherwise, return a [Set] with a single element (this [PublicKey]).
+ * <i>Note that leaf keys cannot be of type [CompositeKey].</i>
+ */
+val PublicKey.keys: Set<PublicKey> get() = (this as? CompositeKey)?.leafKeys ?: setOf(this)
