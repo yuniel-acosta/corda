@@ -28,7 +28,8 @@ sealed class MerkleTree {
         fun getMerkleTree(allLeavesHashes: List<SecureHash>): MerkleTree {
             if (allLeavesHashes.isEmpty())
                 throw MerkleTreeException("Cannot calculate Merkle root on empty hash list.")
-            val leaves = padWithZeros(allLeavesHashes).map { Leaf(it) }
+            val leaves = padWithZeros(allLeavesHashes)
+                    .map { Leaf(it) }
             return buildMerkleTree(leaves)
         }
 

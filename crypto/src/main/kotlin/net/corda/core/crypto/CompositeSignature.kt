@@ -1,8 +1,8 @@
 package net.corda.core.crypto
 
 import net.corda.core.KeepForDJVM
-import net.corda.core.serialization.deserialize
 import net.corda.crypto.BasicCrypto
+import net.corda.crypto.internal.SignatureBytesDeserializer
 import java.io.ByteArrayOutputStream
 import java.security.*
 import java.security.spec.AlgorithmParameterSpec
@@ -79,7 +79,7 @@ class CompositeSignature : Signature(SIGNATURE_ALGORITHM) {
 
     data class State(val buffer: ByteArrayOutputStream, val verifyKey: CompositeKey) {
         fun engineVerify(sigBytes: ByteArray): Boolean {
-            val sig = sigBytes.deserialize<CompositeSignaturesWithKeys>()
+            val sig = SignatureBytesDeserializer.deserialize(sigBytes)
             return if (verifyKey.isFulfilledBy(sig.sigs.map { it.by })) {
                 val clearData = SecureHash.SHA256(buffer.toByteArray())
                 sig.sigs.all { it.isValid(clearData) }
