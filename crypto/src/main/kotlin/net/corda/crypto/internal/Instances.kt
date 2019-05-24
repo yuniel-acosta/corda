@@ -1,4 +1,4 @@
-package net.corda.core.crypto.internal
+package net.corda.crypto.internal
 
 import java.security.Provider
 import java.security.Signature

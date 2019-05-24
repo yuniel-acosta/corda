@@ -2,10 +2,9 @@ package net.corda.core.crypto
 
 import net.corda.core.DeleteForDJVM
 import net.corda.core.utilities.toSHA256Bytes
+import net.corda.crypto.BasicCrypto
 import net.corda.crypto.internal.platformSecureRandomFactory
-import java.security.NoSuchAlgorithmException
-import java.security.PublicKey
-import java.security.SecureRandom
+import java.security.*
 
 /** Render a public key to its hash (in Base58) of its serialised form using the DL prefix. */
 fun PublicKey.toStringShort(): String = "DL" + this.toSHA256Bytes().toBase58()
@@ -53,3 +52,35 @@ val PublicKey.keys: Set<PublicKey> get() = (this as? CompositeKey)?.leafKeys ?: 
 
 /** Convert a byte array to a Base58 encoded [String]. */
 fun ByteArray.toBase58(): String = Base58.encode(this)
+
+/**
+ * Utility to simplify the act of verifying a signature.
+ *
+ * @throws InvalidKeyException if the key to verify the signature with is not valid (i.e. wrong key type for the
+ * signature).
+ * @throws SignatureException if the signature is invalid (i.e. damaged), or does not match the key (incorrect).
+ * @throws IllegalArgumentException if the signature scheme is not supported or if any of the clear or signature data is empty.
+ */
+// TODO: SignatureException should be used only for a damaged signature, as per `java.security.Signature.verify()`.
+@Throws(SignatureException::class, InvalidKeyException::class)
+fun PublicKey.verify(content: ByteArray, signature: DigitalSignature) = BasicCrypto.doVerify(this, signature.bytes, content)
+
+/**
+ * Utility to simplify the act of verifying a signature. In comparison to [verify] if the key and signature
+ * do not match it returns false rather than throwing an exception. Normally you should use the function which throws,
+ * as it avoids the risk of failing to test the result, but this is for uses such as [java.security.Signature.verify]
+ * implementations.
+ *
+ * @throws InvalidKeyException if the key to verify the signature with is not valid (i.e. wrong key type for the
+ * signature).
+ * @throws SignatureException if the signature is invalid (i.e. damaged).
+ * @throws IllegalArgumentException if the signature scheme is not supported or if any of the clear or signature data is empty.
+ * @throws IllegalStateException if this is a [CompositeKey], because verification of composite key signatures is not supported.
+ * @return whether the signature is correct for this key.
+ */
+@Throws(SignatureException::class, InvalidKeyException::class)
+fun PublicKey.isValid(content: ByteArray, signature: DigitalSignature): Boolean {
+    if (this is CompositeKey)
+        throw IllegalStateException("Verification of CompositeKey signatures currently not supported.") // TODO CompositeSignature verification.
+    return BasicCrypto.isValid(this, signature.bytes, content)
+}

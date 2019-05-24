@@ -63,7 +63,7 @@ fun Class<out FlowLogic<*>>.isIdempotentFlow(): Boolean {
 /**
  * Ensures each log entry from the current thread will contain id of the transaction in the MDC.
  */
-internal fun SignedTransaction.pushToLoggingContext() {
+public fun SignedTransaction.pushToLoggingContext() {
     MDC.put("tx_id", id.toString())
 }
 

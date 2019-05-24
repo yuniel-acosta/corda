@@ -1,6 +1,7 @@
 package net.corda.core.internal
 
 import net.corda.core.identity.Party
+import net.corda.crypto.internal.hash
 import java.security.CodeSigner
 import java.security.PublicKey
 import java.security.cert.X509Certificate

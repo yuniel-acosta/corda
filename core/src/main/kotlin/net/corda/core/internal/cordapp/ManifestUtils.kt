@@ -1,7 +1,7 @@
 package net.corda.core.internal.cordapp
 
-import net.corda.core.internal.cordapp.CordappImpl.Companion.MIN_PLATFORM_VERSION
-import net.corda.core.internal.cordapp.CordappImpl.Companion.TARGET_PLATFORM_VERSION
+import net.corda.core.internal.cordapp.CordappDefaults.MIN_PLATFORM_VERSION
+import net.corda.core.internal.cordapp.CordappDefaults.TARGET_PLATFORM_VERSION
 import java.util.jar.Attributes
 import java.util.jar.Manifest
 

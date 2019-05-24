@@ -54,6 +54,7 @@ processSmokeTestResources {
 }
 
 dependencies {
+    compile project(":basic-types")
     compile project(":core-types")
     compile project(":crypto")
     

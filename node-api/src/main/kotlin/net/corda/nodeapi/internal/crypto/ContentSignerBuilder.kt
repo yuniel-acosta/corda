@@ -2,7 +2,7 @@ package net.corda.nodeapi.internal.crypto
 
 import net.corda.core.crypto.Crypto.SPHINCS256_SHA256
 import net.corda.core.crypto.SignatureScheme
-import net.corda.core.crypto.internal.Instances
+import net.corda.crypto.internal.Instances
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier
 import org.bouncycastle.operator.ContentSigner
 import java.io.OutputStream

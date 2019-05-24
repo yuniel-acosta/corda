@@ -1,4 +1,4 @@
-package net.corda.nodeapi.internal.cordapp
+package net.corda.core.internal.cordapp
 
 import net.corda.core.cordapp.Cordapp
 import net.corda.core.flows.FlowLogic

@@ -2,7 +2,7 @@ package net.corda.core.internal
 
 import net.corda.core.contracts.*
 import net.corda.core.crypto.keys
-import net.corda.core.internal.cordapp.CordappImpl
+import net.corda.core.internal.cordapp.CordappDefaults.DEFAULT_CORDAPP_VERSION
 import net.corda.core.utilities.loggerFor
 
 /**
@@ -12,7 +12,7 @@ typealias Version = Int
 
 private val log = loggerFor<AttachmentConstraint>()
 
-val Attachment.contractVersion: Version get() = if (this is ContractAttachment) version else CordappImpl.DEFAULT_CORDAPP_VERSION
+val Attachment.contractVersion: Version get() = if (this is ContractAttachment) version else DEFAULT_CORDAPP_VERSION
 
 /**
  * Obtain the typename of the required [ContractClass] associated with the target [ContractState], using the

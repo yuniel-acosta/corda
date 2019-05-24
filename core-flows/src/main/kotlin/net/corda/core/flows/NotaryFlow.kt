@@ -9,6 +9,8 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.identity.Party
 import net.corda.core.internal.*
+import net.corda.core.internal.notary.generateSignature
+import net.corda.core.internal.notary.validateSignatures
 import net.corda.core.transactions.*
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.UntrustworthyData

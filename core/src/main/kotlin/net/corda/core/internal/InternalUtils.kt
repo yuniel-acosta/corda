@@ -367,19 +367,6 @@ class DeclaredField<T>(clazz: Class<*>, name: String, private val receiver: Any?
     }
 }
 
-/** The annotated object would have a more restricted visibility were it not needed in tests. */
-@Target(AnnotationTarget.CLASS,
-        AnnotationTarget.PROPERTY,
-        AnnotationTarget.CONSTRUCTOR,
-        AnnotationTarget.FUNCTION,
-        AnnotationTarget.TYPEALIAS)
-@Retention(AnnotationRetention.SOURCE)
-@MustBeDocumented
-annotation class VisibleForTesting
-
-@Suppress("UNCHECKED_CAST")
-fun <T, U : T> uncheckedCast(obj: T) = obj as U
-
 fun <K, V> Iterable<Pair<K, V>>.toMultiMap(): Map<K, List<V>> = this.groupBy({ it.first }) { it.second }
 
 /** Returns the location of this class. */

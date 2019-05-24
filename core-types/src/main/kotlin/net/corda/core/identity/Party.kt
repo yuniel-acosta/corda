@@ -2,8 +2,8 @@ package net.corda.core.identity
 
 import net.corda.core.KeepForDJVM
 import net.corda.core.contracts.PartyAndReference
-import net.corda.core.crypto.Crypto
 import net.corda.core.utilities.OpaqueBytes
+import net.corda.crypto.BasicCrypto
 import java.security.PublicKey
 import java.security.cert.X509Certificate
 
@@ -29,7 +29,7 @@ import java.security.cert.X509Certificate
 @KeepForDJVM
 class Party(val name: CordaX500Name, owningKey: PublicKey) : AbstractParty(owningKey) {
     constructor(certificate: X509Certificate)
-            : this(CordaX500Name.build(certificate.subjectX500Principal), Crypto.toSupportedPublicKey(certificate.publicKey))
+            : this(CordaX500Name.build(certificate.subjectX500Principal), BasicCrypto.toSupportedPublicKey(certificate.publicKey))
 
     override fun nameOrNull(): CordaX500Name = name
     fun anonymise(): AnonymousParty = AnonymousParty(owningKey)

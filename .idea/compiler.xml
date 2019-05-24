@@ -241,6 +241,8 @@
       <module name="net.corda.core-deterministic.test" target="1.8" />
       <module name="net.corda.core-flows.main" target="1.8" />
       <module name="net.corda.core-flows.test" target="1.8" />
+      <module name="net.corda.core-serialization.main" target="1.8" />
+      <module name="net.corda.core-serialization.test" target="1.8" />
       <module name="net.corda.core-types.main" target="1.8" />
       <module name="net.corda.core-types.test" target="1.8" />
       <module name="net.corda.core.integrationTest" target="1.8" />

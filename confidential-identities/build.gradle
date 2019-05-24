@@ -10,6 +10,7 @@ apply plugin: 'com.jfrog.artifactory'
 description 'Corda Experimental Confidential Identities'
 
 dependencies {
+    cordaCompile project(':cordapp-api')
     cordaCompile project(':core')
 
     testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"

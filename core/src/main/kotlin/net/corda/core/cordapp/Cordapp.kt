@@ -5,7 +5,7 @@ import net.corda.core.DoNotImplement
 import net.corda.core.cordapp.Cordapp.Info.*
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogic
-import net.corda.core.internal.cordapp.CordappImpl.Companion.UNKNOWN_VALUE
+import net.corda.core.internal.cordapp.CordappDefaults.UNKNOWN_VALUE
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.serialization.SerializationCustomSerializer
 import net.corda.core.serialization.SerializationWhitelist

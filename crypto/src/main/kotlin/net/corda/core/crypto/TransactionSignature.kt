@@ -2,6 +2,7 @@ package net.corda.core.crypto
 
 import net.corda.core.KeepForDJVM
 import net.corda.core.serialization.CordaSerializable
+import net.corda.crypto.BasicCrypto
 import java.security.InvalidKeyException
 import java.security.PublicKey
 import java.security.SignatureException
@@ -37,7 +38,7 @@ class TransactionSignature(bytes: ByteArray, val by: PublicKey, val signatureMet
      * @throws IllegalArgumentException if the signature scheme is not supported for this private key or if any of the clear or signature data is empty.
      */
     @Throws(InvalidKeyException::class, SignatureException::class)
-    fun verify(txId: SecureHash) = Crypto.doVerify(txId, this)
+    fun verify(txId: SecureHash) = BasicCrypto.doVerify(txId, this)
 
     /**
      * Utility to simplify the act of verifying a signature. In comparison to [verify] doesn't throw an
@@ -50,7 +51,7 @@ class TransactionSignature(bytes: ByteArray, val by: PublicKey, val signatureMet
      * @return whether the signature is correct for this key.
      */
     @Throws(InvalidKeyException::class, SignatureException::class)
-    fun isValid(txId: SecureHash) = Crypto.isValid(txId, this)
+    fun isValid(txId: SecureHash) = BasicCrypto.isValid(txId, this)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

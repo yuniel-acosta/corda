@@ -6,12 +6,8 @@ import net.corda.crypto.internal.SignatureBytesDeserializer
 
 class SignatureBytesDeserializerImpl : SignatureBytesDeserializer {
     companion object {
-        private val instance = createDeserializerInstance()
-
-        private fun createDeserializerInstance(): SignatureBytesDeserializer {
-            val thisInstance = SignatureBytesDeserializerImpl()
-            SignatureBytesDeserializer.initialize(thisInstance)
-            return thisInstance
+        fun registerInstance() {
+            SignatureBytesDeserializer.initialize(SignatureBytesDeserializerImpl())
         }
     }
 

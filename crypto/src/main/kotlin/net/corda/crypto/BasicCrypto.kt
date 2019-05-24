@@ -1,9 +1,9 @@
 package net.corda.crypto
 
-import net.corda.core.crypto.CordaObjectIdentifier
-import net.corda.core.crypto.SignatureScheme
+import net.corda.core.crypto.*
 import net.corda.crypto.internal.*
 import net.i2p.crypto.eddsa.EdDSAEngine
+import net.i2p.crypto.eddsa.EdDSAPublicKey
 import net.i2p.crypto.eddsa.spec.EdDSANamedCurveTable
 import org.bouncycastle.asn1.ASN1Integer
 import org.bouncycastle.asn1.DERNull
@@ -16,11 +16,12 @@ import org.bouncycastle.asn1.sec.SECObjectIdentifiers
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.asn1.x9.X9ObjectIdentifiers
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey
+import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey
 import org.bouncycastle.jce.ECNamedCurveTable
+import org.bouncycastle.pqc.jcajce.provider.sphincs.BCSphincs256PublicKey
 import org.bouncycastle.pqc.jcajce.spec.SPHINCS256KeyGenParameterSpec
-import java.security.KeyFactory
-import java.security.PrivateKey
-import java.security.PublicKey
+import java.security.*
 import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
@@ -115,6 +116,34 @@ object BasicCrypto {
         } else {
             id
         }
+    }
+
+    /**
+     * Factory pattern to retrieve the corresponding [SignatureScheme] based on [SignatureScheme.schemeCodeName].
+     * This function is usually called by key generators and verify signature functions.
+     * In case the input is not a key in the supportedSignatureSchemes map, null will be returned.
+     * @param schemeCodeName a [String] that should match a supported signature scheme code name (e.g. ECDSA_SECP256K1_SHA256), see [Crypto].
+     * @return a currently supported SignatureScheme.
+     * @throws IllegalArgumentException if the requested signature scheme is not supported.
+     */
+    @JvmStatic
+    fun findSignatureScheme(schemeCodeName: String): SignatureScheme {
+        return signatureSchemeMap[schemeCodeName]
+                ?: throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: $schemeCodeName")
+    }
+
+    /**
+     * Retrieve the corresponding [SignatureScheme] based on the type of the input [Key].
+     * This function is usually called when requiring to verify signatures and the signing schemes must be defined.
+     * For the supported signature schemes see [Crypto].
+     * @param key either private or public.
+     * @return a currently supported SignatureScheme.
+     * @throws IllegalArgumentException if the requested key type is not supported.
+     */
+    @JvmStatic
+    fun findSignatureScheme(key: PublicKey): SignatureScheme {
+        val keyInfo = SubjectPublicKeyInfo.getInstance(key.encoded)
+        return findSignatureScheme(keyInfo.algorithm)
     }
 
     @JvmStatic
@@ -260,4 +289,216 @@ object BasicCrypto {
     private val algorithmMap: Map<AlgorithmIdentifier, SignatureScheme> = (signatureSchemeMap.values.flatMap { scheme -> scheme.alternativeOIDs.map { Pair(it, scheme) } }
             + signatureSchemeMap.values.map { Pair(it.signatureOID, it) })
             .toMap()
+
+    /**
+     * Utility to simplify the act of verifying a digital signature.
+     * It returns true if it succeeds, but it always throws an exception if verification fails.
+     * @param schemeCodeName a signature scheme's code name (e.g. ECDSA_SECP256K1_SHA256).
+     * @param publicKey the signer's [PublicKey].
+     * @param signatureData the signatureData on a message.
+     * @param clearData the clear data/message that was signed (usually the Merkle root).
+     * @return true if verification passes or throws an exception if verification fails.
+     * @throws InvalidKeyException if the key is invalid.
+     * @throws SignatureException if this signatureData object is not initialized properly,
+     * the passed-in signatureData is improperly encoded or of the wrong type,
+     * if this signatureData scheme is unable to process the input data provided, if the verification is not possible.
+     * @throws IllegalArgumentException if the signature scheme is not supported or if any of the clear or signature data is empty.
+     */
+    @JvmStatic
+    @Throws(InvalidKeyException::class, SignatureException::class)
+    fun doVerify(schemeCodeName: String, publicKey: PublicKey, signatureData: ByteArray, clearData: ByteArray): Boolean {
+        return doVerify(findSignatureScheme(schemeCodeName), publicKey, signatureData, clearData)
+    }
+
+    /**
+     * Utility to simplify the act of verifying a digital signature by identifying the signature scheme used from the input public key's type.
+     * It returns true if it succeeds, but it always throws an exception if verification fails.
+     * Strategy on identifying the actual signing scheme is based on the [PublicKey] type, but if the schemeCodeName is known,
+     * then better use doVerify(schemeCodeName: String, publicKey: PublicKey, signatureData: ByteArray, clearData: ByteArray).
+     *
+     * @param publicKey the signer's [PublicKey].
+     * @param signatureData the signatureData on a message.
+     * @param clearData the clear data/message that was signed (usually the Merkle root).
+     * @return true if verification passes or throws an exception if verification fails.
+     * @throws InvalidKeyException if the key is invalid.
+     * @throws SignatureException if this signatureData object is not initialized properly,
+     * the passed-in signatureData is improperly encoded or of the wrong type,
+     * if this signatureData scheme is unable to process the input data provided, if the verification is not possible.
+     * @throws IllegalArgumentException if the signature scheme is not supported or if any of the clear or signature data is empty.
+     */
+    @JvmStatic
+    @Throws(InvalidKeyException::class, SignatureException::class)
+    fun doVerify(publicKey: PublicKey, signatureData: ByteArray, clearData: ByteArray): Boolean {
+        return doVerify(findSignatureScheme(publicKey), publicKey, signatureData, clearData)
+    }
+
+    /**
+     * Method to verify a digital signature.
+     * It returns true if it succeeds, but it always throws an exception if verification fails.
+     * @param signatureScheme a [SignatureScheme] object, retrieved from supported signature schemes, see [Crypto].
+     * @param publicKey the signer's [PublicKey].
+     * @param signatureData the signatureData on a message.
+     * @param clearData the clear data/message that was signed (usually the Merkle root).
+     * @return true if verification passes or throws an exception if verification fails.
+     * @throws InvalidKeyException if the key is invalid.
+     * @throws SignatureException if this signatureData object is not initialized properly,
+     * the passed-in signatureData is improperly encoded or of the wrong type,
+     * if this signatureData scheme is unable to process the input data provided, if the verification is not possible.
+     * @throws IllegalArgumentException if the signature scheme is not supported or if any of the clear or signature data is empty.
+     */
+    @JvmStatic
+    @Throws(InvalidKeyException::class, SignatureException::class)
+    fun doVerify(signatureScheme: SignatureScheme, publicKey: PublicKey, signatureData: ByteArray, clearData: ByteArray): Boolean {
+        require(isSupportedSignatureScheme(signatureScheme)) {
+            "Unsupported key/algorithm for schemeCodeName: ${signatureScheme.schemeCodeName}"
+        }
+        if (signatureData.isEmpty()) throw IllegalArgumentException("Signature data is empty!")
+        if (clearData.isEmpty()) throw IllegalArgumentException("Clear data is empty, nothing to verify!")
+        val verificationResult = isValid(signatureScheme, publicKey, signatureData, clearData)
+        if (verificationResult) {
+            return true
+        } else {
+            throw SignatureException("Signature Verification failed!")
+        }
+    }
+
+    /**
+     * Method to verify a digital signature. In comparison to [doVerify] if the key and signature
+     * do not match it returns false rather than throwing an exception.
+     * Use this method if the signature scheme type is a-priori unknown.
+     * @param signatureScheme a [SignatureScheme] object, retrieved from supported signature schemes, see [Crypto].
+     * @param publicKey the signer's [PublicKey].
+     * @param signatureData the signatureData on a message.
+     * @param clearData the clear data/message that was signed (usually the Merkle root).
+     * @return true if verification passes or false if verification fails.
+     * @throws SignatureException if this signatureData object is not initialized properly,
+     * the passed-in signatureData is improperly encoded or of the wrong type,
+     * if this signatureData scheme is unable to process the input data provided, if the verification is not possible.
+     * @throws IllegalArgumentException if the requested signature scheme is not supported.
+     */
+    @JvmStatic
+    @Throws(SignatureException::class)
+    fun isValid(signatureScheme: SignatureScheme, publicKey: PublicKey, signatureData: ByteArray, clearData: ByteArray): Boolean {
+        require(isSupportedSignatureScheme(signatureScheme)) {
+            "Unsupported key/algorithm for schemeCodeName: ${signatureScheme.schemeCodeName}"
+        }
+        val signature = Instances.getSignatureInstance(signatureScheme.signatureName, providerMap[signatureScheme.providerName])
+        signature.initVerify(publicKey)
+        signature.update(clearData)
+        return signature.verify(signatureData)
+    }
+
+    /**
+     * Utility to simplify the act of verifying a digital signature by identifying the signature scheme used from the
+     * input public key's type.
+     * It returns true if it succeeds and false if not. In comparison to [doVerify] if the key and signature
+     * do not match it returns false rather than throwing an exception. Normally you should use the function which throws,
+     * as it avoids the risk of failing to test the result.
+     * @param txId transaction's id.
+     * @param transactionSignature the signature on the transaction.
+     * @throws SignatureException if this signatureData object is not initialized properly,
+     * the passed-in signatureData is improperly encoded or of the wrong type,
+     * if this signatureData scheme is unable to process the input data provided, if the verification is not possible.
+     */
+    @JvmStatic
+    @Throws(SignatureException::class)
+    fun isValid(txId: SecureHash, transactionSignature: TransactionSignature): Boolean {
+        val signableData = SignableData(originalSignedHash(txId, transactionSignature.partialMerkleTree), transactionSignature.signatureMetadata)
+        return isValid(
+                findSignatureScheme(transactionSignature.by),
+                transactionSignature.by,
+                transactionSignature.bytes,
+                SignableDataSerializer.serialize(signableData).bytes)
+    }
+
+    /**
+     * Utility to simplify the act of verifying a digital signature by identifying the signature scheme used from the
+     * input public key's type.
+     * It returns true if it succeeds and false if not. In comparison to [doVerify] if the key and signature
+     * do not match it returns false rather than throwing an exception. Normally you should use the function which throws,
+     * as it avoids the risk of failing to test the result.
+     * Use this method if the signature scheme is not a-priori known.
+     * @param publicKey the signer's [PublicKey].
+     * @param signatureData the signatureData on a message.
+     * @param clearData the clear data/message that was signed (usually the Merkle root).
+     * @return true if verification passes or false if verification fails.
+     * @throws SignatureException if this signatureData object is not initialized properly,
+     * the passed-in signatureData is improperly encoded or of the wrong type,
+     * if this signatureData scheme is unable to process the input data provided, if the verification is not possible.
+     */
+    @JvmStatic
+    @Throws(SignatureException::class)
+    fun isValid(publicKey: PublicKey, signatureData: ByteArray, clearData: ByteArray): Boolean {
+        return isValid(findSignatureScheme(publicKey), publicKey, signatureData, clearData)
+    }
+
+    /**
+     * Utility to simplify the act of verifying a [TransactionSignature].
+     * It returns true if it succeeds, but it always throws an exception if verification fails.
+     * @param txId transaction's id.
+     * @param transactionSignature the signature on the transaction.
+     * @return true if verification passes or throw exception if verification fails.
+     * @throws InvalidKeyException if the key is invalid.
+     * @throws SignatureException if this signatureData object is not initialized properly,
+     * the passed-in signatureData is improperly encoded or of the wrong type,
+     * if this signatureData scheme is unable to process the input data provided, if the verification is not possible.
+     * @throws IllegalArgumentException if the signature scheme is not supported or if any of the clear or signature data is empty.
+     */
+    @JvmStatic
+    @Throws(InvalidKeyException::class, SignatureException::class)
+    fun doVerify(txId: SecureHash, transactionSignature: TransactionSignature): Boolean {
+        val signableData = SignableData(originalSignedHash(txId, transactionSignature.partialMerkleTree), transactionSignature.signatureMetadata)
+        return BasicCrypto.doVerify(transactionSignature.by, transactionSignature.bytes, SignableDataSerializer.serialize(signableData).bytes)
+    }
+
+    /**
+     *  Get the hash value that is actually signed.
+     *  The txId is returned when [partialMerkleTree] is null,
+     *  else the root of the tree is computed and returned.
+     *  Note that the hash of the txId should be a leaf in the tree, not the txId itself.
+     */
+    private fun originalSignedHash(txId: SecureHash, partialMerkleTree: PartialMerkleTree?): SecureHash {
+        return if (partialMerkleTree != null) {
+            val usedHashes = mutableListOf<SecureHash>()
+            val root = PartialMerkleTree.rootAndUsedHashes(partialMerkleTree.root, usedHashes)
+            require(txId.sha256() in usedHashes) { "Transaction with id:$txId is not a leaf in the provided partial Merkle tree" }
+            root
+        } else {
+            txId
+        }
+    }
+
+    /**
+     * Convert a public key to a supported implementation.
+     * @param key a public key.
+     * @return a supported implementation of the input public key.
+     * @throws IllegalArgumentException on not supported scheme or if the given key specification
+     * is inappropriate for a supported key factory to produce a private key.
+     */
+    @JvmStatic
+    fun toSupportedPublicKey(key: SubjectPublicKeyInfo): PublicKey = decodePublicKey(key.encoded)
+
+    /**
+     * Convert a public key to a supported implementation. This can be used to convert a SUN's EC key to an BC key.
+     * This method is usually required to retrieve a key (via its corresponding cert) from JKS keystores that by default
+     * return SUN implementations.
+     * @param key a public key.
+     * @return a supported implementation of the input public key.
+     * @throws IllegalArgumentException on not supported scheme or if the given key specification
+     * is inappropriate for a supported key factory to produce a private key.
+     */
+    @JvmStatic
+    fun toSupportedPublicKey(key: PublicKey): PublicKey {
+        return when (key) {
+            is BCECPublicKey -> key
+            is BCRSAPublicKey -> key
+            is BCSphincs256PublicKey -> key
+            is EdDSAPublicKey -> key
+            is CompositeKey -> key
+            else -> decodePublicKey(key.encoded)
+        }
+    }
+
+
+
 }

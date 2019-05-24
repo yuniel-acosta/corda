@@ -6,6 +6,7 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogic
 import net.corda.core.internal.PLATFORM_VERSION
 import net.corda.core.internal.VisibleForTesting
+import net.corda.core.internal.cordapp.CordappDefaults.UNKNOWN_VALUE
 import net.corda.core.internal.notary.NotaryService
 import net.corda.core.internal.toPath
 import net.corda.core.schemas.MappedSchema
@@ -47,23 +48,6 @@ data class CordappImpl(
 
     companion object {
         fun jarName(url: URL): String = url.toPath().fileName.toString().removeSuffix(".jar")
-
-        /** CorDapp manifest entries */
-        const val CORDAPP_CONTRACT_NAME = "Cordapp-Contract-Name"
-        const val CORDAPP_CONTRACT_VERSION = "Cordapp-Contract-Version"
-        const val CORDAPP_CONTRACT_VENDOR = "Cordapp-Contract-Vendor"
-        const val CORDAPP_CONTRACT_LICENCE = "Cordapp-Contract-Licence"
-
-        const val CORDAPP_WORKFLOW_NAME = "Cordapp-Workflow-Name"
-        const val CORDAPP_WORKFLOW_VERSION = "Cordapp-Workflow-Version"
-        const val CORDAPP_WORKFLOW_VENDOR = "Cordapp-Workflow-Vendor"
-        const val CORDAPP_WORKFLOW_LICENCE = "Cordapp-Workflow-Licence"
-
-        const val TARGET_PLATFORM_VERSION = "Target-Platform-Version"
-        const val MIN_PLATFORM_VERSION = "Min-Platform-Version"
-
-        const val UNKNOWN_VALUE = "Unknown"
-        const val DEFAULT_CORDAPP_VERSION = 1
 
         /** used for CorDapps that do not explicitly define attributes */
         val UNKNOWN_INFO = Cordapp.Info.Default(UNKNOWN_VALUE, UNKNOWN_VALUE, UNKNOWN_VALUE, UNKNOWN_VALUE)

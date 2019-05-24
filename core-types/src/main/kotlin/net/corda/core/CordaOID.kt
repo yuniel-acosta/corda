@@ -1,7 +1,5 @@
 package net.corda.core
 
-import net.corda.core.crypto.internal.AliasPrivateKey
-
 /**
  * OIDs used for the Corda platform. All entries MUST be defined in this file only and they MUST NOT be removed.
  * If an OID is incorrectly assigned, it should be marked deprecated and NEVER be reused again.

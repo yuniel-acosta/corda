@@ -3,6 +3,7 @@ package net.corda.core.internal.cordapp
 import net.corda.core.cordapp.Cordapp
 import net.corda.core.internal.PLATFORM_VERSION
 import net.corda.core.internal.VisibleForTesting
+import net.corda.core.internal.warnOnce
 import net.corda.core.utilities.loggerFor
 import java.util.concurrent.ConcurrentHashMap
 
