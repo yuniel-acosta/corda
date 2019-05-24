@@ -1,11 +1,9 @@
-package net.corda.core.flows.mixins
+package net.corda.core.flows
 
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PartyAndReference
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UpgradedContract
-import net.corda.core.flows.CollectSignaturesFlow
-import net.corda.core.flows.ContractUpgradeFlow
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.messaging.startFlow
 import net.corda.core.node.ServiceHub

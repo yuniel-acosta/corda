@@ -1,10 +1,9 @@
-package net.corda.core.flows.mixins
+package net.corda.core.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.equalTo
-import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.internal.FlowStateMachine
 import net.corda.core.messaging.CordaRPCOps
@@ -25,7 +24,7 @@ interface WithFinality : WithMockNet {
     }
 
     fun CordaRPCOps.finalise(stx: SignedTransaction, vararg recipients: Party): FlowHandle<SignedTransaction> {
-        return startFlow(::FinalityInvoker, stx, recipients.toSet(), emptySet()).andRunNetwork()
+        return startFlow(WithFinality::FinalityInvoker, stx, recipients.toSet(), emptySet()).andRunNetwork()
     }
     //endregion
 

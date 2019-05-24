@@ -1,8 +1,7 @@
-package net.corda.core.flows.mixins
+package net.corda.core.flows
 
 import com.natpryce.hamkrest.*
 import net.corda.core.contracts.ContractState
-import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.identity.PartyAndCertificate

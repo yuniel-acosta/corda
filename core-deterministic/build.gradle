@@ -16,6 +16,12 @@ configurations {
 }
 
 dependencies {
+
+task patchCore(type: Zip, dependsOn: coreJarTask) {
+    destinationDir file("$buildDir/source-libs")
+    metadataCharset 'UTF-8'
+    classifier 'transient'
+    extension 'jar'
     compileOnly project(':core')
 
     // Configure these by hand. It should be a minimal subset of core's dependencies,
@@ -39,12 +45,6 @@ jar {
 
 def coreJarTask = tasks.getByPath(':core:jar')
 def originalJar = coreJarTask.outputs.files.singleFile
-
-task patchCore(type: Zip, dependsOn: coreJarTask) {
-    destinationDir file("$buildDir/source-libs")
-    metadataCharset 'UTF-8'
-    classifier 'transient'
-    extension 'jar'
 
     from(compileKotlin)
     from(zipTree(originalJar)) {

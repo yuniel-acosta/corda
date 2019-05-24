@@ -3,8 +3,6 @@ package net.corda.core.flows
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assert
 import net.corda.core.contracts.*
-import net.corda.core.flows.mixins.WithContracts
-import net.corda.core.flows.mixins.WithFinality
 import net.corda.core.identity.AbstractParty
 import net.corda.core.internal.Emoji
 import net.corda.core.transactions.ContractUpgradeLedgerTransaction

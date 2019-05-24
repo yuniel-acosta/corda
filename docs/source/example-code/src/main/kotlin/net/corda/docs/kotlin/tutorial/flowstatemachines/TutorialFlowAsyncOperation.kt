@@ -6,7 +6,6 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.internal.FlowAsyncOperation
 import net.corda.core.internal.concurrent.doneFuture
-import net.corda.core.internal.concurrent.openFuture
 import net.corda.core.internal.executeAsync
 
 // DOCSTART SummingOperation

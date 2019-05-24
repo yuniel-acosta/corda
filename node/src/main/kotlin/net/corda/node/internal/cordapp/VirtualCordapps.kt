@@ -35,7 +35,7 @@ internal object VirtualCordapp {
                 customSchemas = setOf(),
                 info = Cordapp.Info.Default("corda-core", versionInfo.vendor, versionInfo.releaseVersion, "Open Source (Apache 2)"),
                 allFlows = listOf(),
-                jarPath = ContractUpgradeFlow.javaClass.location, // Core JAR location
+                jarPath = javaClass.location, // Core JAR location
                 jarHash = SecureHash.allOnesHash,
                 minimumPlatformVersion = versionInfo.platformVersion,
                 targetPlatformVersion = versionInfo.platformVersion,

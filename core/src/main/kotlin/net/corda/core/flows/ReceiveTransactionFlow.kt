@@ -7,6 +7,7 @@ import net.corda.core.internal.checkParameterHash
 import net.corda.core.internal.pushToLoggingContext
 import net.corda.core.node.StatesToRecord
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.utilities.trace
 import net.corda.core.utilities.unwrap
 import java.security.SignatureException
 
