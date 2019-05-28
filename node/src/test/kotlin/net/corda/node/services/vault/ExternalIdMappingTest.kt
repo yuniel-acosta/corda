@@ -14,6 +14,7 @@ import net.corda.testing.contracts.DummyState
 import net.corda.testing.core.SerializationEnvironmentRule
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
+import net.i2p.crypto.eddsa.EdDSASecurityProvider
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -48,6 +49,7 @@ class ExternalIdMappingTest {
         )
         services = mockServices
         database = db
+        EdDSASecurityProvider()
     }
 
     private fun createDummyState(participants: List<AbstractParty>): DummyState {
