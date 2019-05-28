@@ -53,7 +53,10 @@ val bouncyCastlePQCProvider = BouncyCastlePQCProvider().apply {
 // that could cause unexpected and suspicious behaviour.
 // i.e. if someone removes a Provider and then he/she adds a new one with the same name.
 // The val is private to avoid any harmful state changes.
-val providerMap = listOf(cordaBouncyCastleProvider, cordaSecurityProvider, bouncyCastlePQCProvider).map { it.name to it }.toMap()
+val providerMap = listOf(cordaBouncyCastleProvider, cordaSecurityProvider, bouncyCastlePQCProvider).map {
+    println("Provider: $it")
+    it.name to it
+}.toMap()
 
 @DeleteForDJVM
 fun platformSecureRandomFactory(): SecureRandom = platformSecureRandom() // To minimise diff of CryptoUtils against open-source.

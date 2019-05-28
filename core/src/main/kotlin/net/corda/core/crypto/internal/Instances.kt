@@ -8,5 +8,8 @@ import java.security.Signature
  * optimise them en masse.
  */
 object Instances {
-    fun getSignatureInstance(algorithm: String, provider: Provider?) = Signature.getInstance(algorithm, provider)
+    fun getSignatureInstance(algorithm: String, provider: Provider?): Signature {
+        println("getSignatureInstance: $algorithm, $provider")
+        return Signature.getInstance(algorithm, provider)
+    }
 }
