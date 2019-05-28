@@ -49,7 +49,6 @@ class ExternalIdMappingTest {
         )
         services = mockServices
         database = db
-        EdDSASecurityProvider()
     }
 
     private fun createDummyState(participants: List<AbstractParty>): DummyState {
