@@ -15,11 +15,13 @@ import net.corda.testing.core.SerializationEnvironmentRule
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertEquals
 
+@Ignore("Azure TC agent VM's always through: java.security.NoSuchAlgorithmException: no such algorithm: NONEwithEdDSA for provider BC")
 class ExternalIdMappingTest {
 
     @Rule
