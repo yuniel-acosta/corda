@@ -17,6 +17,7 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.i2p.crypto.eddsa.EdDSASecurityProvider
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.util.*
@@ -70,6 +71,7 @@ class ExternalIdMappingTest {
         return stx.tx.outputsOfType<DummyState>().single()
     }
 
+    @Ignore
     @Test
     fun `Two states can be mapped to a single externalId`() {
         val vaultService = services.vaultService
@@ -97,6 +99,7 @@ class ExternalIdMappingTest {
         assertEquals(setOf(dummyStateOne, dummyStateTwo), resultTwo.map { it.state.data }.toSet())
     }
 
+    @Ignore
     @Test
     fun `One state can be mapped to multiple externalIds`() {
         val vaultService = services.vaultService
@@ -116,4 +119,14 @@ class ExternalIdMappingTest {
         assertEquals(dummyState, result.single().state.data)
     }
 
+    @Test
+    fun `fresh key and cert creation`() {
+        // Create new external ID.
+        val idOne = UUID.randomUUID()
+        val keyOne = services.keyManagementService.freshKeyAndCert(myself.identity, false, idOne)
+        val idTwo = UUID.randomUUID()
+        val keyTwo = services.keyManagementService.freshKeyAndCert(myself.identity, false, idTwo)
+        println("keyOne: $keyOne")
+        println("keyTwo: $keyTwo")
+    }
 }
