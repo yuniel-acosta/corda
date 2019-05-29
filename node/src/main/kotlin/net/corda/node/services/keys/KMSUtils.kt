@@ -57,6 +57,6 @@ fun getSigner(issuerKeyPair: KeyPair): ContentSigner {
     val signatureScheme = Crypto.findSignatureScheme(issuerKeyPair.private)
     val provider = Security.getProvider(signatureScheme.providerName)
     println("getSigner for signatureScheme: ${signatureScheme.signatureName} and provider: ${provider.info}")
-    Security.getProviders().forEach { println("Provider ${it.info}") }
+    Security.getProviders().forEach { println("Provider ${it.info} [${it.keys}]") }
     return ContentSignerBuilder.build(signatureScheme, issuerKeyPair.private, provider)
 }

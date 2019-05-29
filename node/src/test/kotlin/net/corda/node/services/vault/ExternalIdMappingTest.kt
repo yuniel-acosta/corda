@@ -1,5 +1,6 @@
 package net.corda.node.services.vault
 
+import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
@@ -49,6 +50,8 @@ class ExternalIdMappingTest {
         )
         services = mockServices
         database = db
+        println("Registering Crypto Providers ...")
+        Crypto.registerProviders()
     }
 
     private fun createDummyState(participants: List<AbstractParty>): DummyState {

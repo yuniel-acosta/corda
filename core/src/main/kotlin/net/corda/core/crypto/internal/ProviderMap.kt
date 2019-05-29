@@ -25,6 +25,7 @@ val cordaSecurityProvider = CordaSecurityProvider().also {
     // Then it returns the first PRNG algorithm of the first provider that has registered a SecureRandom
     // implementation (in our case [CordaSecurityProvider]), or null if none of the registered providers supplies
     // a SecureRandom implementation.
+    println("Security.insertProvider ${it.info}")
     Security.insertProviderAt(it, 1) // The position is 1-based.
 }
 // OID taken from https://tools.ietf.org/html/draft-ietf-curdle-pkix-00
@@ -42,11 +43,13 @@ val cordaBouncyCastleProvider = BouncyCastleProvider().apply {
 }.also {
     // This registration is needed for reading back EdDSA key from java keystore.
     // TODO: Find a way to make JKS work with bouncy castle provider or implement our own provide so we don't have to register bouncy castle provider.
+    println("Security.addProvider ${it.info}")
     Security.addProvider(it)
 }
 val bouncyCastlePQCProvider = BouncyCastlePQCProvider().apply {
     require(name == "BCPQC") { "Invalid PQCProvider name" }
 }.also {
+    println("Security.addProvider ${it.info}")
     Security.addProvider(it)
 }
 // This map is required to defend against users that forcibly call Security.addProvider / Security.removeProvider
