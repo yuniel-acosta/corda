@@ -99,18 +99,18 @@ class ExternalIdMappingTest {
         assertEquals(setOf(dummyStateOne, dummyStateTwo), resultTwo.map { it.state.data }.toSet())
     }
 
-    @Ignore
     @Test
     fun `One state can be mapped to multiple externalIds`() {
-        val vaultService = services.vaultService
         // Create new external ID.
         val idOne = UUID.randomUUID()
         val keyOne = services.keyManagementService.freshKeyAndCert(myself.identity, false, idOne)
         val idTwo = UUID.randomUUID()
         val keyTwo = services.keyManagementService.freshKeyAndCert(myself.identity, false, idTwo)
+
         // Create state with a public key assigned to the new external ID.
         val dummyState = createDummyState(listOf(AnonymousParty(keyOne.owningKey), AnonymousParty(keyTwo.owningKey)))
         // This query should return one state!
+        val vaultService = services.vaultService
         val result = database.transaction {
             val externalId = builder { VaultSchemaV1.StateToExternalId::externalId.`in`(listOf(idOne, idTwo)) }
             val queryCriteria = QueryCriteria.VaultCustomQueryCriteria(externalId)
