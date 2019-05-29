@@ -33,14 +33,22 @@ class ExternalIdMappingTest {
             "net.corda.testing.contracts"
     )
 
-    private val myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
-    private val notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
+//    private val myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
+//    private val notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
+
+    lateinit var myself: TestIdentity
+    lateinit var notary: TestIdentity
 
     lateinit var services: MockServices
     lateinit var database: CordaPersistence
 
     @Before
     fun setUp() {
+        println("Registering Crypto Providers ...")
+        Crypto.registerProviders()
+        myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
+        notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
+
         val (db, mockServices) = MockServices.makeTestDatabaseAndPersistentServices(
                 cordappPackages = cordapps,
                 initialIdentity = myself,
@@ -50,8 +58,6 @@ class ExternalIdMappingTest {
         )
         services = mockServices
         database = db
-        println("Registering Crypto Providers ...")
-        Crypto.registerProviders()
     }
 
     private fun createDummyState(participants: List<AbstractParty>): DummyState {
