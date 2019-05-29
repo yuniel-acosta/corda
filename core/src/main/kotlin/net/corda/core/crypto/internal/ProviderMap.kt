@@ -54,7 +54,7 @@ val bouncyCastlePQCProvider = BouncyCastlePQCProvider().apply {
 // i.e. if someone removes a Provider and then he/she adds a new one with the same name.
 // The val is private to avoid any harmful state changes.
 val providerMap = listOf(cordaBouncyCastleProvider, cordaSecurityProvider, bouncyCastlePQCProvider).map {
-    println("Provider: $it")
+    println("Bootstrapping Provider: $it [${it.info}]")
     it.name to it
 }.toMap()
 
