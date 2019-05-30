@@ -61,7 +61,6 @@ class ExternalIdMappingTest {
         return stx.tx.outputsOfType<DummyState>().single()
     }
 
-    @Ignore
     @Test
     fun `Two states can be mapped to a single externalId`() {
         // Create new external ID and two keys mapped to it.
@@ -89,6 +88,7 @@ class ExternalIdMappingTest {
         assertEquals(setOf(dummyStateOne, dummyStateTwo), resultTwo.map { it.state.data }.toSet())
     }
 
+    @Ignore
     @Test
     fun `One state can be mapped to multiple externalIds`() {
         // Create new external ID.
