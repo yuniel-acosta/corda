@@ -1,5 +1,6 @@
 package net.corda.node.services.vault
 
+import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
@@ -14,7 +15,10 @@ import net.corda.testing.contracts.DummyState
 import net.corda.testing.core.SerializationEnvironmentRule
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
-import org.junit.*
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Rule
+import org.junit.Test
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -37,6 +41,8 @@ class ExternalIdMappingTest {
 
     @Before
     fun setUp() {
+        println("Registering Crypto Providers ...")
+        Crypto.registerProviders()
         myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
         notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
 
@@ -61,6 +67,7 @@ class ExternalIdMappingTest {
         return stx.tx.outputsOfType<DummyState>().single()
     }
 
+    @Ignore
     @Test
     fun `Two states can be mapped to a single externalId`() {
         // Create new external ID and two keys mapped to it.
@@ -88,7 +95,6 @@ class ExternalIdMappingTest {
         assertEquals(setOf(dummyStateOne, dummyStateTwo), resultTwo.map { it.state.data }.toSet())
     }
 
-    @Ignore
     @Test
     fun `One state can be mapped to multiple externalIds`() {
         // Create new external ID.
