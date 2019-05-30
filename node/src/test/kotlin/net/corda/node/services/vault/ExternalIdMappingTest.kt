@@ -67,6 +67,19 @@ class ExternalIdMappingTest {
         return stx.tx.outputsOfType<DummyState>().single()
     }
 
+
+    @Test
+    fun `fresh key and cert creation`() {
+        // Create new external ID.
+        val idOne = UUID.randomUUID()
+        val keyOne = services.keyManagementService.freshKeyAndCert(myself.identity, false, idOne)
+        val idTwo = UUID.randomUUID()
+        val keyTwo = services.keyManagementService.freshKeyAndCert(myself.identity, false, idTwo)
+        println("keyOne: $keyOne")
+        println("keyTwo: $keyTwo")
+    }
+
+    @Ignore
     @Test
     fun `Two states can be mapped to a single externalId`() {
         // Create new external ID and two keys mapped to it.
@@ -111,16 +124,5 @@ class ExternalIdMappingTest {
             vaultService.queryBy<DummyState>(queryCriteria).states
         }
         assertEquals(dummyState, result.single().state.data)
-    }
-
-    @Test
-    fun `fresh key and cert creation`() {
-        // Create new external ID.
-        val idOne = UUID.randomUUID()
-        val keyOne = services.keyManagementService.freshKeyAndCert(myself.identity, false, idOne)
-        val idTwo = UUID.randomUUID()
-        val keyTwo = services.keyManagementService.freshKeyAndCert(myself.identity, false, idTwo)
-        println("keyOne: $keyOne")
-        println("keyTwo: $keyTwo")
     }
 }
