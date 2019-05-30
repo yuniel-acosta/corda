@@ -1,6 +1,5 @@
 package net.corda.node.services.vault
 
-import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
@@ -33,19 +32,14 @@ class ExternalIdMappingTest {
             "net.corda.testing.contracts"
     )
 
-    lateinit var myself: TestIdentity
-    lateinit var notary: TestIdentity
+    private val myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
+    private val notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
 
     lateinit var services: MockServices
     lateinit var database: CordaPersistence
 
     @Before
     fun setUp() {
-        println("Registering Crypto Providers ...")
-        Crypto.registerProviders()
-        myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
-        notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
-
         val (db, mockServices) = MockServices.makeTestDatabaseAndPersistentServices(
                 cordappPackages = cordapps,
                 initialIdentity = myself,
@@ -65,18 +59,6 @@ class ExternalIdMappingTest {
         val stx = services.signInitialTransaction(tx)
         database.transaction { services.recordTransactions(stx) }
         return stx.tx.outputsOfType<DummyState>().single()
-    }
-
-
-    @Test
-    fun `fresh key and cert creation`() {
-        // Create new external ID.
-        val idOne = UUID.randomUUID()
-        val keyOne = services.keyManagementService.freshKeyAndCert(myself.identity, false, idOne)
-        val idTwo = UUID.randomUUID()
-        val keyTwo = services.keyManagementService.freshKeyAndCert(myself.identity, false, idTwo)
-        println("keyOne: $keyOne")
-        println("keyTwo: $keyTwo")
     }
 
     @Ignore
