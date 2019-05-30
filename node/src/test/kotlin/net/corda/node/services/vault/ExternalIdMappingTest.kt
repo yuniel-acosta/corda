@@ -90,13 +90,17 @@ class ExternalIdMappingTest {
         println("keyTwo: $keyTwo")
     }
 
-    @Ignore
     @Test
     fun `Two states can be mapped to a single externalId`() {
         // Create new external ID and two keys mapped to it.
         val id = UUID.randomUUID()
+        println("#5 $bcProviderName identityHashCode = ${System.identityHashCode(bcProvider)} (${bcProvider.size})")
         val keyOne = services.keyManagementService.freshKeyAndCert(myself.identity, false, id)
+
+        println("#6 $bcProviderName identityHashCode = ${System.identityHashCode(bcProvider)} (${bcProvider.size})")
         val keyTwo = services.keyManagementService.freshKeyAndCert(myself.identity, false, id)
+
+        println("#7 $bcProviderName identityHashCode = ${System.identityHashCode(bcProvider)} (${bcProvider.size})")
         // Create states with a public key assigned to the new external ID.
         val dummyStateOne = createDummyState(listOf(AnonymousParty(keyOne.owningKey)))
         val dummyStateTwo = createDummyState(listOf(AnonymousParty(keyTwo.owningKey)))
