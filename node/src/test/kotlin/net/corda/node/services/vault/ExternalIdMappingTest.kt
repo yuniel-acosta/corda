@@ -14,10 +14,7 @@ import net.corda.testing.contracts.DummyState
 import net.corda.testing.core.SerializationEnvironmentRule
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Rule
-import org.junit.Test
+import org.junit.*
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -32,14 +29,17 @@ class ExternalIdMappingTest {
             "net.corda.testing.contracts"
     )
 
-    private val myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
-    private val notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
+    lateinit var myself: TestIdentity
+    lateinit var notary: TestIdentity
 
     lateinit var services: MockServices
     lateinit var database: CordaPersistence
 
     @Before
     fun setUp() {
+        myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
+        notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
+
         val (db, mockServices) = MockServices.makeTestDatabaseAndPersistentServices(
                 cordappPackages = cordapps,
                 initialIdentity = myself,
