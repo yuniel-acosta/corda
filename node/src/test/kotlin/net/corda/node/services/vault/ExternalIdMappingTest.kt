@@ -15,6 +15,7 @@ import net.corda.testing.contracts.DummyState
 import net.corda.testing.core.SerializationEnvironmentRule
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -39,12 +40,20 @@ class ExternalIdMappingTest {
     lateinit var services: MockServices
     lateinit var database: CordaPersistence
 
+    private val bcProviderName = BouncyCastleProvider().name
+    private val bcProvider = Crypto.findProvider(bcProviderName)
+
     @Before
     fun setUp() {
         println("Registering Crypto Providers ...")
         Crypto.registerProviders()
+        println("#1 $bcProviderName identityHashCode = ${System.identityHashCode(bcProvider)} (${bcProvider.size})")
+
         myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
+        println("#2 $bcProviderName identityHashCode = ${System.identityHashCode(bcProvider)} (${bcProvider.size})")
+
         notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
+        println("#3 $bcProviderName identityHashCode = ${System.identityHashCode(bcProvider)} (${bcProvider.size})")
 
         val (db, mockServices) = MockServices.makeTestDatabaseAndPersistentServices(
                 cordappPackages = cordapps,
@@ -55,6 +64,8 @@ class ExternalIdMappingTest {
         )
         services = mockServices
         database = db
+        println("#4 $bcProviderName identityHashCode = ${System.identityHashCode(bcProvider)} (${bcProvider.size})")
+
     }
 
     private fun createDummyState(participants: List<AbstractParty>): DummyState {
@@ -65,6 +76,18 @@ class ExternalIdMappingTest {
         val stx = services.signInitialTransaction(tx)
         database.transaction { services.recordTransactions(stx) }
         return stx.tx.outputsOfType<DummyState>().single()
+    }
+
+
+    @Test
+    fun `fresh key and cert creation`() {
+        // Create new external ID.
+        val idOne = UUID.randomUUID()
+        val keyOne = services.keyManagementService.freshKeyAndCert(myself.identity, false, idOne)
+        val idTwo = UUID.randomUUID()
+        val keyTwo = services.keyManagementService.freshKeyAndCert(myself.identity, false, idTwo)
+        println("keyOne: $keyOne")
+        println("keyTwo: $keyTwo")
     }
 
     @Ignore
@@ -99,9 +122,14 @@ class ExternalIdMappingTest {
     fun `One state can be mapped to multiple externalIds`() {
         // Create new external ID.
         val idOne = UUID.randomUUID()
+        println("#5 $bcProviderName identityHashCode = ${System.identityHashCode(bcProvider)} (${bcProvider.size})")
         val keyOne = services.keyManagementService.freshKeyAndCert(myself.identity, false, idOne)
+
+        println("#6 $bcProviderName identityHashCode = ${System.identityHashCode(bcProvider)} (${bcProvider.size})")
         val idTwo = UUID.randomUUID()
         val keyTwo = services.keyManagementService.freshKeyAndCert(myself.identity, false, idTwo)
+
+        println("#7 $bcProviderName identityHashCode = ${System.identityHashCode(bcProvider)} (${bcProvider.size})")
         // Create state with a public key assigned to the new external ID.
         val dummyState = createDummyState(listOf(AnonymousParty(keyOne.owningKey), AnonymousParty(keyTwo.owningKey)))
         // This query should return one state!
