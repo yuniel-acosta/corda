@@ -16,6 +16,7 @@ import net.corda.testing.core.SerializationEnvironmentRule
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.util.*
@@ -112,4 +113,14 @@ class ExternalIdMappingTest {
         assertEquals(dummyState, result.single().state.data)
     }
 
+    @Test
+    fun `fresh key and cert creation`() {
+        // Create new external ID.
+        val idOne = UUID.randomUUID()
+        val keyOne = services.keyManagementService.freshKeyAndCert(myself.identity, false, idOne)
+        val idTwo = UUID.randomUUID()
+        val keyTwo = services.keyManagementService.freshKeyAndCert(myself.identity, false, idTwo)
+        println("keyOne: $keyOne")
+        println("keyTwo: $keyTwo")
+    }
 }
