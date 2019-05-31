@@ -33,8 +33,8 @@ class ExternalIdMappingTest {
             "net.corda.testing.contracts"
     )
 
-//    lateinit var myself: TestIdentity
-//    lateinit var notary: TestIdentity
+    lateinit var myself: TestIdentity
+    lateinit var notary: TestIdentity
 //
 //    lateinit var services: MockServices
 //    lateinit var database: CordaPersistence
@@ -44,6 +44,14 @@ class ExternalIdMappingTest {
 
     @Before
     fun setUp() {
+        println("#1 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
+
+        myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
+        println("#2 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
+
+        notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
+        println("#3 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
+
     }
 
     private fun createDummyState(participants: List<AbstractParty>, notary: TestIdentity, services: MockServices, database: CordaPersistence): DummyState {
@@ -60,15 +68,8 @@ class ExternalIdMappingTest {
     fun `Two states can be mapped to a single externalId`() {
 
         // BEGIN: Setup()
-        println("Registering Crypto Providers ...")
-        Crypto.registerProviders()
-        println("#1 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
-
-        val myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
-        println("#2 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
-
-        val notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
-        println("#3 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
+//        println("Registering Crypto Providers ...")
+//        Crypto.registerProviders()
 
         val (db, mockServices) = MockServices.makeTestDatabaseAndPersistentServices(
                 cordappPackages = cordapps,
@@ -77,26 +78,24 @@ class ExternalIdMappingTest {
                 moreIdentities = setOf(notary.identity),
                 moreKeys = emptySet()
         )
-        val services = mockServices
-        val database = db
         println("#4 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
         // END: SetUp()
 
         // Create new external ID and two keys mapped to it.
         val id = UUID.randomUUID()
         println("#5 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
-        val keyOne = services.keyManagementService.freshKeyAndCert(myself.identity, false, id)
+        val keyOne = mockServices.keyManagementService.freshKeyAndCert(myself.identity, false, id)
 
         println("#6 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
-        val keyTwo = services.keyManagementService.freshKeyAndCert(myself.identity, false, id)
+        val keyTwo = mockServices.keyManagementService.freshKeyAndCert(myself.identity, false, id)
 
         println("#7 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
         // Create states with a public key assigned to the new external ID.
-        val dummyStateOne = createDummyState(listOf(AnonymousParty(keyOne.owningKey)), notary, services, database)
-        val dummyStateTwo = createDummyState(listOf(AnonymousParty(keyTwo.owningKey)), notary, services, database)
+        val dummyStateOne = createDummyState(listOf(AnonymousParty(keyOne.owningKey)), notary, mockServices, db)
+        val dummyStateTwo = createDummyState(listOf(AnonymousParty(keyTwo.owningKey)), notary, mockServices, db)
         // This query should return two states!
-        val vaultService = services.vaultService
-        val result = database.transaction {
+        val vaultService = mockServices.vaultService
+        val result = db.transaction {
             val externalId = builder { VaultSchemaV1.StateToExternalId::externalId.`in`(listOf(id)) }
             val queryCriteria = QueryCriteria.VaultCustomQueryCriteria(externalId)
             vaultService.queryBy<DummyState>(queryCriteria).states
@@ -104,7 +103,7 @@ class ExternalIdMappingTest {
         assertEquals(setOf(dummyStateOne, dummyStateTwo), result.map { it.state.data }.toSet())
 
         // This query should return two states!
-        val resultTwo = database.transaction {
+        val resultTwo = db.transaction {
             val externalId = builder { VaultSchemaV1.StateToExternalId::externalId.equal(id) }
             val queryCriteria = QueryCriteria.VaultCustomQueryCriteria(externalId)
             vaultService.queryBy<DummyState>(queryCriteria).states
@@ -116,15 +115,15 @@ class ExternalIdMappingTest {
     fun `One state can be mapped to multiple externalIds`() {
 
         // BEGIN: Setup()
-        println("Registering Crypto Providers ...")
-        Crypto.registerProviders()
-        println("#1 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
-
-        val myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
-        println("#2 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
-
-        val notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
-        println("#3 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
+//        println("Registering Crypto Providers ...")
+//        Crypto.registerProviders()
+//        println("#1 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
+//
+//        val myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
+//        println("#2 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
+//
+//        val notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
+//        println("#3 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
 
         val (db, mockServices) = MockServices.makeTestDatabaseAndPersistentServices(
                 cordappPackages = cordapps,
@@ -133,26 +132,24 @@ class ExternalIdMappingTest {
                 moreIdentities = setOf(notary.identity),
                 moreKeys = emptySet()
         )
-        val services = mockServices
-        val database = db
         println("#4 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
         // END: SetUp()
 
         // Create new external ID.
         val idOne = UUID.randomUUID()
         println("#5 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
-        val keyOne = services.keyManagementService.freshKeyAndCert(myself.identity, false, idOne)
+        val keyOne = mockServices.keyManagementService.freshKeyAndCert(myself.identity, false, idOne)
 
         println("#6 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
         val idTwo = UUID.randomUUID()
-        val keyTwo = services.keyManagementService.freshKeyAndCert(myself.identity, false, idTwo)
+        val keyTwo = mockServices.keyManagementService.freshKeyAndCert(myself.identity, false, idTwo)
 
         println("#7 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
         // Create state with a public key assigned to the new external ID.
-        val dummyState = createDummyState(listOf(AnonymousParty(keyOne.owningKey), AnonymousParty(keyTwo.owningKey)), notary, services, database)
+        val dummyState = createDummyState(listOf(AnonymousParty(keyOne.owningKey), AnonymousParty(keyTwo.owningKey)), notary, mockServices, db)
         // This query should return one state!
-        val vaultService = services.vaultService
-        val result = database.transaction {
+        val vaultService = mockServices.vaultService
+        val result = db.transaction {
             val externalId = builder { VaultSchemaV1.StateToExternalId::externalId.`in`(listOf(idOne, idTwo)) }
             val queryCriteria = QueryCriteria.VaultCustomQueryCriteria(externalId)
             vaultService.queryBy<DummyState>(queryCriteria).states
