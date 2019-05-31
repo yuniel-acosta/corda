@@ -33,18 +33,17 @@ class ExternalIdMappingTest {
             "net.corda.testing.contracts"
     )
 
+//    lateinit var myself: TestIdentity
+//    lateinit var notary: TestIdentity
+//
+//    lateinit var services: MockServices
+//    lateinit var database: CordaPersistence
+
     private val bcProviderName = BouncyCastleProvider().name
+//    private val bcProvider = Crypto.findProvider(bcProviderName)
 
     @Before
     fun setUp() {
-//        println("Registering Crypto Providers ...")
-//        Crypto.registerProviders()
-    }
-
-    @After
-    fun cleanUp() {
-//        println("Unregistering Crypto Providers ...")
-//        Crypto.unregisterProviders()
     }
 
     private fun createDummyState(participants: List<AbstractParty>, notary: TestIdentity, services: MockServices, database: CordaPersistence): DummyState {
@@ -59,7 +58,9 @@ class ExternalIdMappingTest {
 
     @Test
     fun `Two states can be mapped to a single externalId`() {
+
         // BEGIN: Setup()
+        println("Registering Crypto Providers ...")
         Crypto.registerProviders()
         println("#1 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
 
@@ -115,6 +116,7 @@ class ExternalIdMappingTest {
     fun `One state can be mapped to multiple externalIds`() {
 
         // BEGIN: Setup()
+        println("Registering Crypto Providers ...")
         Crypto.registerProviders()
         println("#1 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
 
