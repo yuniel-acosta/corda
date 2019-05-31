@@ -16,7 +16,6 @@ import net.corda.testing.core.SerializationEnvironmentRule
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
