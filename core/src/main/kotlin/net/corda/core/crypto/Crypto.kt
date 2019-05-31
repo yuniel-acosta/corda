@@ -1059,6 +1059,16 @@ object Crypto {
         setBouncyCastleRNG()
     }
 
+    @JvmStatic
+    fun unregisterProviders() {
+        Security.getProviders().forEach { provider ->
+            if (provider::class.java.classLoader == this.javaClass.classLoader) {
+                println("Removing ${provider.name} ...")
+                Security.removeProvider(provider.name)
+            }
+        }
+    }
+
     @StubOutForDJVM
     private fun setBouncyCastleRNG() {
         CryptoServicesRegistrar.setSecureRandom(newSecureRandom())

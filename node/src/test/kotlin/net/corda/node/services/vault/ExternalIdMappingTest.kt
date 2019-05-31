@@ -16,6 +16,8 @@ import net.corda.testing.core.SerializationEnvironmentRule
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.util.*
@@ -34,6 +36,18 @@ class ExternalIdMappingTest {
 
     private val bcProviderName = BouncyCastleProvider().name
 
+    @Before
+    fun setUp() {
+        println("Registering Crypto Providers ...")
+        Crypto.registerProviders()
+    }
+
+    @After
+    fun cleanUp() {
+        println("Unregistering Crypto Providers ...")
+//        Crypto.unregisterProviders()
+    }
+
     private fun createDummyState(participants: List<AbstractParty>, notary: TestIdentity, services: MockServices, database: CordaPersistence): DummyState {
         val tx = TransactionBuilder(notary = notary.party).apply {
             addOutputState(DummyState(1, participants), DummyContract.PROGRAM_ID)
@@ -46,10 +60,7 @@ class ExternalIdMappingTest {
 
     @Test
     fun `Two states can be mapped to a single externalId`() {
-
         // BEGIN: Setup()
-        println("Registering Crypto Providers ...")
-        Crypto.registerProviders()
         println("#1 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
 
         val myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
@@ -104,8 +115,6 @@ class ExternalIdMappingTest {
     fun `One state can be mapped to multiple externalIds`() {
 
         // BEGIN: Setup()
-        println("Registering Crypto Providers ...")
-        Crypto.registerProviders()
         println("#1 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
 
         val myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
