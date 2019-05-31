@@ -38,13 +38,13 @@ class ExternalIdMappingTest {
 
     @Before
     fun setUp() {
-        println("Registering Crypto Providers ...")
-        Crypto.registerProviders()
+//        println("Registering Crypto Providers ...")
+//        Crypto.registerProviders()
     }
 
     @After
     fun cleanUp() {
-        println("Unregistering Crypto Providers ...")
+//        println("Unregistering Crypto Providers ...")
 //        Crypto.unregisterProviders()
     }
 
@@ -61,6 +61,7 @@ class ExternalIdMappingTest {
     @Test
     fun `Two states can be mapped to a single externalId`() {
         // BEGIN: Setup()
+        Crypto.registerProviders()
         println("#1 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
 
         val myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
@@ -115,6 +116,7 @@ class ExternalIdMappingTest {
     fun `One state can be mapped to multiple externalIds`() {
 
         // BEGIN: Setup()
+        Crypto.registerProviders()
         println("#1 $bcProviderName identityHashCode = ${System.identityHashCode(Crypto.findProvider(bcProviderName))} (${Crypto.findProvider(bcProviderName).size})")
 
         val myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
