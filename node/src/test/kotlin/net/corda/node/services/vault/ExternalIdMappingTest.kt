@@ -1,5 +1,6 @@
 package net.corda.node.services.vault
 
+import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
@@ -44,6 +45,7 @@ class ExternalIdMappingTest {
     fun `Two states can be mapped to a single externalId`() {
         // BEGIN: Setup()
         // Required to prevent 'java.security.NoSuchAlgorithmException: no such algorithm: NONEwithEdDSA for provider BC' on TC Azure VMs
+        Crypto.registerProviders()
         val myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
         val notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
         val (db, mockServices) = MockServices.makeTestDatabaseAndPersistentServices(
@@ -85,6 +87,7 @@ class ExternalIdMappingTest {
     fun `One state can be mapped to multiple externalIds`() {
         // BEGIN: Setup()
         // Required to prevent 'java.security.NoSuchAlgorithmException: no such algorithm: NONEwithEdDSA for provider BC' on TC Azure VMs
+        Crypto.registerProviders()
         val myself = TestIdentity(CordaX500Name("Me", "London", "GB"))
         val notary = TestIdentity(CordaX500Name("NotaryService", "London", "GB"), 1337L)
 
