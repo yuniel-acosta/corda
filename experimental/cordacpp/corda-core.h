@@ -1,7 +1,7 @@
 #ifndef CORDACPP_CORDA_STD_SERIALISERS_H
 #define CORDACPP_CORDA_STD_SERIALISERS_H
 
-#include "corda.h"
+#include "corda-serialization.h"
 
 namespace net {
 namespace corda {
@@ -45,8 +45,25 @@ public:
 
 }  // namespace utilities
 
-}
+//namespace serialization {
+//
+//// Deserialization of this class is specialised to allow a custom API for deserialize().
+//template <class T> class SerializedBytes : public net::corda::core::utilities::OpaqueBytes {
+//public:
+//    proton::binary bytes;
+//
+//    SerializedBytes() = default;
+//
+//    explicit SerializedBytes(proton::codec::decoder &decoder) : net::corda::core::utilities::OpaqueBytes(decoder) {
+//        net::corda::Parser::read_to(decoder, bytes);
+//    }
+//
+//    ptr<T> deserialize() { return parse<T>(bytes); }
+//};
+//
+//}  // namespace serialization
 
+}  // namespace core
 }  // namespace corda
 }  // namespace net
 
@@ -95,8 +112,17 @@ class PublicKey : public net::corda::Any {
 public:
     proton::binary x509_bits;
 
+    PublicKey() = default;
+
     explicit PublicKey(proton::codec::decoder &decoder) {
+        proton::codec::start s;
+        decoder >> s;
+        proton::symbol sym;
+        decoder >> sym;
+        if (sym != "net.corda:java.security.PublicKey")
+            throw std::invalid_argument(net::corda::msg() << "Stream contains symbol '" << sym << "' but expected a java.security.PublicKey");
         decoder >> x509_bits;
+        decoder >> proton::codec::finish();
     }
 };
 
@@ -133,8 +159,20 @@ public:
     }
 };
 
-}
-}
+class Duration : public net::corda::Any {
+public:
+    uint64_t seconds{};
+    uint32_t nanos{};
 
+    Duration() = default;
+
+    explicit Duration(proton::codec::decoder &decoder) {
+        decoder >> seconds;
+        decoder >> nanos;
+    }
+};
+
+}
+}
 
 #endif //CORDACPP_CORDA_STD_SERIALISERS_H

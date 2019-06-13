@@ -19,3 +19,4 @@ You will need to install Apache Qpid Proton C++ and cmake to be able to compile 
 - [ ] Serialization not just deserialization
 - [ ] Demonstrate how to calculate the Merkle tree
 - [ ] Demonstrate how to check the signatures
+- [ ] Generics in FungibleAsset aren't quite right yet.
