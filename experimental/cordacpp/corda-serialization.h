@@ -306,7 +306,7 @@ proton::codec::decoder &operator>>(proton::codec::decoder &decoder, ptr<T> &out)
         int status;
         const char *demangled = abi::__cxa_demangle(typeid(T).name(), 0, 0, &status);
         if (status != 0)
-            demangled = typeid(T).name();
+            demangled = typeid(T).name();  // This should never happen.
         throw std::invalid_argument(msg() << "Stream contains a serialised " << classname << " but the expected type was " << demangled << " for symbol " << sym);
     }
     decoder >> proton::codec::finish();

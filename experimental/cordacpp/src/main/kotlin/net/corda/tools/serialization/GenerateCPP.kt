@@ -506,7 +506,7 @@ class GenerateCPPHeaders : CordaCliWrapper("generate-cpp-headers", "Generate sou
             (type as? Class<*>)?.typeParameters ?: ((type as? ParameterizedType)?.rawType as? Class<*>)?.typeParameters ?: emptyArray()
 
     // Java type to C++ type. See SerializerFactory.primitiveTypeNames and https://qpid.apache.org/releases/qpid-proton-0.26.0/proton/cpp/api/types_page.html
-    private fun convertType(resolved: Type, genericReturnType: Type?): Pair<String, Set<Type>> {
+    private fun convertType(resolved: Type, genericReturnType: Type? = resolved): Pair<String, Set<Type>> {
         val dependencies = mutableSetOf<Type>()
 
         val cppType = when (resolved.typeName) {
@@ -556,7 +556,7 @@ class GenerateCPPHeaders : CordaCliWrapper("generate-cpp-headers", "Generate sou
                     resolved as ParameterizedType
                     var innerType: Type = resolved.inner(0)
                     if (innerType is WildcardType) innerType = innerType.upperBounds.first()
-                    val (innerName, innerDeps) = convertType(innerType, innerType)
+                    val (innerName, innerDeps) = convertType(innerType)
                     dependencies += innerDeps
                     "std::vector<$innerName>"
                 }
@@ -564,9 +564,9 @@ class GenerateCPPHeaders : CordaCliWrapper("generate-cpp-headers", "Generate sou
                     resolved as ParameterizedType
                     val keyType: Type = resolved.inner(0)
                     val valueType: Type = resolved.inner(1)
-                    val (cppKeyType, extraDeps1) = convertType(keyType, keyType)
+                    val (cppKeyType, extraDeps1) = convertType(keyType)
                     dependencies += extraDeps1
-                    val (cppValueType, extraDeps2) = convertType(valueType, valueType)
+                    val (cppValueType, extraDeps2) = convertType(valueType)
                     dependencies += extraDeps2
                     "std::map<$cppKeyType, $cppValueType>"
                 }
@@ -576,7 +576,7 @@ class GenerateCPPHeaders : CordaCliWrapper("generate-cpp-headers", "Generate sou
                     dependencies += resolved
                     if (resolved is ParameterizedType) {
                         val innerTypes = resolved.actualTypeArguments.indices.map { resolved.inner(it) }
-                        val innerTypesProcessed: List<Pair<String, Set<Type>>> = innerTypes.map { convertType(it, it) }
+                        val innerTypesProcessed: List<Pair<String, Set<Type>>> = innerTypes.map { convertType(it) }
                         dependencies += innerTypesProcessed.flatMap { it.second }
                         val innerTypesString = innerTypesProcessed.joinToString(", ") { it.first }
                         "ptr<${resolved.rawType.mangleToCPPSyntax()}<$innerTypesString>>"

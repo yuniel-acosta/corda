@@ -16,11 +16,11 @@ string load_file(const char *filename) {
     return string((istreambuf_iterator<char>(stream)), (istreambuf_iterator<char>()));
 }
 
-template <class T>
-ptr<net::corda::core::serialization::SerializedBytes<ptr<T>>> &operator>>(ptr<net::corda::core::serialization::SerializedBytes<ptr<T>>> &b, ptr<T> &o) {
-    o = parse<T>(b->bytes);
-    return b;
-}
+//template <class T>
+//ptr<net::corda::core::serialization::SerializedBytes<ptr<T>>> &operator>>(ptr<net::corda::core::serialization::SerializedBytes<ptr<T>>> &b, ptr<T> &o) {
+//    o = parse<T>(b->bytes);
+//    return b;
+//}
 
 int main() {
     string stx_bits = load_file("stx");
@@ -28,8 +28,7 @@ int main() {
     cout << dump(stx_bits) << endl;
 
     auto stx = parse<transactions::SignedTransaction>(stx_bits);
-    ptr<transactions::CoreTransaction> wtx;
-    stx->tx_bits >> wtx;
+    ptr<transactions::CoreTransaction> wtx = parse<transactions::CoreTransaction>(stx->tx_bits->bytes);
 
 //    ifstream stream("/tmp/wtx");
 //    string bits = string((istreambuf_iterator<char>(stream)), (istreambuf_iterator<char>()));

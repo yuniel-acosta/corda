@@ -45,24 +45,6 @@ public:
 
 }  // namespace utilities
 
-//namespace serialization {
-//
-//// Deserialization of this class is specialised to allow a custom API for deserialize().
-//template <class T> class SerializedBytes : public net::corda::core::utilities::OpaqueBytes {
-//public:
-//    proton::binary bytes;
-//
-//    SerializedBytes() = default;
-//
-//    explicit SerializedBytes(proton::codec::decoder &decoder) : net::corda::core::utilities::OpaqueBytes(decoder) {
-//        net::corda::Parser::read_to(decoder, bytes);
-//    }
-//
-//    ptr<T> deserialize() { return parse<T>(bytes); }
-//};
-//
-//}  // namespace serialization
-
 }  // namespace core
 }  // namespace corda
 }  // namespace net
