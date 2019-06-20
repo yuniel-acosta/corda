@@ -9,7 +9,7 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.ProgressTracker
-import net.corda.core.utilities.unwrap
+import net.corda.flows.utilities.unwrap
 
 object IdentitySyncFlow {
     /**
@@ -22,8 +22,8 @@ object IdentitySyncFlow {
      */
     // TODO: Can this be triggered automatically from [SendTransactionFlow]?
     class Send @JvmOverloads constructor(val otherSideSessions: Set<FlowSession>,
-               val tx: WireTransaction,
-               override val progressTracker: ProgressTracker = tracker()) : FlowLogic<Unit>() {
+                                         val tx: WireTransaction,
+                                         override val progressTracker: ProgressTracker = tracker()) : FlowLogic<Unit>() {
         constructor(otherSide: FlowSession, tx: WireTransaction) : this(setOf(otherSide), tx)
 
         companion object {

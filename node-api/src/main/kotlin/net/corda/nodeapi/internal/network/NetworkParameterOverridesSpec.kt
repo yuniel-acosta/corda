@@ -6,8 +6,8 @@ import net.corda.common.configuration.parsing.internal.get
 import net.corda.common.configuration.parsing.internal.mapValid
 import net.corda.common.configuration.parsing.internal.nested
 import net.corda.common.validation.internal.Validated
-import net.corda.core.internal.noPackageOverlap
-import net.corda.core.internal.requirePackageValid
+import net.corda.corenode.internal.noPackageOverlap
+import net.corda.corenode.internal.requirePackageValid
 import net.corda.nodeapi.internal.crypto.loadKeyStore
 import java.io.IOException
 import java.nio.file.InvalidPathException

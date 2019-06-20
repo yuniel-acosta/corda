@@ -10,11 +10,12 @@ import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.crypto.Crypto
 import net.corda.core.internal.*
 import net.corda.core.internal.concurrent.thenMatch
-import net.corda.core.internal.cordapp.CordappImpl
 import net.corda.core.internal.errors.AddressBindingException
 import net.corda.core.utilities.Try
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.loggerFor
+import net.corda.corenode.internal.PLATFORM_VERSION
+import net.corda.corenode.internal.cordapp.CordappImpl
 import net.corda.node.*
 import net.corda.node.internal.Node.Companion.isInvalidJavaVersion
 import net.corda.node.internal.cordapp.MultipleCordappsForFlowException

@@ -6,11 +6,14 @@ import net.corda.core.internal.*
 import net.corda.core.node.NetworkParameters
 import net.corda.core.node.NotaryInfo
 import net.corda.core.serialization.SerializedBytes
-import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.serialization.deserialize
 import net.corda.core.utilities.MAX_HASH_HEX_SIZE
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.trace
+import net.corda.corenode.internal.DigitalSignatureWithCert
+import net.corda.corenode.internal.NetworkParametersStorage
+import net.corda.corenode.internal.SignedDataWithCert
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.node.services.network.NetworkMapClient
 import net.corda.node.utilities.AppendOnlyPersistentMap
 import net.corda.nodeapi.internal.crypto.X509CertificateFactory

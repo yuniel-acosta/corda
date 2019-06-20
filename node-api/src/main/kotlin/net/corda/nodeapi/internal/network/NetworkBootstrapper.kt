@@ -21,6 +21,7 @@ import net.corda.core.serialization.internal._contextSerializationEnv
 import net.corda.core.utilities.days
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.seconds
+import net.corda.corenode.internal.PLATFORM_VERSION
 import net.corda.nodeapi.internal.*
 import net.corda.nodeapi.internal.config.getBooleanCaseInsensitive
 import net.corda.nodeapi.internal.network.NodeInfoFilesCopier.Companion.NODE_INFO_FILE_NAME_PREFIX

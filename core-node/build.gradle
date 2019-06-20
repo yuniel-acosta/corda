@@ -1,0 +1,56 @@
+apply plugin: 'kotlin'
+apply plugin: 'kotlin-jpa'
+apply plugin: 'net.corda.plugins.quasar-utils'
+apply plugin: 'net.corda.plugins.api-scanner'
+
+description 'Core Node API'
+
+dependencies {
+    compile project(":core")
+}
+
+jar {
+    baseName 'corda-core-node'
+}
+
+tasks.withType(Test) {
+    // fork a new test process for every test class
+    forkEvery = 10
+}
+
+// quasar exclusions upon agent code instrumentation at run-time
+quasar {
+    excludePackages.addAll(
+            "antlr**",
+            "com.codahale**",
+            "com.fasterxml.**",
+            "com.github.benmanes.caffeine.**",
+            "com.google.**",
+            "com.lmax.**",
+            "com.zaxxer.**",
+            "net.bytebuddy**",
+            "io.github.classgraph**",
+            "io.netty*",
+            "liquibase**",
+            "net.i2p.crypto.**",
+            "nonapi.io.github.classgraph.**",
+            "org.apiguardian.**",
+            "org.bouncycastle**",
+            "org.codehaus.**",
+            "org.h2**",
+            "org.hibernate**",
+            "org.jboss.**",
+            "org.objenesis**",
+            "org.w3c.**",
+            "org.xml**",
+            "org.yaml**",
+            "rx**")
+}
+
+scanApi {
+    excludeClasses = [
+        // Kotlin should probably have declared this class as "synthetic".
+        "net.corda.core.Utils\$toFuture\$1\$subscription\$1"
+    ]
+}
+

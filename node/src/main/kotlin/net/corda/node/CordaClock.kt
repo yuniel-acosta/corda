@@ -1,8 +1,8 @@
 package net.corda.node
 
-import net.corda.core.serialization.SerializeAsToken
-import net.corda.core.serialization.SerializeAsTokenContext
-import net.corda.core.serialization.SingletonSerializationToken
+import net.corda.corenode.serialization.SerializeAsToken
+import net.corda.corenode.serialization.SerializeAsTokenContext
+import net.corda.corenode.serialization.SingletonSerializationToken
 import rx.Observable
 import rx.Subscriber
 import rx.subscriptions.Subscriptions

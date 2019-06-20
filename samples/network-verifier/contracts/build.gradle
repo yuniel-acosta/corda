@@ -5,6 +5,7 @@ description 'Corda Network Verifier - Contracts'
 
 dependencies {
     cordaCompile project(':core')
+    cordaCompile project(':core-node')
 }
 
 cordapp {

@@ -5,9 +5,9 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowInfo
 import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.Party
-import net.corda.core.internal.FlowIORequest
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.utilities.Try
+import net.corda.corenode.internal.FlowIORequest
 import net.corda.node.services.messaging.DeduplicationHandler
 
 /**

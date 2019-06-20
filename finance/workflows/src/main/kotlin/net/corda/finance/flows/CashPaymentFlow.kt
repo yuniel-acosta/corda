@@ -9,7 +9,7 @@ import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
-import net.corda.core.utilities.unwrap
+import net.corda.flows.utilities.unwrap
 import net.corda.finance.flows.AbstractCashFlow.Companion.FINALISING_TX
 import net.corda.finance.flows.AbstractCashFlow.Companion.GENERATING_ID
 import net.corda.finance.flows.AbstractCashFlow.Companion.GENERATING_TX

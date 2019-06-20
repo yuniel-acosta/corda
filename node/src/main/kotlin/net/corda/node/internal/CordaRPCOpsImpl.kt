@@ -14,8 +14,6 @@ import net.corda.core.flows.StateMachineRunId
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
-import net.corda.core.internal.FlowStateMachine
-import net.corda.core.internal.RPC_UPLOADER
 import net.corda.core.internal.STRUCTURAL_STEP_PREFIX
 import net.corda.core.internal.sign
 import net.corda.core.messaging.*
@@ -29,6 +27,8 @@ import net.corda.core.serialization.serialize
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.loggerFor
+import net.corda.corenode.internal.FlowStateMachine
+import net.corda.corenode.internal.RPC_UPLOADER
 import net.corda.node.services.api.FlowStarter
 import net.corda.node.services.api.ServiceHubInternal
 import net.corda.node.services.rpc.context

@@ -1,12 +1,12 @@
 package net.corda.nodeapi.internal.network
 
-import net.corda.core.internal.SignedDataWithCert
 import net.corda.core.internal.VisibleForTesting
 import net.corda.core.internal.copyTo
 import net.corda.core.internal.div
 import net.corda.core.node.NetworkParameters
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.serialize
+import net.corda.corenode.internal.SignedDataWithCert
 import net.corda.nodeapi.internal.createDevNetworkMapCa
 import net.corda.nodeapi.internal.crypto.CertificateAndKeyPair
 import java.nio.file.FileAlreadyExistsException

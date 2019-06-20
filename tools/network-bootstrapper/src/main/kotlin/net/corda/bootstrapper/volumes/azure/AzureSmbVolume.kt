@@ -9,8 +9,8 @@ import net.corda.bootstrapper.notaries.CopiedNotary
 import net.corda.bootstrapper.volumes.Volume
 import net.corda.bootstrapper.volumes.Volume.Companion.keyPair
 import net.corda.bootstrapper.volumes.Volume.Companion.networkMapCert
-import net.corda.core.internal.signWithCert
 import net.corda.core.serialization.serialize
+import net.corda.corenode.internal.signWithCert
 import net.corda.nodeapi.internal.network.NETWORK_PARAMS_FILE_NAME
 import org.slf4j.LoggerFactory
 

@@ -3,8 +3,8 @@ package net.corda.node.services.api
 import net.corda.core.context.InvocationContext
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StateMachineRunId
-import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.ProgressTracker
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import java.time.Instant
 
 /**

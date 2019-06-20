@@ -16,10 +16,11 @@ import net.corda.core.internal.concurrent.flatMap
 import net.corda.core.internal.concurrent.openFuture
 import net.corda.core.node.ServicesForResolution
 import net.corda.core.schemas.PersistentStateRef
-import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.seconds
 import net.corda.core.utilities.trace
+import net.corda.corenode.internal.FlowStateMachine
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.node.CordaClock
 import net.corda.node.MutableClock
 import net.corda.node.services.api.FlowStarter

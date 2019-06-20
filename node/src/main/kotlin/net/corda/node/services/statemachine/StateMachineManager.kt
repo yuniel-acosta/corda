@@ -4,9 +4,9 @@ import net.corda.core.concurrent.CordaFuture
 import net.corda.core.context.InvocationContext
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StateMachineRunId
-import net.corda.core.internal.FlowStateMachine
 import net.corda.core.messaging.DataFeed
 import net.corda.core.utilities.Try
+import net.corda.corenode.internal.FlowStateMachine
 import net.corda.node.services.messaging.DeduplicationHandler
 import net.corda.node.services.messaging.ReceivedMessage
 import rx.Observable

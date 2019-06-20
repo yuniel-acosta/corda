@@ -11,6 +11,7 @@ import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.days
 import net.corda.core.utilities.seconds
+import net.corda.corenode.identity.ref
 import net.corda.finance.`issued by`
 import net.corda.finance.workflows.CommercialPaperUtils
 import java.time.Instant

@@ -5,6 +5,7 @@ description 'Isolated CorDapp for testing'
 
 dependencies {
     cordaCompile project(':core')
+    cordaCompile project(':core-node')
 }
 
 cordapp {

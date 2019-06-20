@@ -2,12 +2,12 @@ package net.corda.node.services.transactions
 
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.Attachment
-import net.corda.core.internal.TransactionVerifierServiceInternal
 import net.corda.core.internal.concurrent.openFuture
-import net.corda.core.internal.prepareVerify
 import net.corda.core.node.services.TransactionVerifierService
-import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.transactions.LedgerTransaction
+import net.corda.corenode.internal.TransactionVerifierServiceInternal
+import net.corda.corenode.internal.prepareVerify
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.nodeapi.internal.persistence.withoutDatabaseAccess
 
 class InMemoryTransactionVerifierService(numberOfWorkers: Int) : SingletonSerializeAsToken(), TransactionVerifierService, TransactionVerifierServiceInternal, AutoCloseable {

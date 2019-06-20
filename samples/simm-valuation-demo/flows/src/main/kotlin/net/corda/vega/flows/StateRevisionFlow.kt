@@ -1,7 +1,7 @@
 package net.corda.vega.flows
 
-import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateAndRef
+import net.corda.core.crypto.PrivacySalt
 import net.corda.core.flows.AbstractStateReplacementFlow
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.StateReplacementException

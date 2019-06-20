@@ -3,8 +3,8 @@ package net.corda.node.services.keys
 import net.corda.core.crypto.*
 import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.internal.NamedCacheFactory
-import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.MAX_HASH_HEX_SIZE
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.node.services.identity.PersistentIdentityService
 import net.corda.node.utilities.AppendOnlyPersistentMap
 import net.corda.nodeapi.internal.persistence.CordaPersistence

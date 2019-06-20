@@ -6,14 +6,14 @@ import net.corda.core.flows.FlowSession
 import net.corda.core.flows.NotarisationPayload
 import net.corda.core.flows.NotaryError
 import net.corda.core.identity.Party
-import net.corda.core.internal.notary.NotaryInternalException
-import net.corda.core.internal.notary.NotaryServiceFlow
-import net.corda.core.internal.notary.SinglePartyNotaryService
 import net.corda.core.node.NetworkParameters
 import net.corda.core.transactions.ContractUpgradeFilteredTransaction
 import net.corda.core.transactions.CoreTransaction
 import net.corda.core.transactions.FilteredTransaction
 import net.corda.core.transactions.NotaryChangeWireTransaction
+import net.corda.corenode.internal.notary.NotaryInternalException
+import net.corda.corenode.internal.notary.NotaryServiceFlow
+import net.corda.corenode.internal.notary.SinglePartyNotaryService
 import java.time.Duration
 
 /**

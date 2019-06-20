@@ -30,8 +30,6 @@ import net.corda.core.crypto.*
 import net.corda.core.crypto.PartialMerkleTree.PartialTree
 import net.corda.core.flows.StateMachineRunId
 import net.corda.core.identity.*
-import net.corda.core.internal.DigitalSignatureWithCert
-import net.corda.core.internal.createComponentGroups
 import net.corda.core.internal.kotlinObjectInstance
 import net.corda.core.node.NodeInfo
 import net.corda.core.serialization.SerializedBytes
@@ -42,6 +40,8 @@ import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.parseAsHex
 import net.corda.core.utilities.toHexString
+import net.corda.corenode.internal.DigitalSignatureWithCert
+import net.corda.corenode.internal.createComponentGroups
 import net.corda.serialization.internal.AllWhitelist
 import net.corda.serialization.internal.amqp.*
 import java.math.BigDecimal

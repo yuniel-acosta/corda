@@ -1,9 +1,7 @@
 package net.corda.core.identity
 
 import net.corda.core.DoNotImplement
-import net.corda.core.contracts.PartyAndReference
 import net.corda.core.serialization.CordaSerializable
-import net.corda.core.utilities.OpaqueBytes
 import java.security.PublicKey
 
 /**
@@ -18,16 +16,4 @@ abstract class AbstractParty(val owningKey: PublicKey) {
 
     override fun hashCode(): Int = owningKey.hashCode()
     abstract fun nameOrNull(): CordaX500Name?
-
-    /**
-     * Build a reference to something being stored or issued by a party e.g. in a vault or (more likely) on their normal
-     * ledger.
-     */
-    abstract fun ref(bytes: OpaqueBytes): PartyAndReference
-
-    /**
-     * Build a reference to something being stored or issued by a party e.g. in a vault or (more likely) on their normal
-     * ledger.
-     */
-    fun ref(vararg bytes: Byte) = ref(OpaqueBytes.of(*bytes))
 }

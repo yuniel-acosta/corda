@@ -1,8 +1,8 @@
 package net.corda.node.services.statemachine
 
 import net.corda.core.flows.FlowSession
-import net.corda.core.internal.FlowIORequest
 import net.corda.core.utilities.loggerFor
+import net.corda.corenode.internal.FlowIORequest
 import net.corda.node.internal.LifecycleSupport
 import java.time.Duration
 import java.time.Instant

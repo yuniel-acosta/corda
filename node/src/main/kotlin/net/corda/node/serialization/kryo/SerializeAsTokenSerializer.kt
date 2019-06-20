@@ -6,8 +6,8 @@ import com.esotericsoftware.kryo.Serializer
 import com.esotericsoftware.kryo.io.Input
 import com.esotericsoftware.kryo.io.Output
 import net.corda.core.internal.castIfPossible
-import net.corda.core.serialization.SerializationToken
-import net.corda.core.serialization.SerializeAsToken
+import net.corda.corenode.serialization.SerializationToken
+import net.corda.corenode.serialization.SerializeAsToken
 
 /**
  * A Kryo serializer for [SerializeAsToken] implementations.

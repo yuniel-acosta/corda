@@ -1,9 +1,7 @@
 package net.corda.core.identity
 
 import net.corda.core.KeepForDJVM
-import net.corda.core.contracts.PartyAndReference
 import net.corda.core.crypto.toStringShort
-import net.corda.core.utilities.OpaqueBytes
 import java.security.PublicKey
 
 /**
@@ -13,6 +11,5 @@ import java.security.PublicKey
 @KeepForDJVM
 class AnonymousParty(owningKey: PublicKey) : AbstractParty(owningKey) {
     override fun nameOrNull(): CordaX500Name? = null
-    override fun ref(bytes: OpaqueBytes): PartyAndReference = PartyAndReference(this, bytes)
     override fun toString() = "Anonymous(${owningKey.toStringShort()})"
 }

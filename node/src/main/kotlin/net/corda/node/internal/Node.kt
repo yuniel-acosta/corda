@@ -18,8 +18,6 @@ import net.corda.core.internal.concurrent.openFuture
 import net.corda.core.internal.concurrent.thenMatch
 import net.corda.core.internal.div
 import net.corda.core.internal.errors.AddressBindingException
-import net.corda.core.internal.getJavaUpdateVersion
-import net.corda.core.internal.notary.NotaryService
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.messaging.RPCOps
 import net.corda.core.node.NetworkParameters
@@ -29,6 +27,8 @@ import net.corda.core.serialization.internal.SerializationEnvironment
 import net.corda.core.serialization.internal.nodeSerializationEnv
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.contextLogger
+import net.corda.corenode.internal.getJavaUpdateVersion
+import net.corda.corenode.internal.notary.NotaryService
 import net.corda.node.CordaClock
 import net.corda.node.SimpleClock
 import net.corda.node.VersionInfo

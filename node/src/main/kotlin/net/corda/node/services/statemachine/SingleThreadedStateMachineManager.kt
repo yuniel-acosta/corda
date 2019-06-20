@@ -13,7 +13,6 @@ import net.corda.core.flows.FlowInfo
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StateMachineRunId
 import net.corda.core.identity.Party
-import net.corda.core.internal.FlowStateMachine
 import net.corda.core.internal.ThreadBox
 import net.corda.core.internal.bufferUntilSubscribed
 import net.corda.core.internal.castIfPossible
@@ -31,6 +30,7 @@ import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.Try
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.debug
+import net.corda.corenode.internal.FlowStateMachine
 import net.corda.node.internal.InitiatedFlowFactory
 import net.corda.node.services.api.CheckpointStorage
 import net.corda.node.services.api.ServiceHubInternal

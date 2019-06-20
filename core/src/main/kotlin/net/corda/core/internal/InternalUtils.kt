@@ -5,12 +5,9 @@ package net.corda.core.internal
 import net.corda.core.DeleteForDJVM
 import net.corda.core.KeepForDJVM
 import net.corda.core.crypto.*
-import net.corda.core.serialization.SerializationDefaults
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.deserialize
-import net.corda.core.serialization.serialize
 import net.corda.core.utilities.OpaqueBytes
-import net.corda.core.utilities.UntrustworthyData
 import net.corda.core.utilities.seconds
 import org.slf4j.Logger
 import rx.Observable
@@ -36,7 +33,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.security.KeyPair
 import java.security.MessageDigest
-import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.cert.*
 import java.time.Duration
@@ -480,20 +476,6 @@ $trustAnchor""", e, this, e.index)
 }
 
 @DeleteForDJVM
-inline fun <T : Any> T.signWithCert(signer: (SerializedBytes<T>) -> DigitalSignatureWithCert): SignedDataWithCert<T> {
-    val serialised = serialize()
-    return SignedDataWithCert(serialised, signer(serialised))
-}
-
-@DeleteForDJVM
-fun <T : Any> T.signWithCert(privateKey: PrivateKey, certificate: X509Certificate): SignedDataWithCert<T> {
-    return signWithCert {
-        val signature = Crypto.doSign(privateKey, it.bytes)
-        DigitalSignatureWithCert(certificate, signature)
-    }
-}
-
-@DeleteForDJVM
 inline fun <T : Any> SerializedBytes<T>.sign(signer: (SerializedBytes<T>) -> DigitalSignature.WithKey): SignedData<T> {
     return SignedData(this, signer(this))
 }
@@ -509,17 +491,6 @@ val PublicKey.hash: SecureHash get() = encoded.sha256()
  * Extension method for providing a sumBy method that processes and returns a Long
  */
 fun <T> Iterable<T>.sumByLong(selector: (T) -> Long): Long = this.map { selector(it) }.sum()
-
-fun <T : Any> SerializedBytes<Any>.checkPayloadIs(type: Class<T>): UntrustworthyData<T> {
-    val payloadData: T = try {
-        val serializer = SerializationDefaults.SERIALIZATION_FACTORY
-        serializer.deserialize(this, type, SerializationDefaults.P2P_CONTEXT)
-    } catch (ex: Exception) {
-        throw IllegalArgumentException("Payload invalid", ex)
-    }
-    return type.castIfPossible(payloadData)?.let { UntrustworthyData(it) }
-            ?: throw IllegalArgumentException("We were expecting a ${type.name} but we instead got a ${payloadData.javaClass.name} ($payloadData)")
-}
 
 /**
  * Simple Map structure that can be used as a cache in the DJVM.
@@ -539,45 +510,6 @@ fun <K, V> MutableMap<K, V>.toSynchronised(): MutableMap<K, V> = Collections.syn
 /** @see Collections.synchronizedSet */
 fun <E> MutableSet<E>.toSynchronised(): MutableSet<E> = Collections.synchronizedSet(this)
 
-/**
- * List implementation that applies the expensive [transform] function only when the element is accessed and caches calculated values.
- * Size is very cheap as it doesn't call [transform].
- * Used internally by [net.corda.core.transactions.TraversableTransaction].
- */
-class LazyMappedList<T, U>(val originalList: List<T>, val transform: (T, Int) -> U) : AbstractList<U>() {
-    private val partialResolvedList = MutableList<U?>(originalList.size) { null }
-    override val size get() = originalList.size
-    override fun get(index: Int): U {
-        return partialResolvedList[index]
-                ?: transform(originalList[index], index).also { computed -> partialResolvedList[index] = computed }
-    }
-    internal fun eager(onError: (TransactionDeserialisationException, Int) -> U?) {
-        for (i in 0 until size) {
-            try {
-                get(i)
-            } catch (ex: TransactionDeserialisationException) {
-                partialResolvedList[i] = onError(ex, i)
-            }
-        }
-    }
-}
-
-/**
- * Returns a [List] implementation that applies the expensive [transform] function only when an element is accessed and then caches the calculated values.
- * Size is very cheap as it doesn't call [transform].
- */
-fun <T, U> List<T>.lazyMapped(transform: (T, Int) -> U): List<U> = LazyMappedList(this, transform)
-
-/**
- * Iterate over a [LazyMappedList], forcing it to transform all of its elements immediately.
- * This transformation is assumed to be "deserialisation". Does nothing for any other kind of [List].
- * WARNING: Any changes made to the [LazyMappedList] contents are PERMANENT!
- */
-fun <T> List<T>.eagerDeserialise(onError: (TransactionDeserialisationException, Int) -> T? = { ex, _ -> throw ex }) {
-    if (this is LazyMappedList<*, T>) {
-        eager(onError)
-    }
-}
 
 private const val MAX_SIZE = 100
 private val warnings = Collections.newSetFromMap(createSimpleCache<String, Boolean>(MAX_SIZE)).toSynchronised()

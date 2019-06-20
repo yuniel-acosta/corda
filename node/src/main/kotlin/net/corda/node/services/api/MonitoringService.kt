@@ -1,7 +1,7 @@
 package net.corda.node.services.api
 
 import com.codahale.metrics.MetricRegistry
-import net.corda.core.serialization.SingletonSerializeAsToken
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 
 /**
  * Provides access to various metrics and ways to notify monitoring services of things, for sysadmin purposes.

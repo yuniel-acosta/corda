@@ -1,8 +1,8 @@
 package net.corda.node.services.statemachine.transitions
 
 import net.corda.core.flows.InitiatingFlow
-import net.corda.core.internal.FlowIORequest
 import net.corda.core.utilities.Try
+import net.corda.corenode.internal.FlowIORequest
 import net.corda.node.services.statemachine.*
 
 /**

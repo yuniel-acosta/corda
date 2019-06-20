@@ -6,12 +6,12 @@ import net.corda.core.cordapp.Cordapp
 import net.corda.core.cordapp.CordappContext
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogic
-import net.corda.core.internal.DEPLOYED_CORDAPP_UPLOADER
-import net.corda.core.internal.cordapp.CordappImpl
 import net.corda.core.node.services.AttachmentId
 import net.corda.core.node.services.AttachmentStorage
-import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.contextLogger
+import net.corda.corenode.internal.DEPLOYED_CORDAPP_UPLOADER
+import net.corda.corenode.internal.cordapp.CordappImpl
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.nodeapi.internal.cordapp.CordappLoader
 import net.corda.node.services.persistence.AttachmentStorageInternal
 import java.net.URL

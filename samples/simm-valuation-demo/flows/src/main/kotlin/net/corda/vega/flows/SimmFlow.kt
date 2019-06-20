@@ -24,7 +24,7 @@ import net.corda.core.node.services.vault.QueryCriteria.LinearStateQueryCriteria
 import net.corda.core.node.services.vault.QueryCriteria.VaultQueryCriteria
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
-import net.corda.core.utilities.unwrap
+import net.corda.flows.utilities.unwrap
 import net.corda.finance.flows.TwoPartyDealFlow
 import net.corda.vega.analytics.BimmAnalysisUtils
 import net.corda.vega.analytics.InitialMarginTriple

@@ -5,6 +5,7 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
+import net.corda.corenode.identity.ref
 import net.corda.isolated.contracts.AnotherDummyContract
 
 @StartableByRPC

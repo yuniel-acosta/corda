@@ -170,7 +170,7 @@ class PartialMerkleTree(val root: PartialTree) {
      * @throws MerkleTreeException if the provided hash is not in the tree.
      */
     @Throws(MerkleTreeException::class)
-    internal fun leafIndex(leaf: SecureHash): Int {
+    fun leafIndex(leaf: SecureHash): Int {
         // Special handling if the tree consists of one node only.
         if (root is PartialTree.IncludedLeaf && root.hash == leaf) return 0
         val flagPath = mutableListOf<Boolean>()

@@ -16,12 +16,12 @@ import net.corda.core.node.NotaryInfo
 import net.corda.core.node.services.IdentityService
 import net.corda.core.node.services.NetworkMapCache.MapChange
 import net.corda.core.node.services.PartyInfo
-import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.serialization.serialize
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.Try
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.debug
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.node.internal.schemas.NodeInfoSchemaV1
 import net.corda.node.services.api.NetworkMapCacheInternal
 import net.corda.node.utilities.NonInvalidatingCache

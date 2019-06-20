@@ -11,6 +11,7 @@ description 'Corda finance module - contracts'
 
 dependencies {
     cordaCompile project(':core')
+    cordaCompile project(':core-node')
 
     testCompile project(':test-utils')
     testCompile project(path: ':core', configuration: 'testArtifacts')

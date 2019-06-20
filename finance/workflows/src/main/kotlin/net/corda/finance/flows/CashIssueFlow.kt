@@ -8,6 +8,7 @@ import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.ProgressTracker
+import net.corda.corenode.identity.ref
 import net.corda.finance.contracts.asset.Cash
 import net.corda.finance.flows.AbstractCashFlow.Companion.FINALISING_TX
 import net.corda.finance.flows.AbstractCashFlow.Companion.GENERATING_TX

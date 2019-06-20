@@ -6,7 +6,7 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
-import net.corda.core.utilities.unwrap
+import net.corda.flows.utilities.unwrap
 
 @StartableByRPC
 @InitiatingFlow

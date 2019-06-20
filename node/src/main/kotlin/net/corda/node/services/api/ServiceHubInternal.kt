@@ -5,7 +5,6 @@ import net.corda.core.context.InvocationContext
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StateMachineRunId
-import net.corda.core.internal.FlowStateMachine
 import net.corda.core.internal.NamedCacheFactory
 import net.corda.core.internal.concurrent.OpenFuture
 import net.corda.core.messaging.DataFeed
@@ -18,6 +17,7 @@ import net.corda.core.node.services.NetworkMapCacheBase
 import net.corda.core.node.services.TransactionStorage
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.contextLogger
+import net.corda.corenode.internal.FlowStateMachine
 import net.corda.node.internal.InitiatedFlowFactory
 import net.corda.node.internal.cordapp.CordappProviderInternal
 import net.corda.node.services.config.NodeConfiguration

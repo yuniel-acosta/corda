@@ -5,14 +5,14 @@ import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.flows.FlowInfo
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.Party
-import net.corda.core.internal.FlowIORequest
-import net.corda.core.internal.FlowStateMachine
 import net.corda.core.serialization.SerializationDefaults
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.serialize
 import net.corda.core.utilities.NonEmptySet
-import net.corda.core.utilities.UntrustworthyData
-import net.corda.core.internal.checkPayloadIs
+import net.corda.corenode.internal.FlowIORequest
+import net.corda.corenode.internal.FlowStateMachine
+import net.corda.corenode.internal.checkPayloadIs
+import net.corda.flows.utilities.UntrustworthyData
 
 class FlowSessionImpl(
         override val counterparty: Party,

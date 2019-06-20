@@ -6,8 +6,8 @@ import com.github.benmanes.caffeine.cache.CacheLoader
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
 import net.corda.core.internal.NamedCacheFactory
-import net.corda.core.serialization.SerializeAsToken
-import net.corda.core.serialization.SingletonSerializeAsToken
+import net.corda.corenode.serialization.SerializeAsToken
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.node.services.config.NodeConfiguration
 import java.util.concurrent.TimeUnit
 

@@ -13,11 +13,11 @@ import net.corda.core.node.NodeInfo
 import net.corda.core.node.services.NetworkMapCache
 import net.corda.core.node.services.PartyInfo
 import net.corda.core.serialization.SerializationDefaults
-import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.internal.nodeSerializationEnv
 import net.corda.core.serialization.serialize
 import net.corda.core.utilities.*
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.node.VersionInfo
 import net.corda.node.internal.LifecycleSupport
 import net.corda.node.internal.artemis.ReactiveArtemisConsumer

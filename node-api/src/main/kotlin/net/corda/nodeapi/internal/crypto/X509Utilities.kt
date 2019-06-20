@@ -7,6 +7,8 @@ import net.corda.core.crypto.random63BitValue
 import net.corda.core.internal.*
 import net.corda.core.utilities.days
 import net.corda.core.utilities.millis
+import net.corda.corenode.internal.SignedDataWithCert
+import net.corda.corenode.internal.signWithCert
 import org.bouncycastle.asn1.*
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x500.style.BCStyle

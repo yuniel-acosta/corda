@@ -14,13 +14,13 @@ import net.corda.core.internal.NamedCacheFactory
 import net.corda.core.internal.concurrent.OpenFuture
 import net.corda.core.internal.concurrent.openFuture
 import net.corda.core.internal.elapsedTime
-import net.corda.core.internal.notary.*
 import net.corda.core.schemas.PersistentStateRef
 import net.corda.core.serialization.CordaSerializable
-import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.serialization.serialize
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.debug
+import net.corda.corenode.internal.notary.*
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.node.utilities.AppendOnlyPersistentMap
 import net.corda.nodeapi.internal.persistence.CordaPersistence
 import net.corda.nodeapi.internal.persistence.NODE_DATABASE_PREFIX

@@ -5,6 +5,7 @@ description 'Corda Notary Demo - Contracts'
 
 dependencies {
     cordaCompile project(':core')
+    cordaCompile project(':core-node')
 }
 
 cordapp {

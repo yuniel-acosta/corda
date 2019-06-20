@@ -13,9 +13,7 @@ import net.corda.core.contracts.ContractClassName
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.sha256
 import net.corda.core.internal.*
-import net.corda.core.internal.Version
-import net.corda.core.internal.cordapp.CordappImpl.Companion.CORDAPP_CONTRACT_VERSION
-import net.corda.core.internal.cordapp.CordappImpl.Companion.DEFAULT_CORDAPP_VERSION
+import net.corda.core.internal.cordapp.CordappConstants.DEFAULT_CORDAPP_VERSION
 import net.corda.core.node.ServicesForResolution
 import net.corda.core.node.services.AttachmentId
 import net.corda.core.node.services.vault.AttachmentQueryCriteria
@@ -24,6 +22,13 @@ import net.corda.core.node.services.vault.Builder
 import net.corda.core.node.services.vault.Sort
 import net.corda.core.serialization.*
 import net.corda.core.utilities.contextLogger
+import net.corda.corenode.internal.*
+import net.corda.corenode.internal.Version
+import net.corda.corenode.internal.cordapp.CordappImpl.Companion.CORDAPP_CONTRACT_VERSION
+import net.corda.corenode.serialization.SerializationToken
+import net.corda.corenode.serialization.SerializeAsToken
+import net.corda.corenode.serialization.SerializeAsTokenContext
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.node.services.vault.HibernateAttachmentQueryCriteriaParser
 import net.corda.node.utilities.InfrequentlyMutatedCache
 import net.corda.node.utilities.NonInvalidatingCache

@@ -3,9 +3,9 @@ package net.corda.node.services.statemachine.transitions
 import net.corda.core.flows.FlowInfo
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.UnexpectedFlowEndException
-import net.corda.core.internal.FlowIORequest
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.utilities.toNonEmptySet
+import net.corda.corenode.internal.FlowIORequest
 import net.corda.node.services.statemachine.*
 
 /**

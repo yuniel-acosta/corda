@@ -13,7 +13,7 @@ import net.corda.core.node.NodeInfo
 import net.corda.core.serialization.serialize
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.getOrThrow
-import net.corda.core.utilities.unwrap
+import net.corda.flows.utilities.unwrap
 import net.corda.nodeapi.internal.DEV_INTERMEDIATE_CA
 import net.corda.nodeapi.internal.DEV_ROOT_CA
 import net.corda.nodeapi.internal.SignedNodeInfo

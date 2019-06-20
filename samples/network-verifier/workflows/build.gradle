@@ -5,6 +5,7 @@ description 'Corda Network Verifier - Workflows'
 
 dependencies {
     cordaCompile project(':core')
+    cordaCompile project(':core-node')
     cordapp project(':samples:network-verifier:contracts')
 
     testCompile project(":test-utils")

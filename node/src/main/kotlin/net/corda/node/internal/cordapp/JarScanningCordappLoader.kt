@@ -7,18 +7,21 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.sha256
 import net.corda.core.flows.*
 import net.corda.core.internal.*
-import net.corda.core.internal.cordapp.CordappImpl
-import net.corda.core.internal.cordapp.CordappImpl.Companion.UNKNOWN_INFO
-import net.corda.core.internal.cordapp.CordappResolver
+import net.corda.core.internal.cordapp.CordappConstants.MIN_PLATFORM_VERSION
+import net.corda.core.internal.cordapp.CordappConstants.TARGET_PLATFORM_VERSION
 import net.corda.core.internal.cordapp.get
-import net.corda.core.internal.notary.NotaryService
-import net.corda.core.internal.notary.SinglePartyNotaryService
 import net.corda.core.node.services.CordaService
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.serialization.SerializationCustomSerializer
 import net.corda.core.serialization.SerializationWhitelist
-import net.corda.core.serialization.SerializeAsToken
 import net.corda.core.utilities.contextLogger
+import net.corda.corenode.internal.cordapp.CordappImpl
+import net.corda.corenode.internal.cordapp.CordappImpl.Companion.UNKNOWN_INFO
+import net.corda.corenode.internal.cordapp.CordappResolver
+import net.corda.corenode.internal.notary.NotaryService
+import net.corda.corenode.internal.notary.SinglePartyNotaryService
+import net.corda.corenode.internal.warnContractWithoutConstraintPropagation
+import net.corda.corenode.serialization.SerializeAsToken
 import net.corda.node.VersionInfo
 import net.corda.nodeapi.internal.cordapp.CordappLoader
 import net.corda.nodeapi.internal.coreContractClasses
@@ -135,8 +138,8 @@ class JarScanningCordappLoader private constructor(private val cordappJarPaths: 
     private fun RestrictedScanResult.toCordapp(url: RestrictedURL): CordappImpl {
         val manifest: Manifest? = url.url.openStream().use { JarInputStream(it).manifest }
         val info = parseCordappInfo(manifest, CordappImpl.jarName(url.url))
-        val minPlatformVersion = manifest?.get(CordappImpl.MIN_PLATFORM_VERSION)?.toIntOrNull() ?: 1
-        val targetPlatformVersion = manifest?.get(CordappImpl.TARGET_PLATFORM_VERSION)?.toIntOrNull() ?: minPlatformVersion
+        val minPlatformVersion = manifest?.get(MIN_PLATFORM_VERSION)?.toIntOrNull() ?: 1
+        val targetPlatformVersion = manifest?.get(TARGET_PLATFORM_VERSION)?.toIntOrNull() ?: minPlatformVersion
         return CordappImpl(
                 findContractClassNames(this),
                 findInitiatedFlows(this),

@@ -13,9 +13,10 @@ import net.corda.core.node.services.*
 import net.corda.core.node.services.Vault.ConstraintInfo.Companion.constraintInfo
 import net.corda.core.node.services.vault.*
 import net.corda.core.schemas.PersistentStateRef
-import net.corda.core.serialization.SingletonSerializeAsToken
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.core.transactions.*
 import net.corda.core.utilities.*
+import net.corda.corenode.internal.TransactionDeserialisationException
 import net.corda.node.services.api.SchemaService
 import net.corda.node.services.api.VaultServiceInternal
 import net.corda.node.services.schema.PersistentStateService

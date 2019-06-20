@@ -3,8 +3,8 @@ package net.corda.node.internal.cordapp
 import net.corda.core.cordapp.Cordapp
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.ContractUpgradeFlow
-import net.corda.core.internal.cordapp.CordappImpl
 import net.corda.core.internal.location
+import net.corda.corenode.internal.cordapp.CordappImpl
 import net.corda.node.VersionInfo
 import net.corda.node.services.transactions.NodeNotarySchemaV1
 import net.corda.node.services.transactions.SimpleNotaryService

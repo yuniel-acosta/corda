@@ -26,6 +26,7 @@ dependencies {
 
     // Corda integration dependencies
     cordaCompile project(':core')
+    cordaCompile project(':core-node')
 
     // Cordapp dependencies
     // Specify your cordapp's dependencies below, including dependent cordapps

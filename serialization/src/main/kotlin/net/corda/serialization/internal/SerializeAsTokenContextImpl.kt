@@ -6,6 +6,8 @@ import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.*
 import net.corda.core.serialization.internal.CheckpointSerializationContext
 import net.corda.core.serialization.internal.CheckpointSerializer
+import net.corda.corenode.serialization.SerializeAsToken
+import net.corda.corenode.serialization.SerializeAsTokenContext
 
 val serializationContextKey = SerializeAsTokenContext::class.java
 

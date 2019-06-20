@@ -6,7 +6,7 @@ import net.corda.core.contracts.FungibleState
 import net.corda.core.contracts.LinearState
 import net.corda.core.schemas.*
 import net.corda.core.schemas.MappedSchemaValidator.crossReferencesToOtherMappedSchema
-import net.corda.core.serialization.SingletonSerializeAsToken
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.node.internal.DBNetworkParametersStorage
 import net.corda.node.internal.schemas.NodeInfoSchemaV1
 import net.corda.node.services.api.SchemaService

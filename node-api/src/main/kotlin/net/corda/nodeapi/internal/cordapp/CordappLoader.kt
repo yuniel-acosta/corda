@@ -2,8 +2,8 @@ package net.corda.nodeapi.internal.cordapp
 
 import net.corda.core.cordapp.Cordapp
 import net.corda.core.flows.FlowLogic
-import net.corda.core.internal.cordapp.CordappImpl
 import net.corda.core.schemas.MappedSchema
+import net.corda.corenode.internal.cordapp.CordappImpl
 
 /**
  * Handles loading [Cordapp]s.

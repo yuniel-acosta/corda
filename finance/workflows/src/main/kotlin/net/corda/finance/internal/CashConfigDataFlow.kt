@@ -7,7 +7,7 @@ import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
 import net.corda.core.serialization.CordaSerializable
-import net.corda.core.serialization.SingletonSerializeAsToken
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.finance.CHF
 import net.corda.finance.EUR
 import net.corda.finance.GBP

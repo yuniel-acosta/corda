@@ -5,7 +5,7 @@ import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.CacheLoader
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
-import net.corda.core.serialization.SingletonSerializeAsToken
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.node.services.config.NodeConfiguration
 import net.corda.node.utilities.BindableNamedCacheFactory
 import net.corda.nodeapi.internal.persistence.DatabaseConfig

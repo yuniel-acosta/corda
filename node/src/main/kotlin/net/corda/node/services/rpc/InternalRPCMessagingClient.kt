@@ -3,7 +3,7 @@ package net.corda.node.services.rpc
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.internal.NamedCacheFactory
 import net.corda.core.messaging.RPCOps
-import net.corda.core.serialization.SingletonSerializeAsToken
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.core.serialization.internal.nodeSerializationEnv
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.node.internal.security.RPCSecurityManager

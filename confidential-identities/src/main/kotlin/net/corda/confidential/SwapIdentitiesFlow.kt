@@ -10,7 +10,6 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.internal.VisibleForTesting
-import net.corda.core.internal.cordapp.CordappResolver
 import net.corda.core.internal.warnOnce
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.CordaSerializable
@@ -18,7 +17,8 @@ import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 import net.corda.core.utilities.ProgressTracker
-import net.corda.core.utilities.unwrap
+import net.corda.corenode.internal.cordapp.CordappResolver
+import net.corda.flows.utilities.unwrap
 import java.security.PublicKey
 import java.security.SignatureException
 import java.util.*

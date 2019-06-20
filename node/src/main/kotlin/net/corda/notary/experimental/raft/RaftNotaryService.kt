@@ -1,9 +1,9 @@
 package net.corda.notary.experimental.raft
 
 import net.corda.core.flows.FlowSession
-import net.corda.core.internal.notary.NotaryServiceFlow
-import net.corda.core.internal.notary.SinglePartyNotaryService
 import net.corda.core.utilities.seconds
+import net.corda.corenode.internal.notary.NotaryServiceFlow
+import net.corda.corenode.internal.notary.SinglePartyNotaryService
 import net.corda.node.services.api.ServiceHubInternal
 import net.corda.node.services.transactions.NonValidatingNotaryFlow
 import net.corda.node.services.transactions.ValidatingNotaryFlow

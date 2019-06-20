@@ -21,13 +21,13 @@ import net.corda.core.flows.NotarisationRequestSignature
 import net.corda.core.identity.Party
 import net.corda.core.internal.NamedCacheFactory
 import net.corda.core.internal.concurrent.openFuture
-import net.corda.core.internal.notary.UniquenessProvider
 import net.corda.core.serialization.SerializationDefaults
-import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.debug
+import net.corda.corenode.internal.notary.UniquenessProvider
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.node.utilities.AppendOnlyPersistentMap
 import net.corda.nodeapi.internal.config.MutualSslConfiguration
 import net.corda.nodeapi.internal.persistence.CordaPersistence

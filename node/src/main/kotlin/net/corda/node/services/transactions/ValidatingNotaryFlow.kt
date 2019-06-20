@@ -5,13 +5,14 @@ import net.corda.core.contracts.TimeWindow
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.NotarisationPayload
 import net.corda.core.flows.NotaryError
-import net.corda.core.internal.ResolveTransactionsFlow
-import net.corda.core.internal.notary.NotaryInternalException
-import net.corda.core.internal.notary.NotaryServiceFlow
-import net.corda.core.internal.notary.SinglePartyNotaryService
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionWithSignatures
 import net.corda.core.transactions.WireTransaction
+import net.corda.corenode.internal.ResolveTransactionsFlow
+import net.corda.corenode.internal.notary.NotaryInternalException
+import net.corda.corenode.internal.notary.NotaryServiceFlow
+import net.corda.corenode.internal.notary.NotaryServiceFlow.Companion.defaultEstimatedWaitTime
+import net.corda.corenode.internal.notary.SinglePartyNotaryService
 import java.time.Duration
 
 /**

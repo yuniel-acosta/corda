@@ -7,7 +7,6 @@ import net.corda.core.internal.createInstancesOfClassesImplementing
 import net.corda.core.context.Actor
 import net.corda.core.context.Trace
 import net.corda.core.identity.CordaX500Name
-import net.corda.core.internal.PLATFORM_VERSION
 import net.corda.core.messaging.ClientRpcSslOptions
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.serialization.SerializationCustomSerializer
@@ -17,6 +16,7 @@ import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.days
 import net.corda.core.utilities.minutes
 import net.corda.core.utilities.seconds
+import net.corda.corenode.internal.PLATFORM_VERSION
 import net.corda.nodeapi.internal.ArtemisTcpTransport.Companion.rpcConnectorTcpTransport
 import net.corda.serialization.internal.AMQP_RPC_CLIENT_CONTEXT
 import net.corda.serialization.internal.amqp.SerializationFactoryCacheKey

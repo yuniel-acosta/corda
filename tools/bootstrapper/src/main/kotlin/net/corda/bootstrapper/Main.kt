@@ -4,8 +4,8 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 import net.corda.cliutils.*
 import net.corda.common.configuration.parsing.internal.Configuration
-import net.corda.core.internal.PLATFORM_VERSION
 import net.corda.core.internal.exists
+import net.corda.corenode.internal.PLATFORM_VERSION
 import net.corda.nodeapi.internal.network.*
 import net.corda.nodeapi.internal.network.NetworkBootstrapper.Companion.DEFAULT_MAX_MESSAGE_SIZE
 import net.corda.nodeapi.internal.network.NetworkBootstrapper.Companion.DEFAULT_MAX_TRANSACTION_SIZE

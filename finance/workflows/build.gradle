@@ -33,6 +33,7 @@ dependencies {
     // cordapp project(':finance:workflows')
     // cordapp project(':finance:contracts')
     cordaCompile project(':core')
+    cordaCompile project(':core-node')
     cordaCompile project(':confidential-identities')
     
     cordapp project(':finance:contracts')

@@ -17,6 +17,7 @@ configurations {
 
 dependencies {
     compileOnly project(':core')
+    compileOnly project(':core-node')
 
     // Configure these by hand. It should be a minimal subset of core's dependencies,
     // and without any obviously non-deterministic ones such as Hibernate.

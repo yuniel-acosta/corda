@@ -14,6 +14,7 @@ import net.corda.core.schemas.PersistentState
 import net.corda.core.schemas.QueryableState
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.corenode.identity.ref
 import net.corda.finance.contracts.utils.sumCash
 import net.corda.finance.contracts.utils.sumCashOrNull
 import net.corda.finance.contracts.utils.sumCashOrZero

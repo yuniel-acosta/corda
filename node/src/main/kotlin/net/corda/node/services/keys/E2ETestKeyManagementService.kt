@@ -4,8 +4,8 @@ import net.corda.core.crypto.*
 import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.internal.ThreadBox
 import net.corda.core.node.services.IdentityService
-import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.crypto.internal.AliasPrivateKey
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.nodeapi.internal.cryptoservice.bouncycastle.BCCryptoService
 import net.corda.nodeapi.internal.cryptoservice.CryptoService
 import org.bouncycastle.operator.ContentSigner

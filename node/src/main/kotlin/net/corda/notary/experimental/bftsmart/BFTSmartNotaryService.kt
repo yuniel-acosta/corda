@@ -7,9 +7,6 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.SignedData
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
-import net.corda.core.internal.notary.NotaryInternalException
-import net.corda.core.internal.notary.NotaryService
-import net.corda.core.internal.notary.verifySignature
 import net.corda.core.schemas.PersistentStateRef
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
@@ -18,7 +15,10 @@ import net.corda.core.transactions.FilteredTransaction
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.debug
 import net.corda.core.utilities.getOrThrow
-import net.corda.core.utilities.unwrap
+import net.corda.corenode.internal.notary.NotaryInternalException
+import net.corda.flows.utilities.unwrap
+import net.corda.corenode.internal.notary.NotaryService
+import net.corda.corenode.internal.notary.verifySignature
 import net.corda.node.services.api.ServiceHubInternal
 import net.corda.node.services.transactions.PersistentUniquenessProvider
 import net.corda.node.utilities.AppendOnlyPersistentMap

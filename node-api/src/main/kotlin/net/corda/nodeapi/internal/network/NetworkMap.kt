@@ -2,10 +2,10 @@ package net.corda.nodeapi.internal.network
 
 import net.corda.core.crypto.SecureHash
 import net.corda.core.internal.CertRole
-import net.corda.core.internal.SignedDataWithCert
 import net.corda.core.node.NetworkParameters
 import net.corda.core.node.NodeInfo
 import net.corda.core.serialization.CordaSerializable
+import net.corda.corenode.internal.SignedDataWithCert
 import net.corda.nodeapi.internal.crypto.X509Utilities
 import java.security.cert.X509Certificate
 import java.time.Instant

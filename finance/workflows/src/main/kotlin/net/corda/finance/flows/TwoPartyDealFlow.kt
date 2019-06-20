@@ -7,15 +7,15 @@ import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.*
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
-import net.corda.core.identity.excludeNotary
-import net.corda.core.identity.groupPublicKeysByWellKnownParty
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.seconds
 import net.corda.core.utilities.trace
-import net.corda.core.utilities.unwrap
+import net.corda.corenode.identity.excludeNotary
+import net.corda.corenode.identity.groupPublicKeysByWellKnownParty
+import net.corda.flows.utilities.unwrap
 import net.corda.finance.contracts.DealState
 import java.security.PublicKey
 

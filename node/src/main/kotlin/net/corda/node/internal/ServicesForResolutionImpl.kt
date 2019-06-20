@@ -2,7 +2,6 @@ package net.corda.node.internal
 
 import net.corda.core.contracts.*
 import net.corda.core.cordapp.CordappProvider
-import net.corda.core.internal.SerializedStateAndRef
 import net.corda.core.node.NetworkParameters
 import net.corda.core.node.ServicesForResolution
 import net.corda.core.node.services.AttachmentStorage
@@ -13,6 +12,7 @@ import net.corda.core.transactions.ContractUpgradeWireTransaction
 import net.corda.core.transactions.NotaryChangeWireTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.transactions.WireTransaction.Companion.resolveStateRefBinaryComponent
+import net.corda.corenode.internal.SerializedStateAndRef
 
 data class ServicesForResolutionImpl(
         override val identityService: IdentityService,

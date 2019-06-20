@@ -28,6 +28,7 @@ import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.NonEmptySet
 import net.corda.core.utilities.seconds
+import net.corda.corenode.identity.ref
 import net.corda.finance.contracts.NetCommand
 import net.corda.finance.contracts.NetType
 import net.corda.finance.contracts.NettableState

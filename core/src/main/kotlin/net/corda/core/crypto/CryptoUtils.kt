@@ -5,7 +5,6 @@ package net.corda.core.crypto
 
 import net.corda.core.DeleteForDJVM
 import net.corda.core.KeepForDJVM
-import net.corda.core.contracts.PrivacySalt
 import net.corda.core.crypto.internal.platformSecureRandomFactory
 import net.corda.core.serialization.SerializationDefaults
 import net.corda.core.serialization.serialize

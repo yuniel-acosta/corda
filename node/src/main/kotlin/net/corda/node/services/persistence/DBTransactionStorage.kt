@@ -9,11 +9,12 @@ import net.corda.core.internal.VisibleForTesting
 import net.corda.core.internal.bufferUntilSubscribed
 import net.corda.core.internal.concurrent.doneFuture
 import net.corda.core.messaging.DataFeed
+import net.corda.core.messaging.toFuture
 import net.corda.core.serialization.*
 import net.corda.core.serialization.internal.effectiveSerializationEnv
-import net.corda.core.toFuture
 import net.corda.core.transactions.CoreTransaction
 import net.corda.core.transactions.SignedTransaction
+import net.corda.corenode.serialization.SingletonSerializeAsToken
 import net.corda.node.services.api.WritableTransactionStorage
 import net.corda.node.services.statemachine.FlowStateMachineImpl
 import net.corda.node.utilities.AppendOnlyPersistentMapBase
