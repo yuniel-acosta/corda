@@ -61,6 +61,15 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
             address "localhost:10006"
             adminAddress "localhost:10007"
         }
+        extraConfig = [
+                "dataSourceProperties.dataSourceClassName"  : "com.microsoft.sqlserver.jdbc.SQLServerDataSource",
+                "dataSourceProperties.dataSource.url"       : "jdbc:sqlserver://localhost:1433;databaseName=PartyA",
+                "dataSourceProperties.dataSource.user"      : "PartyA",
+                "dataSourceProperties.dataSource.password"  : "Passw0rd",
+                "database.transactionIsolationLevel"        : "READ_COMMITTED",
+                "database.runMigration"                     : "true",
+                "jarDirs"                                   : ["C:/dbdrivers/sql/sqljdbc_6.2/enu"],
+                "jvmArgs"                                   : ["-Xms5g", "-Xmx10g", "-Xss10m", "-XX:MaxJavaStackTraceDepth=-1"]
     }
     node {
         name "O=Bank B,L=New York,C=US"
@@ -71,16 +80,7 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
             address "localhost:10009"
             adminAddress "localhost:10010"
         }
-    }
-    node {
-        name "O=BankOfCorda,L=New York,C=US"
-        p2pPort 10011
-        cordapps = ["$project.group:finance:$corda_release_version"]
-        rpcUsers = ext.rpcUsers
-        rpcSettings {
-            address "localhost:10012"
-            adminAddress "localhost:10013"
-        }
+
     }
 }
 

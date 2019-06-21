@@ -77,13 +77,16 @@ object ExampleFlow {
             // Verify that the transaction is valid.
             txBuilder.verify(serviceHub)
 
-
             // create loads of objects on the heap
             class Crap(val someCrap: String, val index: Int)
 
-            val reallyLargeListOfCrap = mutableListOf<Crap>()
-            for(i in 1..60000) {
-                reallyLargeListOfCrap.add(Crap(UUID.randomUUID().toString(), i))
+            val reallyReallyLargeListOfCrap = mutableListOf<MutableList<Crap>>()
+            for(i in 1..iouValue) {
+                val reallyLargeListOfCrap = mutableListOf<Crap>()
+                for (i in 1..100000) {
+                    reallyLargeListOfCrap.add(Crap(UUID.randomUUID().toString(), i))
+                }
+                reallyReallyLargeListOfCrap.add(reallyLargeListOfCrap)
             }
 
             // Stage 3.
