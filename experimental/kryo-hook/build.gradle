@@ -24,7 +24,6 @@ repositories {
 }
 
 apply plugin: 'kotlin'
-apply plugin: 'kotlin-kapt'
 apply plugin: 'idea'
 
 description 'A javaagent to allow hooking into Kryo'
@@ -35,6 +34,14 @@ dependencies {
     compile "javassist:javassist:$javaassist_version"
     compile "com.esotericsoftware:kryo:4.0.0"
     compile "co.paralleluniverse:quasar-core:$quasar_version:jdk8"
+
+    compile (project(':core')) {
+        transitive = false
+    }
+
+    // SLF4J: commons-logging bindings for a SLF4J back end
+    compile "org.slf4j:jcl-over-slf4j:$slf4j_version"
+    compile "org.slf4j:slf4j-api:$slf4j_version"
 }
 
 jar {

@@ -5,8 +5,10 @@ import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.Output
 import javassist.ClassPool
 import javassist.CtClass
+import net.corda.kryohook.KryoHookAgent.Companion.instrumentClassname
+import net.corda.kryohook.KryoHookAgent.Companion.minimumSize
+import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
-import java.lang.StringBuilder
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
 import java.security.ProtectionDomain
@@ -15,34 +17,40 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class KryoHookAgent {
     companion object {
+        val DEFAULT_INSTRUMENT_CLASSNAME = "net.corda.node.services.statemachine.FlowStateMachineImpl"
+        val DEFAULT_MINIMUM_SIZE = 8 * 1024
+        var instrumentClassname = DEFAULT_INSTRUMENT_CLASSNAME
+        var minimumSize = DEFAULT_MINIMUM_SIZE
+
+        val log by lazy {
+            LoggerFactory.getLogger("KryoHook")
+        }
+
         @JvmStatic
         fun premain(argumentsString: String?, instrumentation: Instrumentation) {
-            Runtime.getRuntime().addShutdownHook(Thread {
-                val statsTrees = KryoHook.events.values.flatMap {
-                    readTrees(it, 0).second
-                }
-                val builder = StringBuilder()
-                statsTrees.forEach {
-                    prettyStatsTree(0, it, builder)
-                }
-                print(builder.toString())
-            })
+            parseArguments(argumentsString)
             instrumentation.addTransformer(KryoHook)
         }
-    }
-}
 
-fun prettyStatsTree(indent: Int, statsTree: StatsTree, builder: StringBuilder) {
-    when (statsTree) {
-        is StatsTree.Object -> {
-            builder.append(kotlin.CharArray(indent) { ' ' })
-            builder.append(statsTree.className)
-            builder.append(" ")
-            builder.append(statsTree.size)
-            builder.append("\n")
-            for (child in statsTree.children) {
-                prettyStatsTree(indent + 2, child, builder)
+        fun parseArguments(argumentsString: String?) {
+            instrumentClassname = DEFAULT_INSTRUMENT_CLASSNAME
+            minimumSize = DEFAULT_MINIMUM_SIZE
+            argumentsString?.let {
+                val nvpList = it.split(",")
+                nvpList.forEach {
+                    val nvpItem = it.split("=")
+                    if (nvpItem.size == 2) {
+                        if (nvpItem[0].trim() == "instrumentClassname")
+                            instrumentClassname = nvpItem[1]
+                        else if (nvpItem[1].trim() == "minimumSize")
+                            try {
+                                minimumSize = nvpItem[1].toInt()
+                            } catch (e: NumberFormatException) {
+                            }
+                    }
+                }
             }
+            println("Running Kryo hook agent with following arguments: instrumentClassname = $instrumentClassname, minimumSize = $minimumSize")
         }
     }
 }
@@ -95,19 +103,42 @@ object KryoHook : ClassFileTransformer {
     }
 
     // StrandID -> StatsEvent map
-    val events = ConcurrentHashMap<Long, ArrayList<StatsEvent>>()
+    val events = ConcurrentHashMap<Long, Pair<ArrayList<StatsEvent>, AtomicInteger>>()
 
     @JvmStatic
     fun writeEnter(kryo: Kryo, output: Output, obj: Any) {
-        events.getOrPut(Strand.currentStrand().id) { ArrayList() }.add(
-                StatsEvent.Enter(obj.javaClass.name, output.total())
-        )
+        val (list, count) = events.getOrPut(Strand.currentStrand().id) { Pair(ArrayList(), AtomicInteger(0)) }
+        list.add(StatsEvent.Enter(obj.javaClass.name, output.total()))
+        count.incrementAndGet()
     }
     @JvmStatic
     fun writeExit(kryo: Kryo, output: Output, obj: Any) {
-        events.get(Strand.currentStrand().id)!!.add(
-                StatsEvent.Exit(obj.javaClass.name, output.total())
-        )
+        val (list, count) = events[Strand.currentStrand().id]!!
+        list.add(StatsEvent.Exit(obj.javaClass.name, output.total()))
+        if ((count.decrementAndGet() == 0) &&
+                (obj.javaClass.name == instrumentClassname) &&
+                (output.total() >= minimumSize)) {
+            val sb = StringBuilder()
+            prettyStatsTree(0, readTree(list, 0).second, sb)
+            KryoHookAgent.log.info("$obj\n$sb")
+            list.clear()
+        }
+    }
+
+    private fun prettyStatsTree(indent: Int, statsTree: StatsTree, builder: StringBuilder) {
+        when (statsTree) {
+            is StatsTree.Object -> {
+                builder.append(String.format("%03d:", indent / 2))
+                builder.append(kotlin.CharArray(indent) { ' ' })
+                builder.append(statsTree.className)
+                builder.append(" ")
+                builder.append(String.format("%,d", statsTree.size))
+                builder.append("\n")
+                for (child in statsTree.children) {
+                    prettyStatsTree(indent + 2, child, builder)
+                }
+            }
+        }
     }
 }
 
