@@ -28,3 +28,7 @@ annotation class CordaSerializable
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.FUNCTION)
 annotation class SerializableCalculatedProperty
+
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class SerializedAliased(val aliasClassName: String)

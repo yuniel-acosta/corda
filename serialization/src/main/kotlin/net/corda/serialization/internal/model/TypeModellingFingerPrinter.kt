@@ -195,6 +195,7 @@ private class FingerPrintingState(
         val identifier = type.typeIdentifier
         when (identifier) {
             is TypeIdentifier.ArrayOf -> writer.write(identifier.componentType.name).writeArray()
+            is TypeIdentifier.Alias -> writer.write(identifier.wireIdentifier.name)
             else -> writer.write(identifier.name)
         }
     }

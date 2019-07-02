@@ -6,6 +6,7 @@ import org.apache.qpid.proton.amqp.*
 import java.io.NotSerializableException
 import java.lang.StringBuilder
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Thrown if the type string parser enters an illegal state.
@@ -20,6 +21,10 @@ object AMQPTypeIdentifierParser {
     internal const val MAX_TYPE_PARAM_DEPTH = 32
     private const val MAX_ARRAY_DEPTH = 32
 
+    val remoteTypeMapping = mapOf(
+            "" to ""
+    )
+
     /**
      * Given a string representing a serialized AMQP type, construct a TypeIdentifier for that string.
      *
@@ -28,9 +33,14 @@ object AMQPTypeIdentifierParser {
      */
     fun parse(typeString: String): TypeIdentifier {
         validate(typeString)
-        return typeString.fold<ParseState>(ParseState.ParsingRawType(null)) { state, c ->
+        return alias(typeString.fold<ParseState>(ParseState.ParsingRawType(null)) { state, c ->
                     state.accept(c)
-                }.getTypeIdentifier()
+        }.getTypeIdentifier())
+    }
+
+    private fun alias(remote: TypeIdentifier): TypeIdentifier {
+        val localTypeName = remoteTypeMapping[remote.name]
+        return if (localTypeName != null) TypeIdentifier.Alias(TypeIdentifier.Unparameterised(localTypeName), remote) else remote
     }
 
     // Make sure our inputs aren't designed to blow things up.

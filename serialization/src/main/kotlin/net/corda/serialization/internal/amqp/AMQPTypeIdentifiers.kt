@@ -48,6 +48,7 @@ object AMQPTypeIdentifiers {
         is TypeIdentifier.Unparameterised -> primitiveTypeNamesByName[typeIdentifier] ?: typeIdentifier.name
         is TypeIdentifier.UnknownType -> "?"
         is TypeIdentifier.TopType -> Any::class.java.name
+        is TypeIdentifier.Alias -> nameForType(typeIdentifier.wireIdentifier)
         is TypeIdentifier.ArrayOf ->
             if (typeIdentifier == primitiveByteArrayType) "binary"
             else nameForType(typeIdentifier.componentType) +

@@ -1,6 +1,7 @@
 package net.corda.serialization.internal.model
 
 import com.google.common.reflect.TypeToken
+import net.corda.core.serialization.SerializedAliased
 import net.corda.serialization.internal.amqp.asClass
 import java.io.NotSerializableException
 import java.lang.reflect.*
@@ -50,6 +51,7 @@ sealed class TypeIdentifier {
             is TypeIdentifier.Unparameterised -> name.simplifyClassNameIfRequired(simplifyClassNames)
             is TypeIdentifier.Erased -> "${name.simplifyClassNameIfRequired(simplifyClassNames)} (erased)"
             is TypeIdentifier.ArrayOf -> "${componentType.prettyPrint(simplifyClassNames)}[]"
+        is TypeIdentifier.Alias -> "${name.simplifyClassNameIfRequired(simplifyClassNames)} aliased to ${wireIdentifier.name.simplifyClassNameIfRequired(simplifyClassNames)}"
             is TypeIdentifier.Parameterised ->
                 name.simplifyClassNameIfRequired(simplifyClassNames) + parameters.joinToString(", ", "<", ">") {
                     it.prettyPrint(simplifyClassNames)
@@ -68,12 +70,12 @@ sealed class TypeIdentifier {
          *
          * @param type The class to get a [TypeIdentifier] for.
          */
-        fun forClass(type: Class<*>): TypeIdentifier = when {
+        fun forClass(type: Class<*>): TypeIdentifier = alias(when {
             type.name == "java.lang.Object" -> TopType
             type.isArray -> ArrayOf(forClass(type.componentType))
             type.typeParameters.isEmpty() -> Unparameterised(type.name)
             else -> Erased(type.name, type.typeParameters.size)
-        }
+        }, type)
 
         /**
          * Obtain the [TypeIdentifier] for a Java [Type] (typically obtained by calling one of
@@ -101,6 +103,11 @@ sealed class TypeIdentifier {
                 is WildcardType -> type.upperBound.let { if (it == type) UnknownType else forGenericType(it) }
                 else -> UnknownType
             }
+
+        private fun alias(unaliased: TypeIdentifier, classInfo: Class<*>): TypeIdentifier {
+            val annotation = classInfo.getAnnotationsByType(SerializedAliased::class.java).singleOrNull()
+            return if (annotation != null) Alias(unaliased, Unparameterised(annotation.aliasClassName)) else unaliased
+        }
     }
 
     /**
@@ -217,6 +224,16 @@ sealed class TypeIdentifier {
                     owner?.getLocalType(classLoader),
                     parameters.map { it.getLocalType(classLoader) }.toTypedArray())
         }
+    }
+
+    /**
+     * A class that is serialised under a different identifier than its instances live - e.g.
+     * because it has been moved
+     */
+    data class Alias(val localIdentifier: TypeIdentifier, val wireIdentifier: TypeIdentifier) : TypeIdentifier() {
+        override val name get() = localIdentifier.name
+        override fun getLocalType(classLoader: ClassLoader): Type = localIdentifier.getLocalType(classLoader)
+        override fun toString() = "Alias($wireIdentifier $localIdentifier)"
     }
 }
 
