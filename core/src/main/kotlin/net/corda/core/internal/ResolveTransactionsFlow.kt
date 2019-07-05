@@ -75,7 +75,7 @@ class ResolveTransactionsFlow(private val txHashes: Set<SecureHash>,
 
     // TODO: Figure out a more appropriate DOS limit here, 5000 is simply a very bad guess.
     /** The maximum number of transactions this flow will try to download before bailing out. */
-    var transactionCountLimit = 5000
+    var transactionCountLimit = System.getProperty("net.corda.node.internal.resolve_chain_limit", "5000").toInt()
         set(value) {
             require(value > 0) { "$value is not a valid count limit" }
             field = value
