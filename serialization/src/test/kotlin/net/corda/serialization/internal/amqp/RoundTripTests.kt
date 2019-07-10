@@ -17,6 +17,7 @@ import net.corda.serialization.internal.amqp.custom.PublicKeySerializer
 import net.corda.serialization.internal.amqp.testutils.deserialize
 import net.corda.serialization.internal.amqp.testutils.serialize
 import net.corda.serialization.internal.amqp.testutils.testDefaultFactoryNoEvolution
+import net.corda.serialization.internal.amqp.testutils.testSerializationContext
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.Test
@@ -189,8 +190,11 @@ class RoundTripTests {
     }
 
     @CordaSerializable
-    @SerializedAliased("com.newnamespace.AliasTest")
+    @SerializedAliased("net.corda.serialization.internal.amqp.RoundTripTests\$OriginalTestType")
     class AliasTestType(val value: String)
+
+    @CordaSerializable
+    class OriginalTestType(val value: String)
 
     @Test
     fun aliasedSerialization(){
@@ -201,9 +205,17 @@ class RoundTripTests {
 
         assertEquals(
                 """
-                AliasTestType aliased to AliasTest(value: String)
+                AliasTestType aliased to OriginalTestType(value: String)
                   value: String
                 """.trimIndent(),
                 factory.getTypeInformation(instance::class.java).prettyPrint())
+
+        val originalInstance = OriginalTestType("second value")
+        val oBytes = SerializationOutput(factory).serialize(originalInstance)
+
+        val roundTrip2 = DeserializationInput(factory).deserialize(oBytes, AliasTestType::class.java, testSerializationContext )
+        val roundTrip3 = DeserializationInput(factory).deserialize(bytes, OriginalTestType::class.java, testSerializationContext )
+
     }
+
 }
