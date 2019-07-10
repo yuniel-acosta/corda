@@ -44,7 +44,7 @@ class DeserializationInput constructor(
                 byteSequence: ByteSequence,
                 encodingWhitelist: EncodingWhitelist,
                 task: (ByteBuffer) -> T
-        ) : T {
+        ): T {
             // Check that the lead bytes match expected header
             val amqpSequence = amqpMagic.consume(byteSequence)
                     ?: throw AMQPNoTypeNotSerializableException("Serialization header does not match.")
@@ -97,7 +97,7 @@ class DeserializationInput constructor(
     private fun <R> des(generator: () -> R): R {
         try {
             return generator()
-        } catch (amqp : AMQPNotSerializableException) {
+        } catch (amqp: AMQPNotSerializableException) {
             amqp.log("Deserialize", logger)
             throw NotSerializableException(amqp.mitigation)
         } catch (nse: NotSerializableException) {
@@ -155,7 +155,7 @@ class DeserializationInput constructor(
                     throw AMQPNotSerializableException(
                             type,
                             "Retrieval of existing reference failed. Requested index $objectIndex " +
-                            "is outside of the bounds for the list of size: ${objectHistory.size}")
+                                    "is outside of the bounds for the list of size: ${objectHistory.size}")
 
                 val objectRetrieved = objectHistory[objectIndex]
                 if (!objectRetrieved::class.java.isSubClassOf(type.asClass())) {
@@ -177,7 +177,7 @@ class DeserializationInput constructor(
                             throw AMQPNotSerializableException(
                                     type,
                                     "Described type with descriptor ${obj.descriptor} was " +
-                                    "expected to be of type $type but was ${serializer.type}")
+                                            "expected to be of type $type but was ${serializer.type}")
                         }
                         serializer.readObject(obj.described, schemas, this, context)
                     }

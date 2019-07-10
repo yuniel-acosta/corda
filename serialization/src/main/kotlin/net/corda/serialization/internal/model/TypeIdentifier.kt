@@ -51,7 +51,7 @@ sealed class TypeIdentifier {
             is TypeIdentifier.Unparameterised -> name.simplifyClassNameIfRequired(simplifyClassNames)
             is TypeIdentifier.Erased -> "${name.simplifyClassNameIfRequired(simplifyClassNames)} (erased)"
             is TypeIdentifier.ArrayOf -> "${componentType.prettyPrint(simplifyClassNames)}[]"
-        is TypeIdentifier.Alias -> "${name.simplifyClassNameIfRequired(simplifyClassNames)} aliased to ${wireIdentifier.name.simplifyClassNameIfRequired(simplifyClassNames)}"
+            is TypeIdentifier.Alias -> "${name.simplifyClassNameIfRequired(simplifyClassNames)} aliased to ${wireIdentifier.name.simplifyClassNameIfRequired(simplifyClassNames)}"
             is TypeIdentifier.Parameterised ->
                 name.simplifyClassNameIfRequired(simplifyClassNames) + parameters.joinToString(", ", "<", ">") {
                     it.prettyPrint(simplifyClassNames)

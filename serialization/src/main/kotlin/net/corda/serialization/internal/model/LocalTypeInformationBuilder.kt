@@ -86,6 +86,7 @@ internal data class LocalTypeInformationBuilder(val lookup: LocalTypeLookup,
         return when (typeIdentifier) {
             is TypeIdentifier.TopType -> LocalTypeInformation.Top
             is TypeIdentifier.UnknownType -> LocalTypeInformation.Unknown
+            is TypeIdentifier.Alias,
             is TypeIdentifier.Unparameterised,
             is TypeIdentifier.Erased -> buildForClass(rawType, typeIdentifier, isOpaque)
             is TypeIdentifier.ArrayOf -> {

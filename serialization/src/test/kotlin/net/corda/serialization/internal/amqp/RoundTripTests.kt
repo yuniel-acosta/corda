@@ -10,7 +10,9 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.serialization.ConstructorForDeserialization
+import net.corda.core.serialization.CordaSerializable
 import net.corda.core.serialization.SerializableCalculatedProperty
+import net.corda.core.serialization.SerializedAliased
 import net.corda.serialization.internal.amqp.custom.PublicKeySerializer
 import net.corda.serialization.internal.amqp.testutils.deserialize
 import net.corda.serialization.internal.amqp.testutils.serialize
@@ -182,6 +184,25 @@ class RoundTripTests {
                 """
                 C (erased)(t: *): I2<*>
                   t: *
+                """.trimIndent(),
+                factory.getTypeInformation(instance::class.java).prettyPrint())
+    }
+
+    @CordaSerializable
+    @SerializedAliased("com.newnamespace.AliasTest")
+    class AliasTestType(val value: String)
+
+    @Test
+    fun aliasedSerialization(){
+        val instance = AliasTestType("some value")
+        val factory = testDefaultFactoryNoEvolution()
+        val bytes = SerializationOutput(factory).serialize(instance)
+        val roundTrip = DeserializationInput(factory).deserialize(bytes)
+
+        assertEquals(
+                """
+                AliasTestType aliased to AliasTest(value: String)
+                  value: String
                 """.trimIndent(),
                 factory.getTypeInformation(instance::class.java).prettyPrint())
     }

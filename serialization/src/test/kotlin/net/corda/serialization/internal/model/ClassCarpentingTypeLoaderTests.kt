@@ -106,6 +106,8 @@ class ClassCarpentingTypeLoaderTests {
                 typeIdentifier.prettyPrint(),
                 TypeIdentifier.Unparameterised(typeIdentifier.name))
             is TypeIdentifier.TopType -> RemoteTypeInformation.Top
+            is TypeIdentifier.Alias -> RemoteTypeInformation.Unparameterised(typeIdentifier.wireIdentifier.prettyPrint(),
+                    typeIdentifier.wireIdentifier)
             is TypeIdentifier.UnknownType -> RemoteTypeInformation.Unknown
         }
 
