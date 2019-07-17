@@ -4,6 +4,7 @@ import net.corda.core.KeepForDJVM
 import net.corda.core.internal.VisibleForTesting
 import net.corda.core.serialization.EncodingWhitelist
 import net.corda.core.serialization.SerializationContext
+import net.corda.core.serialization.SerializedAliased
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.loggerFor
@@ -168,6 +169,11 @@ class DeserializationInput constructor(
             } else {
                 val objectRead = when (obj) {
                     is DescribedType -> {
+                        val annotation = type.asClass().getAnnotationsByType(SerializedAliased::class.java).firstOrNull()
+                        if (annotation != null) {
+                            AMQPTypeIdentifierParser.remoteTypeMapping.computeIfAbsent(annotation.aliasClassName) { type.asClass().name }
+                        }
+
                         // Look up serializer in factory by descriptor
                         val serializer = serializerFactory.get(obj.descriptor.toString(), schemas, context)
                         if (type != TypeIdentifier.UnknownType.getLocalType() && serializer.type != type && with(serializer.type) {

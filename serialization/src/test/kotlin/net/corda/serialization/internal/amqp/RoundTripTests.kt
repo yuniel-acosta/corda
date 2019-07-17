@@ -114,7 +114,7 @@ class RoundTripTests {
 
     @Test
     fun inheritedCalculatedFunction() {
-        class C: I {
+        class C : I {
             var i: Int = 0
             override val squared get() = i * i
         }
@@ -128,7 +128,7 @@ class RoundTripTests {
 
     @Test
     fun inheritedCalculatedFunctionIsNotCalculated() {
-        class C(override val squared: Int): I
+        class C(override val squared: Int) : I
 
         val instance = C(2)
         val factory = testDefaultFactoryNoEvolution()
@@ -137,12 +137,12 @@ class RoundTripTests {
         assertThat(deserialized.squared).isEqualTo(2)
     }
 
-    data class MembershipState<out T: Any>(val metadata: T): ContractState {
+    data class MembershipState<out T : Any>(val metadata: T) : ContractState {
         override val participants: List<AbstractParty>
             get() = emptyList()
     }
 
-    data class OnMembershipChanged(val changedMembership : StateAndRef<MembershipState<Any>>)
+    data class OnMembershipChanged(val changedMembership: StateAndRef<MembershipState<Any>>)
 
     @Test
     fun canSerializeClassesWithUntypedProperties() {
@@ -196,26 +196,91 @@ class RoundTripTests {
     @CordaSerializable
     class OriginalTestType(val value: String)
 
+    @CordaSerializable
+    @SerializedAliased("net.corda.serialization.internal.amqp.RoundTripTests\$OriginalComplexType")
+    class AliasComplexType(val aValue: AliasTestType)
+
+    @CordaSerializable
+    class OriginalComplexType(val aValue: OriginalTestType)
+
     @Test
-    fun aliasedSerialization(){
-        val instance = AliasTestType("some value")
+    fun aliasedSerialization() {
+        val aliasInstance = AliasTestType("some value")
         val factory = testDefaultFactoryNoEvolution()
-        val bytes = SerializationOutput(factory).serialize(instance)
-        val roundTrip = DeserializationInput(factory).deserialize(bytes)
+        val aBytes = SerializationOutput(factory).serialize(aliasInstance)
 
         assertEquals(
                 """
                 AliasTestType aliased to OriginalTestType(value: String)
                   value: String
                 """.trimIndent(),
-                factory.getTypeInformation(instance::class.java).prettyPrint())
+                factory.getTypeInformation(aliasInstance::class.java).prettyPrint())
 
         val originalInstance = OriginalTestType("second value")
         val oBytes = SerializationOutput(factory).serialize(originalInstance)
+        assertEquals(
+                """
+                OriginalTestType(value: String)
+                  value: String
+                """.trimIndent(),
+                factory.getTypeInformation(originalInstance::class.java).prettyPrint())
 
-        val roundTrip2 = DeserializationInput(factory).deserialize(oBytes, AliasTestType::class.java, testSerializationContext )
-        val roundTrip3 = DeserializationInput(factory).deserialize(bytes, OriginalTestType::class.java, testSerializationContext )
-
+        // Giving every deserialisation it's own fresh factory so we don't leak state from one to the next
+        val aToA = DeserializationInput(testDefaultFactoryNoEvolution()).deserialize(aBytes, AliasTestType::class.java, testSerializationContext)
+        println("A to A ok")
+        val oToA = DeserializationInput(testDefaultFactoryNoEvolution()).deserialize(oBytes, AliasTestType::class.java, testSerializationContext)
+        println("O to A ok")
     }
 
+    @Test
+    fun aliasedSerialisationBackToLegacyType() {
+        val aliasInstance = AliasTestType("some value")
+        val factoryAlias = testDefaultFactoryNoEvolution()
+        val factoryOriginal = testDefaultFactoryNoEvolution()
+        val aBytes = SerializationOutput(factoryAlias).serialize(aliasInstance)
+
+        assertEquals(
+                """
+                AliasTestType aliased to OriginalTestType(value: String)
+                  value: String
+                """.trimIndent(),
+                factoryAlias.getTypeInformation(aliasInstance::class.java).prettyPrint())
+
+        val originalInstance = OriginalTestType("second value")
+        val oBytes = SerializationOutput(factoryAlias).serialize(originalInstance)
+        assertEquals(
+                """
+                OriginalTestType(value: String)
+                  value: String
+                """.trimIndent(),
+                factoryAlias.getTypeInformation(originalInstance::class.java).prettyPrint())
+
+        val oToO = DeserializationInput(factoryOriginal).deserialize(oBytes, OriginalTestType::class.java, testSerializationContext)
+        println("O to O ok")
+        val aToO = DeserializationInput(factoryOriginal).deserialize(aBytes, OriginalTestType::class.java, testSerializationContext)
+        println("A to O ok")
+    }
+
+    @Test
+    fun aliasedComplexSerialization() {
+        val aliasInstance = AliasComplexType(AliasTestType("some value"))
+        val factory = testDefaultFactoryNoEvolution()
+        val aBytes = SerializationOutput(factory).serialize(aliasInstance)
+        assertEquals(
+                """
+                    AliasComplexType aliased to OriginalComplexType(aValue: AliasTestType aliased to OriginalTestType)
+                      aValue: AliasTestType aliased to OriginalTestType(value: String)
+                        value: String
+                """.trimIndent(),
+                factory.getTypeInformation(aliasInstance::class.java).prettyPrint())
+
+        val originalInstance = OriginalComplexType(OriginalTestType("second value"))
+        val oBytes = SerializationOutput(factory).serialize(originalInstance)
+
+        // Giving every deserialisation it's own fresh factory so we don't leak state from one to the next
+        val aToA = DeserializationInput(testDefaultFactoryNoEvolution()).deserialize(aBytes, AliasComplexType::class.java, testSerializationContext)
+        println("A to A ok")
+        val oToA = DeserializationInput(testDefaultFactoryNoEvolution()).deserialize(oBytes, AliasComplexType::class.java, testSerializationContext)
+        println("O to A ok")
+    }
 }

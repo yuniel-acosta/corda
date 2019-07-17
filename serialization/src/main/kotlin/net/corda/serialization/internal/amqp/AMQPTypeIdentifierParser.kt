@@ -5,6 +5,7 @@ import net.corda.serialization.internal.model.TypeIdentifier
 import org.apache.qpid.proton.amqp.*
 import java.io.NotSerializableException
 import java.lang.StringBuilder
+import java.lang.reflect.Type
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -21,11 +22,10 @@ object AMQPTypeIdentifierParser {
     internal const val MAX_TYPE_PARAM_DEPTH = 32
     private const val MAX_ARRAY_DEPTH = 32
 
-    val remoteTypeMapping = mapOf(
-            "" to ""
-    )
+    val remoteTypeMapping = ConcurrentHashMap<String, String>()
 
     /**
+     *
      * Given a string representing a serialized AMQP type, construct a TypeIdentifier for that string.
      *
      * @param typeString The AMQP type string to parse
