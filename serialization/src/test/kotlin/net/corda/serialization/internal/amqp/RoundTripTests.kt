@@ -20,11 +20,18 @@ import net.corda.serialization.internal.amqp.testutils.testDefaultFactoryNoEvolu
 import net.corda.serialization.internal.amqp.testutils.testSerializationContext
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import java.math.BigInteger
 import kotlin.test.assertEquals
 
 class RoundTripTests {
+
+    @After
+    fun tearDown() {
+        AMQPTypeIdentifierParser.remoteTypeMapping.clear()
+    }
 
     @Test
     fun mutableBecomesImmutable() {
@@ -278,6 +285,9 @@ class RoundTripTests {
         val oBytes = SerializationOutput(factory).serialize(originalInstance)
 
         // Giving every deserialisation it's own fresh factory so we don't leak state from one to the next
+
+        // This will fail as the embedded type needs to be aliased, but our deserialisation
+        // code sees the schema before it sees the actual type, so will create the wrong TypeInfo object.
         val aToA = DeserializationInput(testDefaultFactoryNoEvolution()).deserialize(aBytes, AliasComplexType::class.java, testSerializationContext)
         println("A to A ok")
         val oToA = DeserializationInput(testDefaultFactoryNoEvolution()).deserialize(oBytes, AliasComplexType::class.java, testSerializationContext)
