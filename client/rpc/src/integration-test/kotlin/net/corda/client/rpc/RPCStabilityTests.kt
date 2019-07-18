@@ -94,7 +94,9 @@ class RPCStabilityTests {
             // This is a less than check because threads from other tests may be shutting down while this test is running.
             // This is therefore a "best effort" check. When this test is run on its own this should be a strict equality.
             // In case of failure we output the threads along with their stacktraces to get an idea what was running at a time.
-            require(threadsBefore.keys.size >= threadsAfter.keys.size) { "threadsBefore: $threadsBefore\nthreadsAfter: $threadsAfter" }
+            require(threadsBefore.keys.size >= threadsAfter.keys.size) {
+                "Threads have leaked: there were ${threadsAfter.keys.size} threads after the test, but only ${threadsBefore.keys.size} before.\nthreadsBefore: $threadsBefore\nthreadsAfter: $threadsAfter"
+            }
         } finally {
             executor.shutdownNow()
         }
