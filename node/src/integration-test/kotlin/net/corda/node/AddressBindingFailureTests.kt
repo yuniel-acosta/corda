@@ -3,6 +3,7 @@ package net.corda.node
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.internal.errors.AddressBindingException
 import net.corda.core.utilities.NetworkHostAndPort
+import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.driver.DriverParameters
 import net.corda.testing.driver.driver
@@ -18,6 +19,7 @@ class AddressBindingFailureTests {
 
     companion object {
         private val portAllocation = incrementalPortAllocation()
+        private val log = contextLogger()
     }
 
     @Test
@@ -53,8 +55,9 @@ class AddressBindingFailureTests {
 
     private fun assertBindExceptionForOverrides(overrides: (NetworkHostAndPort) -> Map<String, Any?>) {
 
-        ServerSocket(0).use { socket ->
+        ServerSocket(portAllocation.nextPort()).use { socket ->
 
+            log.info("Using port ${socket.localPort} for test")
             val address = InetSocketAddress("localhost", socket.localPort).toNetworkHostAndPort()
             driver(DriverParameters(startNodesInProcess = true, notarySpecs = emptyList(), inMemoryDB = false, portAllocation = portAllocation)) {
 
