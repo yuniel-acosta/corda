@@ -305,6 +305,6 @@ class ReconnectingCordaRPCOps private constructor(
     override fun close() {
         if (!userPool) observersPool.shutdown()
         retryFlowsPool.shutdown()
-        reconnectingRPCConnection.forceClose()
+        reconnectingRPCConnection.close()
     }
 }
