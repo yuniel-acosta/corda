@@ -115,7 +115,7 @@ abstract class PortAllocation {
     companion object {
         @JvmStatic
         val defaultAllocator: PortAllocation = SharedMemoryIncremental.INSTANCE
-        const val DEFAULT_START_PORT = 17_100
+        const val DEFAULT_START_PORT = 10_000
         const val FIRST_EPHEMERAL_PORT = 30_000
     }
 
