@@ -534,16 +534,42 @@ class HibernateQueryCriteriaParser(val contractStateType: Class<out ContractStat
             val entityRoot =
                     rootEntities.getOrElse(entityStateClass) {
                         val entityRoot = criteriaQuery.from(entityStateClass)
-                        rootEntities[entityStateClass] = entityRoot
-                        entityRoot
+
+                        val leftJoinPredicate = if(IndirectStatePersistable::class.java.isAssignableFrom(entityRoot.javaType)) {
+                            entityRoot.join<VaultSchemaV1.VaultStates, IndirectStatePersistable<*>>("compositeKey", JoinType.LEFT)
+                        } else {
+                            entityRoot.join<VaultSchemaV1.VaultStates, PersistentStateRef>("stateRef", JoinType.LEFT)
+                        }
+                        rootEntities[entityStateClass] = leftJoinPredicate as Root<*>
+                        leftJoinPredicate
                     }
 
-            val joinPredicate = if(IndirectStatePersistable::class.java.isAssignableFrom(entityRoot.javaType)) {
-                        criteriaBuilder.equal(vaultStates.get<PersistentStateRef>("stateRef"), entityRoot.get<IndirectStatePersistable<*>>("compositeKey").get<PersistentStateRef>("stateRef"))
-                    } else {
-                criteriaBuilder.equal(vaultStates.get<PersistentStateRef>("stateRef"), entityRoot.get<PersistentStateRef>("stateRef"))
-            }
-            predicateSet.add(joinPredicate)
+//            val joinPredicate = if(IndirectStatePersistable::class.java.isAssignableFrom(entityRoot.javaType)) {
+//                criteriaBuilder.equal(vaultStates.get<PersistentStateRef>("stateRef"), entityRoot.get<IndirectStatePersistable<*>>("compositeKey").get<PersistentStateRef>("stateRef"))
+//            } else {
+//                criteriaBuilder.equal(vaultStates.get<PersistentStateRef>("stateRef"), entityRoot.get<PersistentStateRef>("stateRef"))
+//            }
+
+//            predicateSet.add(joinPredicate)
+
+
+//            val joinPredicate = criteriaBuilder.equal(vaultStates.get<PersistentStateRef>("stateRef"), vaultFungibleStates.get<PersistentStateRef>("stateRef"))
+//            predicateSet.add(joinPredicate)
+
+
+
+
+//            criteriaQuery.from(leftJoinPredicate)
+//            predicateSet.add(leftJoinPredicate)
+
+//            predicateSet.add(criteriaBuilder.and(leftJoinPredicate.isNotNull))
+
+//            val joinPredicate = if(IndirectStatePersistable::class.java.isAssignableFrom(entityRoot.javaType)) {
+//                        criteriaBuilder.equal(vaultStates.get<PersistentStateRef>("stateRef"), entityRoot.get<IndirectStatePersistable<*>>("compositeKey").get<PersistentStateRef>("stateRef"))
+//                    } else {
+//                criteriaBuilder.equal(vaultStates.get<PersistentStateRef>("stateRef"), entityRoot.get<PersistentStateRef>("stateRef"))
+//            }
+//            predicateSet.add(joinPredicate)
 
             // resolve general criteria expressions
             @Suppress("UNCHECKED_CAST")
@@ -555,7 +581,7 @@ class HibernateQueryCriteriaParser(val contractStateType: Class<out ContractStat
                     Please register the entity '${entityStateClass.name}'
                     See https://docs.corda.net/api-persistence.html#custom-schema-registration for more information""")
             }
-            throw VaultQueryException("Parsing error: ${e.message}")
+            throw VaultQueryException("Parsing error: ${e.message}", e)
         }
         return predicateSet
     }

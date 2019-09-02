@@ -12,6 +12,7 @@ import net.corda.core.node.services.*
 import net.corda.core.node.services.Vault.ConstraintInfo.Type.*
 import net.corda.core.node.services.vault.*
 import net.corda.core.node.services.vault.QueryCriteria.*
+import net.corda.core.schemas.PersistentStateRef
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.*
@@ -24,12 +25,15 @@ import net.corda.finance.contracts.asset.Cash
 import net.corda.finance.schemas.CashSchemaV1
 import net.corda.finance.schemas.CashSchemaV1.PersistentCashState
 import net.corda.finance.schemas.CommercialPaperSchemaV1
+import net.corda.finance.schemas.CommercialPaperSchemaV1.PersistentCommercialPaperState
 import net.corda.finance.test.SampleCashSchemaV2
 import net.corda.finance.test.SampleCashSchemaV3
 import net.corda.finance.workflows.CommercialPaperUtils
+import net.corda.node.services.keys.PublicKeyHashToExternalId
 import net.corda.nodeapi.internal.persistence.CordaPersistence
 import net.corda.nodeapi.internal.persistence.DatabaseConfig
 import net.corda.nodeapi.internal.persistence.DatabaseTransaction
+import net.corda.nodeapi.internal.persistence.TransactionIsolationLevel
 import net.corda.testing.core.*
 import net.corda.testing.internal.TEST_TX_TIME
 import net.corda.testing.internal.chooseIdentity
@@ -37,6 +41,7 @@ import net.corda.testing.internal.configureDatabase
 import net.corda.testing.internal.vault.*
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.MockServices.Companion.makeTestDatabaseAndMockServices
+import net.corda.testing.node.MockServices.Companion.makeTestDatabaseAndPersistentServices
 import net.corda.testing.node.makeTestIdentityService
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
@@ -185,7 +190,7 @@ abstract class VaultQueryTestsBase : VaultQueryParties {
     /**
      * Helper method for generating a Persistent H2 test database
      */
-    @Ignore
+//    @Ignore
     @Test
     fun createPersistentTestDb() {
         val database = configureDatabase(makePersistentDataSourceProperties(), DatabaseConfig(), identitySvc::wellKnownPartyFromX500Name, identitySvc::wellKnownPartyFromAnonymous)
@@ -2223,6 +2228,112 @@ abstract class VaultQueryTestsBase : VaultQueryParties {
             // DOCEND VaultQueryExample20
 
             assertThat(results.states).hasSize(3)
+        }
+    }
+
+    // specifying Custom Query with 3-way join using AND and OR
+    @Test
+    fun `custom - select from cash or commercial paper states for given currency`() {
+        database.transaction {
+
+            // Insert cash into Vault
+            val poundsCashState = vaultFiller.fillWithSomeTestCash(100.POUNDS, notaryServices, 1, DUMMY_CASH_ISSUER).states.first()
+
+            // Insert Commercial Paper into Vault
+            val issuance = MEGA_CORP.ref(1)
+
+            // MegaCorp™ issues $10,000 of commercial paper, to mature in 30 days, owned by itself.
+            val faceValue = 10000.DOLLARS `issued by` DUMMY_CASH_ISSUER
+            val commercialPaper =
+                    CommercialPaperUtils.generateIssue(issuance, faceValue, TEST_TX_TIME + 30.days, DUMMY_NOTARY).let { builder ->
+                        builder.setTimeWindow(TEST_TX_TIME, 30.seconds)
+                        val stx = services.signInitialTransaction(builder, MEGA_CORP_PUBKEY)
+                        notaryServices.addSignature(stx, DUMMY_NOTARY_KEY.public)
+                    }
+
+            services.recordTransactions(commercialPaper)
+
+            val generalCriteria = VaultQueryCriteria(Vault.StateStatus.ALL)
+
+            // Query that satisfies Commercial Paper
+            val results = builder {
+                val cashCurrency = PersistentCashState::currency.equal(USD.currencyCode)
+                val commercialPaperCurrency = PersistentCommercialPaperState::currency.equal(USD.currencyCode)
+
+                val customCriteriaCashCurrency = VaultCustomQueryCriteria(cashCurrency)
+                val customCriteriaCommercialPaperCurrency = VaultCustomQueryCriteria(commercialPaperCurrency)
+
+                val criteria = generalCriteria.and(customCriteriaCashCurrency or customCriteriaCommercialPaperCurrency)
+//                val criteria = generalCriteria.and(customCriteriaCommercialPaperCurrency)
+                vaultService.queryBy<ContractState>(criteria)
+            }
+            assertThat(results.states).hasSize(1)
+            assertThat(results.states[0].ref.txhash).isEqualTo(commercialPaper.id)
+
+            // Query that satisfies Cash
+            val moreResults = builder {
+                val cashCurrency = PersistentCashState::currency.equal(GBP.currencyCode)
+                val commercialPaperCurrency = PersistentCommercialPaperState::currency.equal(GBP.currencyCode)
+
+                val customCriteriaCashCurrency = VaultCustomQueryCriteria(cashCurrency)
+                val customCriteriaCommercialPaperCurrency = VaultCustomQueryCriteria(commercialPaperCurrency)
+
+//                val criteria = generalCriteria.and(customCriteriaCashCurrency )
+                val criteria = generalCriteria.and(customCriteriaCashCurrency or customCriteriaCommercialPaperCurrency)
+                vaultService.queryBy<ContractState>(criteria)
+            }
+            assertThat(moreResults.states).hasSize(1)
+            assertThat(moreResults.states[0].ref).isEqualTo(poundsCashState.ref)
+        }
+    }
+
+    // specifying Custom Query with 3-way join using AND and OR
+    @Test
+    fun `custom - select accounts for given set of accountIds`() {
+        database.transaction {
+
+            // create accountId associated with identity
+            val accountId = UUID.randomUUID()
+            val accountIds : List<UUID> = listOf(accountId)
+
+            // Populate vault
+            val states = vaultFiller.fillWithSomeTestCash(100.POUNDS, notaryServices, 1, DUMMY_CASH_ISSUER)
+            println(states.states.first().state.data.participants)
+
+            // associate accountId with identity public key
+            services.withEntityManager {
+                val newEntry = PublicKeyHashToExternalId(
+                        accountId = accountId,
+                        publicKey = MEGA_CORP_IDENTITY.owningKey
+                )
+                persist(newEntry)
+            }
+
+            // assign cash state to accountId created previously
+            services.withEntityManager {
+                val newEntry = AllowedToSeeStateMapping(
+                        id = null,
+                        externalId = accountId,
+                        stateRef = PersistentStateRef(states.states.first().ref)
+                )
+                persist(newEntry)
+            }
+
+            val results = builder {
+
+                val externalIdSelector = VaultSchemaV1.StateToExternalId::externalId.`in`(accountIds)
+                val customCriteriaExternalIdSelector = VaultCustomQueryCriteria(externalIdSelector)
+
+                val allowedToSeeSelector = AllowedToSeeStateMapping::externalId.`in`(accountIds)
+                val customCriteriaAllowedToSeeSelector =VaultCustomQueryCriteria(allowedToSeeSelector)
+
+                val generalCriteria = VaultQueryCriteria(Vault.StateStatus.ALL)
+//                val criteria = generalCriteria and customCriteriaExternalIdSelector
+//                val criteria = generalCriteria and customCriteriaAllowedToSeeSelector
+                val criteria = generalCriteria.and(customCriteriaExternalIdSelector or customCriteriaAllowedToSeeSelector)
+                vaultService.queryBy<ContractState>(criteria)
+            }
+            assertThat(results.states).hasSize(1)
         }
     }
 

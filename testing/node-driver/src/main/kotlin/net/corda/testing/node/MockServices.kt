@@ -35,6 +35,7 @@ import net.corda.node.services.vault.NodeVaultService
 import net.corda.nodeapi.internal.cordapp.CordappLoader
 import net.corda.nodeapi.internal.persistence.CordaPersistence
 import net.corda.nodeapi.internal.persistence.DatabaseConfig
+import net.corda.nodeapi.internal.persistence.TransactionIsolationLevel
 import net.corda.nodeapi.internal.persistence.contextTransaction
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
@@ -123,9 +124,14 @@ open class MockServices private constructor(
                                             vararg moreKeys: KeyPair): Pair<CordaPersistence, MockServices> {
 
             val cordappLoader = cordappLoaderForPackages(cordappPackages)
-            val dataSourceProps = makeTestDataSourceProperties()
             val schemaService = NodeSchemaService(cordappLoader.cordappSchemas)
-            val database = configureDatabase(dataSourceProps, DatabaseConfig(), identityService::wellKnownPartyFromX500Name, identityService::wellKnownPartyFromAnonymous, schemaService, schemaService.internalSchemas())
+
+//            val dataSourceProps = makeTestDataSourceProperties()
+//            val database = configureDatabase(dataSourceProps, DatabaseConfig(), identityService::wellKnownPartyFromX500Name, identityService::wellKnownPartyFromAnonymous, schemaService, schemaService.internalSchemas())
+            val dataSourceProps = makePersistentDataSourceProperties()
+            val databaseConfig = makeDatabaseConfig()
+            val database = configureDatabase(dataSourceProps, databaseConfig, identityService::wellKnownPartyFromX500Name, identityService::wellKnownPartyFromAnonymous, schemaService, schemaService.internalSchemas())
+
             val keyManagementService = MockKeyManagementService(
                     identityService,
                     *arrayOf(initialIdentity.keyPair) + moreKeys,
@@ -135,6 +141,27 @@ open class MockServices private constructor(
                 makeMockMockServices(cordappLoader, identityService, networkParameters, initialIdentity, moreKeys.toSet(), keyManagementService, schemaService, database)
             }
             return Pair(database, mockService)
+        }
+
+        private fun makeDatabaseConfig(): DatabaseConfig {
+//            return DatabaseConfig(transactionIsolationLevel = TransactionIsolationLevel.READ_COMMITTED)
+            return DatabaseConfig()
+        }
+
+        private fun makePersistentDataSourceProperties(): Properties {
+            val props = Properties()
+            props.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource")
+            props.setProperty("dataSource.url", "jdbc:postgresql://localhost:5432/database?currentSchema=my_schema")
+            props.setProperty("dataSource.user", "my_user")
+            props.setProperty("dataSource.password", "my_password")
+            return props
+
+//            val props = Properties()
+//            props.setProperty("dataSourceClassName", "org.h2.jdbcx.JdbcDataSource")
+//            props.setProperty("dataSource.url", "jdbc:h2:~/test/vault_query_persistence;DB_CLOSE_ON_EXIT=TRUE")
+//            props.setProperty("dataSource.user", "sa")
+//            props.setProperty("dataSource.password", "")
+//            return props
         }
 
         /**
