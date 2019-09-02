@@ -16,9 +16,11 @@ import net.corda.testing.internal.LogHelper
 import net.corda.testing.internal.configureDatabase
 import net.corda.testing.internal.rigorousMock
 import net.corda.testing.node.MockServices.Companion.makeTestDataSourceProperties
+import org.assertj.core.api.Assertions
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import javax.persistence.criteria.JoinType
 import kotlin.test.assertEquals
 
 class PersistentStateServiceTests {
@@ -57,6 +59,10 @@ class PersistentStateServiceTests {
                 val parent = TestSchema.Parent()
                 parent.children.add(TestSchema.Child())
                 parent.children.add(TestSchema.Child())
+
+                val buddy = TestSchema.Buddy()
+                buddy.parent = parent
+
                 return parent
             }
         }
@@ -76,6 +82,24 @@ class PersistentStateServiceTests {
             childrenRowCountResult.close()
             assertEquals(1, parentRows, "Expected one parent")
             assertEquals(2, childrenRows, "Expected two children")
+        }
+
+        database.transaction {
+            val session = currentDBSession()
+            val cb = session.criteriaBuilder
+
+            val cq = cb.createQuery(TestSchema.Parent::class.java)
+            val parentRoot = cq.from(TestSchema.Parent::class.java)
+            val joinChild = parentRoot.join<TestSchema.Parent, TestSchema.Child>("children", JoinType.LEFT)
+            val joinBuddy = parentRoot.join<TestSchema.Parent, TestSchema.Buddy>("buddy", JoinType.LEFT)
+
+            val childPredicate = cb.equal(joinChild.get<Int?>(TestSchema.Child::childId.name), 2)
+            val buddyPredicate = cb.equal(joinBuddy.get<Int?>(TestSchema.Buddy::buddyId.name), 1)
+            val predicates = cb.or(childPredicate, buddyPredicate)
+
+            cq.where(predicates)
+            val results =session.createQuery(cq).resultList
+            Assertions.assertThat(results).hasSize(1)
         }
 
         database.close()

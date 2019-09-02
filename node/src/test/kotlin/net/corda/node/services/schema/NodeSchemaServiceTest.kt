@@ -120,7 +120,7 @@ class NodeSchemaServiceTest {
 
 class SchemaFamily
 
-object TestSchema : MappedSchema(SchemaFamily::class.java, 1, setOf(Parent::class.java, Child::class.java)) {
+object TestSchema : MappedSchema(SchemaFamily::class.java, 1, setOf(Parent::class.java, Child::class.java, Buddy::class.java)) {
     @Entity
     @Table(name = "Parents")
     class Parent : PersistentState() {
@@ -129,6 +129,9 @@ object TestSchema : MappedSchema(SchemaFamily::class.java, 1, setOf(Parent::clas
         @OrderColumn
         @Cascade(CascadeType.PERSIST)
         var children: MutableSet<Child> = mutableSetOf()
+
+        @OneToOne
+        var buddy: Buddy? = null
     }
 
     @Suppress("unused")
@@ -141,6 +144,18 @@ object TestSchema : MappedSchema(SchemaFamily::class.java, 1, setOf(Parent::clas
         var childId: Int? = null
 
         @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumns(JoinColumn(name = "transaction_id", referencedColumnName = "transaction_id"), JoinColumn(name = "output_index", referencedColumnName = "output_index"))
+        var parent: Parent? = null
+    }
+
+    @Entity
+    @Table(name = "Buddy")
+    class Buddy : PersistentState() {
+        @GeneratedValue
+        @Column(name = "buddy_id", unique = true, nullable = false)
+        var buddyId: Int? = null
+
+        @OneToOne(fetch = FetchType.LAZY)
         @JoinColumns(JoinColumn(name = "transaction_id", referencedColumnName = "transaction_id"), JoinColumn(name = "output_index", referencedColumnName = "output_index"))
         var parent: Parent? = null
     }
