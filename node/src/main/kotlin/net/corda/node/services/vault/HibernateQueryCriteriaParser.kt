@@ -16,14 +16,12 @@ import net.corda.core.node.services.vault.LikenessOperator.*
 import net.corda.core.node.services.vault.NullOperator.IS_NULL
 import net.corda.core.node.services.vault.NullOperator.NOT_NULL
 import net.corda.core.node.services.vault.QueryCriteria.CommonQueryCriteria
-import net.corda.core.schemas.IndirectStatePersistable
-import net.corda.core.schemas.PersistentState
-import net.corda.core.schemas.PersistentStateRef
-import net.corda.core.schemas.StatePersistable
+import net.corda.core.schemas.*
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.trace
 import net.corda.node.services.persistence.NodeAttachmentService
+import net.corda.node.services.vault.VaultSchemaV1.PersistentStateRefAndKey
 import org.hibernate.query.criteria.internal.expression.LiteralExpression
 import org.hibernate.query.criteria.internal.path.SingularAttributePath
 import org.hibernate.query.criteria.internal.predicate.ComparisonPredicate
@@ -534,42 +532,35 @@ class HibernateQueryCriteriaParser(val contractStateType: Class<out ContractStat
             val entityRoot =
                     rootEntities.getOrElse(entityStateClass) {
                         val entityRoot = criteriaQuery.from(entityStateClass)
-
-                        val leftJoinPredicate = if(IndirectStatePersistable::class.java.isAssignableFrom(entityRoot.javaType)) {
-                            entityRoot.join<VaultSchemaV1.VaultStates, IndirectStatePersistable<*>>("compositeKey", JoinType.LEFT)
-                        } else {
-                            entityRoot.join<VaultSchemaV1.VaultStates, PersistentStateRef>("stateRef", JoinType.LEFT)
-                        }
-                        rootEntities[entityStateClass] = leftJoinPredicate as Root<*>
-                        leftJoinPredicate
+                        rootEntities[entityStateClass] = entityRoot
+                        entityRoot
                     }
 
+            // ORIGINAL Cartesian Join code:
 //            val joinPredicate = if(IndirectStatePersistable::class.java.isAssignableFrom(entityRoot.javaType)) {
 //                criteriaBuilder.equal(vaultStates.get<PersistentStateRef>("stateRef"), entityRoot.get<IndirectStatePersistable<*>>("compositeKey").get<PersistentStateRef>("stateRef"))
 //            } else {
 //                criteriaBuilder.equal(vaultStates.get<PersistentStateRef>("stateRef"), entityRoot.get<PersistentStateRef>("stateRef"))
 //            }
-
 //            predicateSet.add(joinPredicate)
 
+            // WARNING! where a query specifies >1 .from() then a Cartesian Join is auto-generated (inner joins will NOT be generated)
+//            val entityRoot = vaultStates
 
-//            val joinPredicate = criteriaBuilder.equal(vaultStates.get<PersistentStateRef>("stateRef"), vaultFungibleStates.get<PersistentStateRef>("stateRef"))
-//            predicateSet.add(joinPredicate)
+//            val leftJoinPredicate = if (IndirectStatePersistable::class.java.isAssignableFrom(entityStateClass)) {
+            val leftJoinPredicate = if (IndirectStatePersistable::class.java.isAssignableFrom(entityRoot.javaType)) {
+                 val leftJoin = entityRoot.join<VaultSchemaV1.VaultStates, IndirectStatePersistable<*>>("stateRef", JoinType.LEFT)
+                criteriaBuilder.equal(leftJoin.get<PersistentStateRefAndKey>("stateRef"), vaultStates.get<PersistentStateRef>("stateRef"))
 
+            } else {
+                val leftJoin = entityRoot.join<VaultSchemaV1.VaultStates, DirectStatePersistable>("stateRef", JoinType.LEFT)
+                criteriaBuilder.equal(leftJoin.get<PersistentStateRef>("stateRef"), vaultStates.get<PersistentStateRef>("stateRef"))
+            }
+            predicateSet.add(leftJoinPredicate)
 
-
-
-//            criteriaQuery.from(leftJoinPredicate)
+//            val leftJoin = entityRoot.join<VaultSchemaV1.VaultStates, PersistentState>("stateRef", JoinType.LEFT)
+//            val leftJoinPredicate = criteriaBuilder.equal(leftJoin.get<PersistentStateRef>("stateRef"), vaultStates.get<PersistentStateRef>("stateRef"))
 //            predicateSet.add(leftJoinPredicate)
-
-//            predicateSet.add(criteriaBuilder.and(leftJoinPredicate.isNotNull))
-
-//            val joinPredicate = if(IndirectStatePersistable::class.java.isAssignableFrom(entityRoot.javaType)) {
-//                        criteriaBuilder.equal(vaultStates.get<PersistentStateRef>("stateRef"), entityRoot.get<IndirectStatePersistable<*>>("compositeKey").get<PersistentStateRef>("stateRef"))
-//                    } else {
-//                criteriaBuilder.equal(vaultStates.get<PersistentStateRef>("stateRef"), entityRoot.get<PersistentStateRef>("stateRef"))
-//            }
-//            predicateSet.add(joinPredicate)
 
             // resolve general criteria expressions
             @Suppress("UNCHECKED_CAST")

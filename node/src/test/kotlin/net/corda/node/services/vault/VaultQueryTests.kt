@@ -20,7 +20,6 @@ import net.corda.finance.*
 import net.corda.finance.contracts.CommercialPaper
 import net.corda.finance.contracts.Commodity
 import net.corda.finance.contracts.DealState
-import net.corda.finance.workflows.asset.selection.AbstractCashSelection
 import net.corda.finance.contracts.asset.Cash
 import net.corda.finance.schemas.CashSchemaV1
 import net.corda.finance.schemas.CashSchemaV1.PersistentCashState
@@ -29,11 +28,11 @@ import net.corda.finance.schemas.CommercialPaperSchemaV1.PersistentCommercialPap
 import net.corda.finance.test.SampleCashSchemaV2
 import net.corda.finance.test.SampleCashSchemaV3
 import net.corda.finance.workflows.CommercialPaperUtils
-import net.corda.node.services.keys.PublicKeyHashToExternalId
+import net.corda.finance.workflows.asset.selection.AbstractCashSelection
+import net.corda.node.services.persistence.PublicKeyHashToExternalId
 import net.corda.nodeapi.internal.persistence.CordaPersistence
 import net.corda.nodeapi.internal.persistence.DatabaseConfig
 import net.corda.nodeapi.internal.persistence.DatabaseTransaction
-import net.corda.nodeapi.internal.persistence.TransactionIsolationLevel
 import net.corda.testing.core.*
 import net.corda.testing.internal.TEST_TX_TIME
 import net.corda.testing.internal.chooseIdentity
@@ -41,12 +40,10 @@ import net.corda.testing.internal.configureDatabase
 import net.corda.testing.internal.vault.*
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.MockServices.Companion.makeTestDatabaseAndMockServices
-import net.corda.testing.node.MockServices.Companion.makeTestDatabaseAndPersistentServices
 import net.corda.testing.node.makeTestIdentityService
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
@@ -2234,27 +2231,32 @@ abstract class VaultQueryTestsBase : VaultQueryParties {
     // specifying Custom Query with 3-way join using AND and OR
     @Test
     fun `custom - select from cash or commercial paper states for given currency`() {
+        val (poundsCashState, commercialPaper) =
+            database.transaction {
+
+                // Insert cash into Vault
+                val poundsCashState = vaultFiller.fillWithSomeTestCash(100.POUNDS, notaryServices, 1, DUMMY_CASH_ISSUER).states.first()
+
+                // Insert Commercial Paper into Vault
+                val issuance = MEGA_CORP.ref(1)
+
+                // MegaCorp™ issues $10,000 of commercial paper, to mature in 30 days, owned by itself.
+                val faceValue = 10000.DOLLARS `issued by` DUMMY_CASH_ISSUER
+                val commercialPaper =
+                        CommercialPaperUtils.generateIssue(issuance, faceValue, TEST_TX_TIME + 30.days, DUMMY_NOTARY).let { builder ->
+                            builder.setTimeWindow(TEST_TX_TIME, 30.seconds)
+                            val stx = services.signInitialTransaction(builder, MEGA_CORP_PUBKEY)
+                            notaryServices.addSignature(stx, DUMMY_NOTARY_KEY.public)
+                        }
+
+                services.recordTransactions(commercialPaper)
+
+                Pair(poundsCashState, commercialPaper)
+            }
+
+        val generalCriteria = VaultQueryCriteria(Vault.StateStatus.ALL)
+
         database.transaction {
-
-            // Insert cash into Vault
-            val poundsCashState = vaultFiller.fillWithSomeTestCash(100.POUNDS, notaryServices, 1, DUMMY_CASH_ISSUER).states.first()
-
-            // Insert Commercial Paper into Vault
-            val issuance = MEGA_CORP.ref(1)
-
-            // MegaCorp™ issues $10,000 of commercial paper, to mature in 30 days, owned by itself.
-            val faceValue = 10000.DOLLARS `issued by` DUMMY_CASH_ISSUER
-            val commercialPaper =
-                    CommercialPaperUtils.generateIssue(issuance, faceValue, TEST_TX_TIME + 30.days, DUMMY_NOTARY).let { builder ->
-                        builder.setTimeWindow(TEST_TX_TIME, 30.seconds)
-                        val stx = services.signInitialTransaction(builder, MEGA_CORP_PUBKEY)
-                        notaryServices.addSignature(stx, DUMMY_NOTARY_KEY.public)
-                    }
-
-            services.recordTransactions(commercialPaper)
-
-            val generalCriteria = VaultQueryCriteria(Vault.StateStatus.ALL)
-
             // Query that satisfies Commercial Paper
             val results = builder {
                 val cashCurrency = PersistentCashState::currency.equal(USD.currencyCode)
@@ -2269,7 +2271,9 @@ abstract class VaultQueryTestsBase : VaultQueryParties {
             }
             assertThat(results.states).hasSize(1)
             assertThat(results.states[0].ref.txhash).isEqualTo(commercialPaper.id)
+        }
 
+        database.transaction {
             // Query that satisfies Cash
             val moreResults = builder {
                 val cashCurrency = PersistentCashState::currency.equal(GBP.currencyCode)
