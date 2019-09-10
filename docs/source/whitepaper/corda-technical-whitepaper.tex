@@ -50,7 +50,7 @@
 
 \maketitle
 \begin{center}
-Version 1.0
+Version 1.1
 \end{center}
 
 \vspace{10mm}
@@ -220,10 +220,11 @@ Identity is covered further in section~\cref{sec:identity}.
 \subsection{The network map}
 
 Every network requires a network map. This is similar to Tor's concept of \emph{directory authorities}. The network
-map service publishes information about each node such as the set of IP addresses it listens on (multiple IP
-addresses are supported for failover and load balancing purposes), the version of the protocol it speaks, and which
-identity certificates it hosts. Each data structure describing a node is signed by the identity keys it claims to
-host. The network map service is therefore not trusted to specify node data correctly, only to distribute it.
+map service publishes information about each node such as the set of IP addresses it listens on, the version of the
+protocol it speaks, and which identity certificates it hosts. Multiple IP addresses are supported for failover and
+load balancing purposes. Each data structure describing a node is called a \texttt{NodeInfo} and is signed by the
+identity keys it hosts. The network map service is therefore not trusted to specify node data correctly, only to
+distribute it.
 
 The network map abstracts the underlying network locations of the nodes to more useful business concepts like
 identities and services. Domain names for the underlying IP addresses may be helpful for debugging but are not
@@ -232,12 +233,69 @@ notion of an address (hashed public key), and user-facing applications rely on a
 specify human-readable legal identities rather than specific public keys -- which in the bitcoin ecosystem are
 often distributed as QR codes.
 
-It is possible to subscribe to network map changes and registering with the map is the first thing a node does at
-startup.
-
 The map is a set of files that may be cached and distributed via HTTP based content delivery networks. The
 underlying map infrastructure is therefore not required to be highly available: if the map service becomes
 unreachable nodes may not join the network or change IP addresses, but otherwise things continue as normal.
+
+We now contrast this design against the obvious alternative of a centralised lookup service, \emph{a la} DNS.
+
+The network map is a global dataset that's cached locally by every node. In large networks this may increase the
+cost of running a node by increasing the storage requirements, and makes it impossible for a Corda node to
+be invisible. All other nodes on the network will learn its metadata.
+
+In return for these sacrifices we improve availability, usability and privacy.
+
+\paragraph{Availability.}If all identity lookups hit a central directory server, then that directory server becomes
+a single point of failure. Any outage at it creates an outage of the entire Corda network. This in turn makes it an
+attractive target for DoS attackers, and that, in turn, triggers complex SLA negotiations and high DevOps costs
+because you suddenly need a very rigorous on-call rotation. In a P2P system there aren't supposed to be (m)any
+single points of failure. The chosen design allows nodes to cache all the data they will need locally, and
+because the network map is just static data it can be easily distributed via caching CDNs which are the closest
+things we have to bulletproof walls against DoS attacks. If the underlying serving infrastructure goes down
+it doesn't matter until HTTP caches start expiring, and good CDNs can be configured to cache indefinitely if the
+backend is unreachable.
+
+\paragraph{Privacy.}The usual reason for requesting this kind of on-demand lookup is privacy. However, a central
+directory server still needs to know all the members and moreover, if nodes are doing interactive lookups whenever
+they need an identity then that central server learns all the trading and business relationships of the members.
+Users may want to run on a peer-to-peer, decentralised system partly to stop a service provider knowing
+these things! So an interactive lookup service creates a fundamental privacy tradeoff: individual members may learn
+less, but the network operator now learns much more. In fact they learn data that in the caching design nobody has.
+
+\paragraph{Usability.}Interactive directory servers get their queries from somewhere. Ultimately the source of the
+query is a human, who needs to specify an identity via some user interface.
+
+With nodes locally caching the network map, an application can provide a ComboBox type filter widget connected to a
+search engine. The user can interactively type query fragments and pick what they want from the resulting hits
+until they found the identity they're looking for. This may not matter much in the early days but in a large
+network with many similarly named identities, a sophisticated query widget with very low latency response will be
+helpful.
+
+If nodes don't know who is available in the network, you can't create such a UI. Instead you have to give the user
+a single input box, and if they mistype a name they just get an error message back saying ``Unknown identity''. There
+is no way for them to tell the difference between `the peer I typed in doesn't use this app' and `the peer I
+typed in is spelled differently'. That's a problem for any UX in which the user may not know ahead of time whether
+their desired counterparty uses the system.
+
+Most likely this user experience will be deemed unacceptable by the users themselves. The only way to improve it is
+to switch to an API where a fuzzy query returns sets of plausible results the user can pick from. That's because
+spelling correction engines give you sets of results, not a single match. Additionally in international situations
+where there's a desire to support native alphabets you may need to handle multiple transliterations e.g. via
+SoundEx matching. This is useful for handling Chinese or Arabic names, for example.
+
+\paragraph{Scraping.}Lookup services that support fuzzy matching are susceptible to scraping attacks, in which
+randomly generated queries are submitted at a slow rate to the server and the union of all the results are taken.
+Eventually this technique reveals the entire network map. Thus there isn't any good way to provide both highly
+usable query interfaces with privacy, except by downloading the entire network map and running all searches locally.
+
+\paragraph{Scalability.}Downloading and searching the network map locally may appear to have poor scalability. As
+of 2019 there are a little over 41 million registered companies in the USA and each NodeInfo structure is about 7
+kilobytes. This is a rather unoptimized representation, for example, the serialised bytes are self describing which
+isn't strictly necessary. Still, even if every US company had its own Corda node today the full dataset would be
+around 300 gigabytes in size. A one terabyte solid state device costs about \$130 and would cost much less in
+future. Whilst infeasible for consumer devices, for institutional users this seems like a low cost to obtain query
+privacy. Smaller devices can send queries to an interactive lookup server using techniques like Tor to anonymise
+their queries if so desired.
 
 \subsection{Message delivery}
 
