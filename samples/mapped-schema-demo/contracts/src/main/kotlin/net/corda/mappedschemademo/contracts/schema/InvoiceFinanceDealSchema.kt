@@ -8,6 +8,14 @@ import javax.persistence.*
 
 object InvoiceFinanceDealSchema
 
+
+@CordaSerializable
+enum class MyEnum {
+    A,
+    B,
+    C
+}
+
 object InvoiceFinanceDealSchemaV1 : MappedSchema(
         schemaFamily = InvoiceFinanceDealSchema.javaClass,
         version = 1,

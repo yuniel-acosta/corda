@@ -2,6 +2,7 @@ package net.corda.mappedschemademo.contracts.test
 
 import net.corda.core.identity.CordaX500Name
 import net.corda.mappedschemademo.contracts.contract.InvoiceFinanceDealContract
+import net.corda.mappedschemademo.contracts.schema.MyEnum
 import net.corda.mappedschemademo.contracts.state.Invoice
 import net.corda.mappedschemademo.contracts.state.InvoiceFinanceDealState
 import net.corda.testing.core.TestIdentity
@@ -80,6 +81,8 @@ class InvoiceFinanceDealContractTests {
 
     @Test
     fun `invoices must have value greater than or equal to zero`() {
+        MyEnum.A.ordinal
+
         ledgerServices.ledger {
             transaction {
                 output(InvoiceFinanceDealContract.ID, InvoiceFinanceDealState(
