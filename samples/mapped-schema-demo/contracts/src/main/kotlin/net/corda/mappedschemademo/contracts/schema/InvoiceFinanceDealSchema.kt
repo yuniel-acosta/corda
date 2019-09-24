@@ -8,14 +8,6 @@ import javax.persistence.*
 
 object InvoiceFinanceDealSchema
 
-
-@CordaSerializable
-enum class MyEnum {
-    A,
-    B,
-    C
-}
-
 object InvoiceFinanceDealSchemaV1 : MappedSchema(
         schemaFamily = InvoiceFinanceDealSchema.javaClass,
         version = 1,
@@ -35,6 +27,9 @@ object InvoiceFinanceDealSchemaV1 : MappedSchema(
 
             @Column(name = "lender")
             var lender: String = "",
+
+            @Column(name = "currency")
+            var currency: String = "",
 
             @Column(name = "loan_amount")
             var loanAmount: Long = 0,
@@ -60,6 +55,9 @@ object InvoiceFinanceDealSchemaV1 : MappedSchema(
 
             @Column(name = "supplier")
             var supplier: String = "",
+
+            @Column(name = "value_currency")
+            var currency: String = "",
 
             @Column(name = "value_amount")
             var valueAmount: Long = 0,

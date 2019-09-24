@@ -10,6 +10,7 @@ dependencies {
     cordaCompile project(':core')
 
     cordapp project(":samples:mapped-schema-demo:contracts")
+    cordapp project(":finance:contracts")
 
     testCompile project(':node-driver')
 

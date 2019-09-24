@@ -19,6 +19,7 @@ dependencies {
     // Corda integration dependencies
     cordaCompile project(':core')
     cordaRuntime project(':node-api')
+    cordapp project(':finance:contracts')
 
     testCompile project(':node-driver')
 

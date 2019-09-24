@@ -1,5 +1,6 @@
 package net.corda.mappedschemademo.contracts.state
 
+import net.corda.core.contracts.Amount
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
@@ -13,18 +14,27 @@ import net.corda.mappedschemademo.contracts.contract.InvoiceFinanceDealContract
 import net.corda.mappedschemademo.contracts.schema.InvoiceFinanceDealSchemaV1
 import java.util.*
 
+@CordaSerializable
+enum class InvoiceFinanceDealStatus {
+    PROPOSAL,
+    ACCEPTED
+}
+
 @BelongsToContract(InvoiceFinanceDealContract::class)
 data class InvoiceFinanceDealState(
         override val linearId: UniqueIdentifier = UniqueIdentifier(),
         val reference: String = "",
         val borrower: Party,
         val lender: Party,
-        val loan: Long,
-        val fee: Long,
+        val loan: Amount<Currency>,
+        val fee: Amount<Currency>,
+        val status: InvoiceFinanceDealStatus = InvoiceFinanceDealStatus.PROPOSAL,
         val invoiceList: List<Invoice>)
     : LinearState, QueryableState {
 
-    override val participants: List<AbstractParty> get() = listOf(borrower, lender)
+    override val participants: List<AbstractParty> get() {
+        return listOf(borrower, lender)
+    }
 
     override fun generateMappedObject(schema: MappedSchema): PersistentState {
         return when (schema) {
@@ -34,15 +44,17 @@ data class InvoiceFinanceDealState(
                         this.reference,
                         this.borrower.name.toString(),
                         this.lender.name.toString(),
-                        this.loan,
-                        this.fee)
+                        this.loan.token.toString(),
+                        this.loan.quantity,
+                        this.fee.quantity)
                 deal.invoiceList =
                     invoiceList.map { InvoiceFinanceDealSchemaV1.PersistentInvoice(
                                 it.invoiceId,
                                 it.invoiceNumber,
                                 it.supplier,
-                                it.value,
-                                it.paid,
+                                it.value.token.toString(),
+                                it.value.quantity,
+                                it.paid.quantity,
                                 it.invoiceId,
                                 deal)
                         }.toMutableList()
@@ -59,6 +71,6 @@ data class Invoice (
         var invoiceId: UUID = UUID.randomUUID(),
         var invoiceNumber: String = "",
         var supplier: String = "",
-        var value: Long,
-        var paid: Long = 0
+        var value: Amount<Currency>,
+        var paid: Amount<Currency>
 )
