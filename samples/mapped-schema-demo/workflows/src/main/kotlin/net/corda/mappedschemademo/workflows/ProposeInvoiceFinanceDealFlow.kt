@@ -4,74 +4,14 @@ import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.contracts.requireThat
-import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
-import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 import net.corda.mappedschemademo.contracts.contract.InvoiceFinanceDealContract
 import net.corda.mappedschemademo.contracts.state.Invoice
 import net.corda.mappedschemademo.contracts.state.InvoiceFinanceDealState
 import java.util.*
-
-object AcceptInvoiceFinanceDealFlow {
-    @InitiatingFlow
-    @StartableByRPC
-    class Initiator(
-            val txId: SecureHash
-    ): FlowLogic<SecureHash>() {
-
-        companion object {
-            object GENERATING_ACCEPTANCE: ProgressTracker.Step("Generating transaction based on new invoice finance deal.")
-            object VERIFYING_ACCEPTANCE : ProgressTracker.Step("Verifying contract constraints.")
-            object SIGNING_ACCEPTANCE : ProgressTracker.Step("Signing transaction with our private key.")
-
-            object GATHERING_SIGS : ProgressTracker.Step("Gathering the counterparty's signature.") {
-                override fun childProgressTracker() = CollectSignaturesFlow.tracker()
-            }
-
-            object FINALISING_ACCEPTANCE : ProgressTracker.Step("Obtaining notary signature and recording transaction.") {
-                override fun childProgressTracker() = FinalityFlow.tracker()
-            }
-
-            fun tracker() = ProgressTracker(
-                    GENERATING_ACCEPTANCE,
-                    VERIFYING_ACCEPTANCE,
-                    SIGNING_ACCEPTANCE,
-                    GATHERING_SIGS,
-                    FINALISING_ACCEPTANCE
-            )
-        }
-
-        override fun call(): SecureHash {
-            // Obtain a reference to the notary we want to use.
-            val notary = serviceHub.networkMapCache.notaryIdentities[0]
-
-            // Stage 1.
-            //progressTracker.currentStep = GENERATING_ACCEPTANCE
-
-            // get invoice finance deal state attached to provided transaction id
-
-            // Generate an unsigned transaction.
-//
-//            val iouState = InvoiceFinanceDealState(
-//                    reference = reference,
-//                    borrower = serviceHub.myInfo.legalIdentities.first(),
-//                    lender = lender,
-//                    loan = loan,
-//                    fee = fee,
-//                    invoiceList = invoiceList)
-//            val txCommand = Command(InvoiceFinanceDealContract.Commands.Propose(), listOf(iouState.borrower.owningKey))
-//            val txBuilder = TransactionBuilder(notary)
-//                    .addOutputState(iouState, InvoiceFinanceDealContract.ID)
-//                    .addCommand(txCommand)
-
-            return SecureHash.allOnesHash
-        }
-    }
-}
 
 object ProposeInvoiceFinanceDealFlow {
     @InitiatingFlow
@@ -115,16 +55,16 @@ object ProposeInvoiceFinanceDealFlow {
             // Stage 1.
             progressTracker.currentStep = GENERATING_PROPOSAL
             // Generate an unsigned transaction.
-            val iouState = InvoiceFinanceDealState(
+            val dealState = InvoiceFinanceDealState(
                     reference = reference,
                     borrower = serviceHub.myInfo.legalIdentities.first(),
                     lender = lender,
                     loan = loan,
                     fee = fee,
                     invoiceList = invoiceList)
-            val txCommand = Command(InvoiceFinanceDealContract.Commands.Propose(), listOf(iouState.borrower.owningKey))
+            val txCommand = Command(InvoiceFinanceDealContract.Commands.Propose(), listOf(dealState.borrower.owningKey))
             val txBuilder = TransactionBuilder(notary)
-                    .addOutputState(iouState, InvoiceFinanceDealContract.ID)
+                    .addOutputState(dealState, InvoiceFinanceDealContract.ID)
                     .addCommand(txCommand)
 
             // Stage 2.
@@ -147,7 +87,7 @@ object ProposeInvoiceFinanceDealFlow {
             // Notarise and record the transaction in both parties' vaults.
             subFlow(FinalityFlow(fullySignedTx, setOf(lenderSession), FINALISING_PROPOSAL.childProgressTracker()))
 
-            return iouState.linearId
+            return dealState.linearId
         }
     }
 

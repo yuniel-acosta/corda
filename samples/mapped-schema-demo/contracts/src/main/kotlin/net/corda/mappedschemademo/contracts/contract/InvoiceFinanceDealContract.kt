@@ -75,8 +75,12 @@ class InvoiceFinanceDealContract : Contract {
         "Outputs must contain at least one Cash state" using (cashOutputs.isNotEmpty())
         "Outputs must only include Cash and InvoiceFinanceDeal states" using ((cashOutputs.size + 1) == tx.outputs.size)
 
+        "All input cash must be of correct currency" using (cashInputs.all { it.amount.token.product == inputDeal.loan.token })
+        "All output cash must be of correct currency" using (cashInputs.all { it.amount.token.product == inputDeal.loan.token })
+
+        val outputCashToBorrower = cashOutputs.filter { it.owner == outputDeal.borrower }.map{ it.amount.withoutIssuer() }.reduce{ acc, it -> acc + it }
         "All cash must come from the lender" using (cashInputs.all { it.owner == inputDeal.lender })
-        "All cash must go to the borrower" using (cashOutputs.all { it.owner == outputDeal.borrower })
+        "The borrower must receive the loan amount" using (outputCashToBorrower== outputDeal.loan)
     }
 
     private fun verifyPayInvoice() { //tx: LedgerTransaction, signers: Set<PublicKey>) {
