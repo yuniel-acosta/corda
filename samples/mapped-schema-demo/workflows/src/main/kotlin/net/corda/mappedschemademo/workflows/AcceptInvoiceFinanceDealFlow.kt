@@ -3,7 +3,6 @@ package net.corda.mappedschemademo.workflows
 import co.paralleluniverse.fibers.Suspendable
 import com.google.common.collect.ImmutableList
 import net.corda.core.contracts.Command
-import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.contracts.requireThat
 import net.corda.core.flows.*
@@ -19,6 +18,7 @@ import net.corda.finance.workflows.getCashBalance
 import net.corda.mappedschemademo.contracts.contract.InvoiceFinanceDealContract
 import net.corda.mappedschemademo.contracts.state.InvoiceFinanceDealState
 import net.corda.mappedschemademo.contracts.state.InvoiceFinanceDealStatus
+import java.util.*
 
 object AcceptInvoiceFinanceDealFlow {
     @InitiatingFlow
@@ -73,6 +73,7 @@ object AcceptInvoiceFinanceDealFlow {
             }
         }
 
+        @Suspendable
         override fun call(): UniqueIdentifier {
             // Obtain a reference to the notary we want to use.
             val notary = serviceHub.networkMapCache.notaryIdentities[0]
@@ -104,10 +105,13 @@ object AcceptInvoiceFinanceDealFlow {
             )
 
             progressTracker.currentStep = GENERATING_ACCEPTANCE
+            val outputState = dealState.copy(status = InvoiceFinanceDealStatus.ACCEPTED)
+            //outputState.invoiceList.forEach { it.invoiceId = UUID.randomUUID()}
+
             val builder = TransactionBuilder(notary)
                     .addInputState(input)
                     .addCommand(acceptCommand)
-                    .addOutputState(dealState.copy(status = InvoiceFinanceDealStatus.ACCEPTED))
+                    .addOutputState(outputState)
 
             val (_, cashSigningKeys) = CashUtils.generateSpend(serviceHub, builder, listOf(PartyAndAmount(dealState.borrower, dealState.loan)), ourIdentityAndCert, anonymous = false)
 

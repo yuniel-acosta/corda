@@ -49,14 +49,14 @@ data class InvoiceFinanceDealState(
                         this.fee.quantity)
                 deal.invoiceList =
                     invoiceList.map { InvoiceFinanceDealSchemaV1.PersistentInvoice(
-                                it.invoiceId,
                                 it.invoiceNumber,
                                 it.supplier,
                                 it.value.token.toString(),
                                 it.value.quantity,
                                 it.paid.quantity,
                                 it.invoiceId,
-                                deal)
+                                deal,
+                                InvoiceFinanceDealSchemaV1.PersistentInvoiceKey(invoiceId = it.invoiceId))
                         }.toMutableList()
                 deal
             } else -> throw IllegalArgumentException("Unrecognised schema $schema")

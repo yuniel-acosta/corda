@@ -25,7 +25,8 @@ import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.TestCordapp
-import net.corda.testing.node.internal.FINANCE_CORDAPPS
+import net.corda.testing.node.internal.FINANCE_CONTRACTS_CORDAPP
+import net.corda.testing.node.internal.FINANCE_WORKFLOWS_CORDAPP
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -43,10 +44,15 @@ class ProposeInvoiceFinanceDealFlowTest {
     fun setup() {
         network = MockNetwork(MockNetworkParameters(cordappsForAllNodes = listOf(
                 TestCordapp.findCordapp("net.corda.mappedschemademo.contracts"),
-                TestCordapp.findCordapp("net.corda.mappedschemademo.workflows")
-        ) + FINANCE_CORDAPPS, threadPerNode = true))
+                TestCordapp.findCordapp("net.corda.mappedschemademo.workflows"),
+                FINANCE_CONTRACTS_CORDAPP, FINANCE_WORKFLOWS_CORDAPP), threadPerNode = true, networkSendManuallyPumped = true))
         borrower = network.createNode()
         lender = network.createNode()
+
+        listOf(borrower, lender).forEach {
+            it.registerInitiatedFlow(AcceptInvoiceFinanceDealFlow.Acceptor::class.java)
+            it.registerInitiatedFlow(ProposeInvoiceFinanceDealFlow.Acceptor::class.java)
+        }
     }
 
     @After
@@ -87,9 +93,9 @@ class ProposeInvoiceFinanceDealFlowTest {
                 5.POUNDS,
                 listOf(Invoice(invoiceNumber = "20000", supplier = "MegaCorp", value = 150.POUNDS, paid = 0.POUNDS), Invoice(invoiceNumber = "20001", supplier = "MegaCorp", value = 150.POUNDS, paid = 0.POUNDS)))
         val future = borrower.startFlow(flow)
+        val linearId = future.getOrThrow()
         network.runNetwork()
 
-        val linearId = future.getOrThrow()
 
         lender.transaction {
             val deal = lender.services.withEntityManager {
@@ -115,30 +121,63 @@ class ProposeInvoiceFinanceDealFlowTest {
                 5.POUNDS,
                 listOf(Invoice(invoiceNumber = "20000", supplier = "MegaCorp", value = 150.POUNDS, paid = 0.POUNDS), Invoice(invoiceNumber = "20001", supplier = "MegaCorp", value = 150.POUNDS, paid = 0.POUNDS)))
         val proposalResultFuture = borrower.startFlow(proposalFlow)
+        logger.warn("Creating proposal")
         val linearId = proposalResultFuture.getOrThrow()
-        logger.warn("Wait Quiescent 1")
+
+
+        //logger.warn("Wait Quiescent 1 end")
+
+        val issueCashFlow = CashIssueFlow(CashIssueFlow.IssueRequest(1000.POUNDS, OpaqueBytes.of(0), lender.services.networkMapCache.notaryIdentities.firstOrNull()
+                ?: throw IllegalStateException("Could not find a notary.")))
+        logger.warn("Issue cash to lender")
+        lender.startFlow(issueCashFlow).getOrThrow()
+        //logger.warn("Wait Quiescent 2")
+        //network.waitQuiescent()
+        //logger.warn("Wait Quiescent 2 end")
+
+        val acceptanceFlow = AcceptInvoiceFinanceDealFlow.Initiator(linearId)
+        logger.warn("Creating acceptance")
+        lender.startFlow(acceptanceFlow).getOrThrow()
+
+
+        //logger.warn("Wait Quiescent 3")
+        //network.runNetwork()
+        logger.warn("Wait Quiescent 3 end")
         network.waitQuiescent()
-        logger.warn("Wait Quiescent 1 end")
 
-//        val issueCashFlow = CashIssueFlow(CashIssueFlow.IssueRequest(1000.POUNDS, OpaqueBytes.of(0), lender.services.networkMapCache.notaryIdentities.firstOrNull()
-//                ?: throw IllegalStateException("Could not find a notary.")))
-//        lender.startFlow(issueCashFlow).getOrThrow()
-//        logger.warn("Wait Quiescent 2")
-//        network.waitQuiescent()
-//        logger.warn("Wait Quiescent 2 end")
+        lender.transaction {
+            val allCash = borrower.services.vaultService.queryBy<Cash.State>().states
+            if (allCash.any()) {
+                val relevantCash = allCash.filter { it.state.data.amount.token.product == Currency.getInstance("GBP") }
+                        .map { it.state.data.amount.withoutIssuer() }
+                        .reduce { acc, amt -> acc + amt }
+                println("amount of cash lender: $relevantCash")
+                //assertEquals(relevantCash, 100.POUNDS)
+            }
 
-//        val acceptanceFlow = AcceptInvoiceFinanceDealFlow.Initiator(linearId)
-////        lender.startFlow(acceptanceFlow).getOrThrow()
-////        logger.warn("Wait Quiescent 3")
-////        network.waitQuiescent()
-////        logger.warn("Wait Quiescent 3 end")
-////
-////        borrower.transaction {
-////            val allCash = borrower.services.vaultService.queryBy<Cash.State>().states
-////            val relevantCash = allCash.filter { it.state.data.amount.token.product == Currency.getInstance("GBP") }
-////                    .map { it.state.data.amount.withoutIssuer() }
-////                    .reduce { acc, amt -> acc + amt }
-////            assertEquals(relevantCash, 100.POUNDS)
-////        }
+            val allDeals = borrower.services.vaultService.queryBy<InvoiceFinanceDealState>().states
+
+            println("number of deals ${allDeals.size}")
+
+            println("deal status ${allDeals.single().state.data.status}")
+
+        }
+
+        borrower.transaction {
+            val allCash = borrower.services.vaultService.queryBy<Cash.State>().states
+            if (allCash.any()) {
+                val relevantCash = allCash.filter { it.state.data.amount.token.product == Currency.getInstance("GBP") }
+                        .map { it.state.data.amount.withoutIssuer() }
+                        .reduce { acc, amt -> acc + amt }
+                assertEquals(relevantCash, 100.POUNDS)
+            }
+
+            val allDeals = borrower.services.vaultService.queryBy<InvoiceFinanceDealState>().states
+
+            println("number of deals ${allDeals.size}")
+
+            println("deal status ${allDeals.single().state.data.status}")
+
+        }
     }
 }

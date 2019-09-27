@@ -2,8 +2,8 @@ package net.corda.mappedschemademo.contracts.contract
 
 import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
-import net.corda.core.utilities.contextLogger
 import net.corda.finance.contracts.asset.Cash
+import net.corda.mappedschemademo.contracts.schema.InvoiceFinanceDealSchemaV1
 import net.corda.mappedschemademo.contracts.state.InvoiceFinanceDealState
 import net.corda.mappedschemademo.contracts.state.InvoiceFinanceDealStatus
 import java.security.PublicKey
@@ -54,18 +54,25 @@ class InvoiceFinanceDealContract : Contract {
         "Both lender and borrower together must sign the transaction" using (signers == setOf(deal.borrower.owningKey))
         "Invoices must not have any paid amount" using (deal.invoiceList.all { it.paid == Amount.zero(it.value.token) })
     }
+//
+//    fun verifySame(input: InvoiceFinanceDealState, output: InvoiceFinanceDealState) = requireThat {
+//        val inputInvoices = input.invoiceList
+//        val outputInvoices = output.invoiceList
+//        val sanitisedInput = input.copy(linearId = output.linearId, invoiceList = emptyList())
+//        val sanitisedOutput = sanitisedInput.copy(invoiceList = emptyList())
+//        "input deal should equal output deal" using (sanitisedInput.equals(sanitisedOutput))
+//    }
 
     private fun verifyAccept(tx: LedgerTransaction, signers: Set<PublicKey>) = requireThat {
         "Only one Invoice Finance Deal state should be input" using (tx.inputsOfType<InvoiceFinanceDealState>().size == 1)
         val inputDeal = tx.inputsOfType<InvoiceFinanceDealState>().single()
         "Input state should have status of PROPOSAL" using (inputDeal.status == InvoiceFinanceDealStatus.PROPOSAL)
 
-
         "Only one Invoice Finance Deal state should be output" using (tx.outputsOfType<InvoiceFinanceDealState>().size == 1)
         val outputDeal = tx.outputsOfType<InvoiceFinanceDealState>().single()
         "Both lender and borrower together must sign the transaction" using (signers == keysFromParticipants(outputDeal))
         "Output state should have status of ACCEPTED" using (outputDeal.status == InvoiceFinanceDealStatus.ACCEPTED)
-        "Input state and output state should be the same apart from an updated status" using inputDeal.copy(status = InvoiceFinanceDealStatus.ACCEPTED).equals(outputDeal)
+        "Input state and output state should be the same apart from an updated status" using inputDeal.copy(status = InvoiceFinanceDealStatus.ACCEPTED, linearId= outputDeal.linearId).equals(outputDeal)
 
         val cashInputs = tx.inputsOfType<Cash.State>()
         "Inputs must contain at least one Cash state" using (cashInputs.isNotEmpty())

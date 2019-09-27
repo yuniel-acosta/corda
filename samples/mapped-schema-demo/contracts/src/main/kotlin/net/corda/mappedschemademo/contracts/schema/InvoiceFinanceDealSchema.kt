@@ -2,7 +2,9 @@ package net.corda.mappedschemademo.contracts.schema
 
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.schemas.PersistentState
+import net.corda.core.schemas.PersistentStateRef
 import net.corda.core.serialization.CordaSerializable
+import java.io.Serializable
 import java.util.*
 import javax.persistence.*
 
@@ -40,16 +42,27 @@ object InvoiceFinanceDealSchemaV1 : MappedSchema(
             @OneToMany(targetEntity = PersistentInvoice::class, cascade = [CascadeType.ALL])
             @JoinColumns(JoinColumn(name = "transaction_id", referencedColumnName = "transaction_id"), JoinColumn(name = "output_index", referencedColumnName = "output_index"))
             var invoiceList: MutableList<PersistentInvoice> = mutableListOf()
-    ) : PersistentState()
+    ) : PersistentState()  {
+        override var stateRef: PersistentStateRef?
+            get() = super.stateRef
+            set(value) {
+                invoiceList.forEach { it.invoiceId.stateRef = value!! }
+                super.stateRef = value
+            }
+    }
+
+    // https://stackoverflow.com/questions/7146671/hibernate-foreign-key-as-part-of-primary-key
+
+    @Embeddable
+    data class PersistentInvoiceKey(
+            var stateRef: PersistentStateRef = PersistentStateRef(txId =  "", index = 0),
+            var invoiceId: UUID = UUID.randomUUID()
+    ) : Serializable
 
     @CordaSerializable
     @Entity
     @Table(name = "invoice")
     class PersistentInvoice(
-            @Id
-            @Column(name = "invoice_id")
-            var id: UUID = UUID.randomUUID(),
-
             @Column(name = "invoice_number")
             var invoiceNumber: String = "",
 
@@ -68,9 +81,10 @@ object InvoiceFinanceDealSchemaV1 : MappedSchema(
             @Column(name = "invoice_finance_deal_id")
             var invoiceFinanceDealId: UUID = UUID.randomUUID(),
 
-            @ManyToOne(targetEntity = PersistentInvoiceFinanceDeal::class)
-            var parentDeal: PersistentInvoiceFinanceDeal = PersistentInvoiceFinanceDeal()//,
+            @OneToOne
+            var parentDeal: PersistentInvoiceFinanceDeal = PersistentInvoiceFinanceDeal(),
 
-            //override var stateRef: PersistentStateRef? = null
-    ) //: DirectStatePersistable
+            @EmbeddedId
+            var invoiceId: PersistentInvoiceKey = PersistentInvoiceKey()
+    )
 }

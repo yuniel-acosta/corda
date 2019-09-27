@@ -175,8 +175,14 @@ class MockNodeMessagingService(private val configuration: NodeConfiguration,
      * @return the message that was processed, if any in this round.
      */
     fun pumpReceive(block: Boolean): InMemoryMessagingNetwork.MessageTransfer? {
+        if (backgroundThread != null) {
+            log.warn("Background thread is null, about to fail: ")
+        }
         check(backgroundThread == null)
-        check(running)
+        if (running) {
+            log.warn("Running is set to $running, about to fail: ")
+        }
+        check(!running)
         executor.flush()
         try {
             return pumpReceiveInternal(block)
