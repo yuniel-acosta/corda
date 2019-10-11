@@ -1,8 +1,14 @@
+plugins {
+    id 'groovy'
+}
+
 apply plugin: 'net.corda.plugins.publish-utils'
 apply plugin: 'net.corda.plugins.api-scanner'
 apply plugin: 'com.jfrog.artifactory'
 
 dependencies {
+    implementation(localGroovy())
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "org.junit.jupiter:junit-jupiter-api:${junit_jupiter_version}"
     

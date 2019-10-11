@@ -52,7 +52,7 @@ dependencies {
 
 compileJava {
     doFirst {
-        if (JavaVersion.current() == JavaVersion.VERSION_11)
+        if (JavaVersion.current() >= JavaVersion.VERSION_11)
             options.compilerArgs = [
                     '--add-exports', 'java.base/sun.nio.ch=ALL-UNNAMED'
             ]

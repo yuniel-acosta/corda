@@ -24,9 +24,9 @@ buildscript {
 
     ext.quasar_group = 'co.paralleluniverse'
     // Set version of Quasar according to version of Java used:
-    if (JavaVersion.current() == JavaVersion.VERSION_11) {
+    if (JavaVersion.current() >= JavaVersion.VERSION_11) {
         ext.quasar_version = constants.getProperty("quasarVersion11")
-        ext.quasar_classifier = constants.getProperty("quasarClassifier11")
+        ext.quasar_classifier = constants.getProperty("quasarClassifier11") ?: ""
         ext.jdkClassifier = constants.getProperty("jdkClassifier11")
     }
     else {
@@ -59,7 +59,7 @@ buildscript {
     // We must configure it manually to use the latest capsule version.
     ext.capsule_version = '1.0.3'
 
-    ext.asm_version = '7.1'
+    ext.asm_version = '7.2'
     ext.artemis_version = '2.6.2'
     // TODO Upgrade Jackson only when corda is using kotlin 1.3.10
     ext.jackson_version = '2.9.7'
@@ -84,8 +84,8 @@ buildscript {
     // Need this version to access classpath scanning error handling fix -
     // see https://github.com/junit-team/junit5/commit/389de48c2a18c5a93a7203ef424aa47a8a835a74
     // Upgrade to 5.5.x when GA release is available.
-    ext.junit_vintage_version = '5.5.0-RC1'
-    ext.junit_jupiter_version = '5.5.0-RC1'
+    ext.junit_vintage_version = '5.5.1'
+    ext.junit_jupiter_version = '5.5.1'
     ext.junit_platform_version = '1.5.0-RC1'
     ext.mockito_version = '2.28.2'
     ext.mockito_kotlin_version = '1.6.0'
@@ -146,6 +146,7 @@ buildscript {
         }
     }()
     repositories {
+        flatDir { dirs "${rootProject.projectDir}/lib" }  // pick up quasar built for java 13
         mavenLocal()
         mavenCentral()
         jcenter()
@@ -155,6 +156,8 @@ buildscript {
         maven {
             url "$artifactory_contextUrl/corda-releases"
         }
+        // required to pick up gradle-tooling-api for 6.0-SNAPSHOT.
+        maven { url 'http://repo.gradle.org/gradle/libs-snapshots-local' }
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
@@ -180,6 +183,7 @@ buildscript {
 }
 
 plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.3.50"
     // Add the shadow plugin to the plugins classpath for the entire project.
     id 'com.github.johnrengelman.shadow' version '2.0.4' apply false
     id "com.gradle.build-scan" version "2.2.1"
@@ -304,9 +308,9 @@ allprojects {
 
         // Required to use Gradle build cache (until Gradle 5.0 is released with default value of "append" set to false)
         // See https://github.com/gradle/gradle/issues/5269 and https://github.com/gradle/gradle/pull/6419
-        extensions.configure(TypeOf.typeOf(JacocoTaskExtension)) { ex ->
-            ex.append = false
-        }
+//        extensions.configure(TypeOf.typeOf(JacocoTaskExtension)) { ex ->
+//            ex.append = false
+//        }
 
         maxParallelForks = (System.env.CORDA_TESTING_FORKS == null) ? 1 : "$System.env.CORDA_TESTING_FORKS".toInteger()
 
@@ -329,12 +333,14 @@ allprojects {
     version "$corda_release_version"
 
     repositories {
+        flatDir { dirs "${rootProject.projectDir}/lib" }  // pick up quasar built for java 13
         mavenLocal()
         mavenCentral()
         jcenter()
         maven { url "$artifactory_contextUrl/corda-dependencies" }
         maven { url 'https://jitpack.io' }
         maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+        maven { url 'http://repo.gradle.org/gradle/libs-snapshots-local' }      // required to pick up gradle-tooling-api:6.0-SNAPSHOT.
     }
 
     configurations {
@@ -413,27 +419,6 @@ jar {
     enabled = false
 }
 
-task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
-    dependsOn = subprojects.test
-    additionalSourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs)
-    sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
-    classDirectories = files(subprojects.sourceSets.main.output)
-    executionData = files(subprojects.jacocoTestReport.executionData)
-    reports {
-        html.enabled = true
-        xml.enabled = true
-        csv.enabled = false
-    }
-    onlyIf = {
-        true
-    }
-    doFirst {
-        executionData = files(executionData.findAll {
-            it.exists()
-        })
-    }
-}
-
 task detekt(type: JavaExec) {
     main = "io.gitlab.arturbosch.detekt.cli.Main"
     classpath = configurations.detekt
@@ -461,7 +446,7 @@ tasks.withType(Test) {
 task testReport(type: TestReport) {
     destinationDir = file("$buildDir/reports/allTests")
     // Include the results from the `test` task in all subprojects
-    reportOn subprojects*.test
+//    reportOn subprojects*.test
 }
 
 bintrayConfig {
@@ -545,7 +530,7 @@ artifactory {
         defaults {
             // Root project applies the plugin (for this block) but does not need to be published
             if (project != rootProject) {
-                publications(project.extensions.publish.name())
+//                publications(project.extensions.publish.name())
             }
         }
     }
