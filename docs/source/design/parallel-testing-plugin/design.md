@@ -24,7 +24,14 @@ The process in the POC solution is as follows:
 
 ## Implementation
 
-Some general rules we should follow
+A few gradle plugins that are written in an idiomatic way are:
+- [Java plugin][java]
+- [Corda Api Scanner][apiscan]
+
+[java]: https://github.com/gradle/gradle/blob/master/subprojects/plugins/src/main/java/org/gradle/api/plugins/JavaPlugin.java
+[apiscan]: https://github.com/corda/corda-gradle-plugins/tree/master/api-scanner
+
+Based on these, some general rules we should follow
 
 1. Define extension objects with default values, so that defaults can be overridden.
 1. Use extension object content for task configuration when creating them.
@@ -33,19 +40,30 @@ Some general rules we should follow
 (when listing other tasks and changing them)
 1. Try to extract logic from tasks into standalone objects, this lends better testability.
 
+### Main Gradle Tasks
+
+Tasks should be defined for the following things:
+
+- Preparation for parallel building
+- Docker image building
+- Running build in parallel (coordinator side, uses k8s)
+- Running a chunk of work (worker side)
+
+With these four tasks it becomes simple to run the parallel build locally
+- Either run all the workers via k8s
+- Or just a specific instance of a worker
+
 ### Docker Image Creation
 
 1. The build agent can perform the preparation work
     1. Compilation
     1. Grouping tests (can be written in files `test-group-1`, `test-group-2`, ..., `test-group-N`)
 1. Creating docker image
-    1. Includes prep work artifacts
+    1. Packages prep work artifacts with code
     1. Currently one single docker image is created
     1. Each worker however could have its own dedicated image.
     This can be still cheap to upload/download if the docker images are appropriately layered.
-    This could simplify the POC solution.
-
-
+    This could maybe simplify the pod running logic that we have in the POC solution.
 
 #### Artifact Caching
 
@@ -55,6 +73,9 @@ This speeds up the preparation phase.
 This artifact cache should be packaged in the docker image so that builds on the worker also benefit from it.
 As far as I know this is implemented.
 
-An artifact cache cleanup policy needs to be configured.
+An artifact cache cleanup policy needs to be configured to avoid excessive usage of storage.
+If the build agent is not dedicated for running this specific build, its artifact cache
+can contain artifacts that are not needed for running the parallel builds, increasing the size
+of the docker image unnecessarily.
 
 ### 
