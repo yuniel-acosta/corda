@@ -6,7 +6,7 @@ package net.corda.tools.shell.base
 welcome = """
 
 Welcome to the Corda interactive shell.
-Useful commands include 'help' to see what is available, and 'bye' to shut down the node.
+Type 'help' to see what commands are available.
 
 """
 
