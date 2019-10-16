@@ -65,58 +65,6 @@ The build agent can perform the preparation work
 1. Grouping tests (can be written in files `test-group-1`, `test-group-2`, ..., `test-group-N`)
 1. Or instead of grouping, fetching the necessary data for grouping (like test runtimes)
 
-#### Test Grouping
-
-_TLDR: POC approach is a good one, but in case it becomes an obstacle of doing something
-else we might like to do, there are alternatives._
-
-In the POC the test grouping (or bucketing) is performed dynamically on the worker nodes
-in such a way that any single test is guaranteed to be assigned to a single worker.
-
-We want to be able to run any type of tests in parallel (tests, integration tests,
-slow integration tests, etc) in any combination, without having to generate a new
-expensive docker image for the test run.
-
-Performing grouping in the preparation phase would mean that the docker image generated
-might not contain the most optimal distribution of tests to workers.
-This is because the test distribution would be static, but the types of tests to run
-and the number of workers to use is dynamically provided by the user.
-If the user decided to only run tests for the `test` source set, the test grouping logic
-can either
-
-- only consider the tests in the `test` source set (and ignore integration tests, etc)
-- or always consider all tests and perform grouping for them.
-
-In the former case, the resulting docker image cannot be used to run tests in other source
-sets, as there is no grouping defined for them.
-In the latter case, the resulting test grouping might be suboptimal, as tests need to be 
-dynamically excluded from running, that could result in unbalanced distribution of work.
-
-Similarly, if the number of workers that the grouping was performed for is different
-than the number of workers the user decides to run the tests on has the obvious consequence
-of uneven workload or missing some tests.
-
-One possible workaround is to layer the docker image in such a way that test distribution
-is a thin layer on its own, applied on top of the other, more expensive layers.
-This allows the user to dynamically supply the test source sets to run
-along with the number of workers to use and the docker image creation to be still efficient
-(as only the test distribution layer) would need to be uploaded.
-
-In case docker image layering is a rejected approach, the test grouping should either
-be performed by the master parallel test runner or the worker (as it is done currently).
-- When the master performs it, it somehow needs to communicate to the worker
-which tests it needs to run.
-This cannot be a command line parameter, as it has a length limitation that an
-explicit list of tests can easily exceed.
-A feasible way would be a file dynamically created by the master after worker launch.
-This approach has an advantage of the test distribution logic has more freedom,
-does not have to be deterministic.
-In case this becomes a requirement, this approach is a viable one.
-- When the workers perform test distribution logic, it needs to be deterministic to
-guarantee that each test is only executed by a single worker.
-Usage of pseudo randomness with a shared seed is deterministic.
-This possibly makes running a worker on a local developer machine simpler.
-
 ### Docker Image Creation
 
 Depends on the preparation task.
@@ -174,4 +122,59 @@ It could be the case that the docker plugin has some advantage over the api clie
 For example it might set sensible defaults that the client might not by itself do.
 This needs to be looked at still.
 
-### 
+### Test Grouping
+
+_TLDR: POC approach is conceptually a good one, but in case it becomes an obstacle of
+doing something else we might like to do, there are alternatives._
+
+In the POC the test grouping (or bucketing) is performed dynamically on the worker nodes
+in such a way that any single test is guaranteed to be assigned to a single worker.
+
+We want to be able to run any type of tests in parallel (tests, integration tests,
+slow integration tests, etc) in any combination, on any number of worker nodes
+without having to generate a new expensive docker image for the test run.
+
+#### As Preparation Artifacts
+ 
+Performing grouping in the preparation phase would mean that the docker image generated
+might not contain the most optimal distribution of tests to workers.
+This is because the test distribution would be static, but the types of tests to run
+and the number of workers to use is dynamically provided by the user.
+If the user decided to only run tests for the `test` source set, the test grouping logic
+can either
+
+- only consider the tests in the `test` source set (and ignore integration tests, etc)
+- or always consider all tests and perform grouping for them.
+
+In the former case, the resulting docker image cannot be used to run tests in other source
+sets, as there is no grouping defined for them.
+In the latter case, the resulting test grouping might be suboptimal, as tests need to be 
+dynamically excluded from running, that could result in unbalanced distribution of work.
+
+Similarly, if the number of workers that the grouping was performed for is different
+than the number of workers the user decides to run the tests on has the obvious consequence
+of uneven workload or missing some tests.
+
+One possible workaround is to layer the docker image in such a way that test distribution
+is a thin layer on its own, applied on top of the other, more expensive layers.
+This allows the user to dynamically supply the test source sets to run
+along with the number of workers to use and the docker image creation to be still efficient
+(as only the test distribution layer) would need to be uploaded.
+
+#### By Master Node
+
+When the master performs it, it somehow needs to communicate to the worker
+which tests it needs to run.
+This cannot be a command line parameter, as it has a length limitation that an
+explicit list of tests can easily exceed.
+A feasible way would be a file dynamically created by the master after worker launch.
+This approach has an advantage of the test distribution logic has more freedom,
+does not have to be deterministic.
+In case this becomes a requirement, this approach is a viable one.
+
+#### By Workers
+
+When the workers perform test distribution logic, it needs to be deterministic to
+guarantee that each test is only executed by a single worker.
+Usage of pseudo randomness with a shared seed is deterministic.
+This possibly makes running a worker on a local developer machine simpler.
