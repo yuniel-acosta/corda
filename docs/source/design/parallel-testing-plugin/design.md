@@ -65,7 +65,10 @@ The build agent can perform the preparation work
 1. Grouping tests (can be written in files `test-group-1`, `test-group-2`, ..., `test-group-N`)
 1. Or instead of grouping, fetching the necessary data for grouping (like test runtimes)
 
-#### Test Grouping Concerns
+#### Test Grouping
+
+_TLDR: POC approach is a good one, but in case it becomes an obstacle of doing something
+else we might like to do, there are alternatives._
 
 In the POC the test grouping (or bucketing) is performed dynamically on the worker nodes
 in such a way that any single test is guaranteed to be assigned to a single worker.
