@@ -1,11 +1,27 @@
 package net.corda.testing
 
 import com.bmuschko.gradle.docker.DockerRegistryCredentials
-import com.bmuschko.gradle.docker.tasks.container.*
-import com.bmuschko.gradle.docker.tasks.image.*
+import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerLogsContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerRemoveContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerWaitContainer
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerCommitImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPullImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
+import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
+import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.core.DefaultDockerClientConfig
+import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.command.BuildImageResultCallback
+import com.github.dockerjava.core.command.PushImageResultCallback
+import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.TaskAction
 
 /**
  this plugin is responsible for setting up all the required docker image building tasks required for producing and pushing an
@@ -18,6 +34,10 @@ class ImageBuilding implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
+
+        project.tasks.create("buildWorkerImage", BuildWorkerImage) {
+            group = "Parallel Builds"
+        }
 
         def registryCredentialsForPush = new DockerRegistryCredentials(project.getObjects())
         registryCredentialsForPush.username.set("stefanotestingcr")
@@ -119,5 +139,32 @@ class ImageBuilding implements Plugin<Project> {
         if (System.getProperty("docker.keep.image") == null) {
             pushBuildImage.finalizedBy(deleteContainer, deleteBuildImage, deleteTaggedImage)
         }
+    }
+}
+
+
+class BuildWorkerImage extends DefaultTask {
+    @TaskAction
+    void buildImage() {
+        DockerClient client = DockerClientBuilder.getInstance(
+                DefaultDockerClientConfig.createDefaultConfigBuilder()
+                        .withRegistryUsername("stefanotestingcr")
+                        .withRegistryPassword(System.getProperty("docker.push.password"))
+                        .build()
+        ).build()
+
+        // TODO somehow also add gradle and maven cache to img:
+        // /tmp/gradle
+        // /home/root/.m2
+        // BuildImageResultCallback would need to be implemented
+        String imageId = client.buildImageCmd()
+                .withBaseDirectory(project.rootDir)
+                .withDockerfile(project.file("testing/Dockerfile"))
+                .withTag(System.getProperty("docker.provided.tag", "githash"))
+                .exec(new BuildImageResultCallback()).awaitImageId()
+
+        client.pushImageCmd(imageId)
+                .withTag(System.getProperty("docker.provided.tag", "githash"))
+                .exec(new PushImageResultCallback()).awaitCompletion()
     }
 }
