@@ -1,5 +1,6 @@
 import net.corda.testing.DistributedTesting
 import net.corda.testing.ImageBuilding
+import net.corda.testing.KubesTest
 import net.corda.testing.ParallelTestGroup
 
 import static org.gradle.api.JavaVersion.VERSION_11
@@ -27,8 +28,7 @@ buildscript {
         ext.quasar_version = constants.getProperty("quasarVersion11")
         ext.quasar_classifier = constants.getProperty("quasarClassifier11")
         ext.jdkClassifier = constants.getProperty("jdkClassifier11")
-    }
-    else {
+    } else {
         ext.quasar_version = constants.getProperty("quasarVersion")
         ext.quasar_classifier = constants.getProperty("quasarClassifier")
         ext.jdkClassifier = constants.getProperty("jdkClassifier")
@@ -646,10 +646,29 @@ task parallelRegressionTest(type: ParallelTestGroup) {
 apply plugin: ImageBuilding
 apply plugin: DistributedTesting
 
-task myMasterTask(type: net.corda.testing.KubesTest) {
+tasks.register("masterParallelTests", KubesTest) {
     group = "parallel builds"
-    dockerTag = "asd"
+    dockerTag = gitSha()
     fullTaskToExecutePath = "test"
     taskToExecuteName = "test"
 }
 
+String gitSha() {
+    def gitFolder = "$projectDir/.git/"
+    def takeFromHash = 12
+    /*
+     * '.git/HEAD' contains either
+     *      in case of detached head: the currently checked out commit hash
+     *      otherwise: a reference to a file containing the current commit hash
+     */
+    def head = new File(gitFolder + "HEAD").text.split(":") // .git/HEAD
+    def isCommit = head.length == 1 // e5a7c79edabbf7dd39888442df081b1c9d8e88fd
+    // def isRef = head.length > 1     // ref: refs/heads/master
+
+    if (isCommit) return head[0].trim().take(takeFromHash) // e5a7c79edabb
+
+    def refHead = new File(gitFolder + head[1].trim()) // .git/refs/heads/master
+    def sha = refHead.text.trim().take takeFromHash
+    println "Git sha: $sha"
+    return sha
+}
