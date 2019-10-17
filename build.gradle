@@ -1,6 +1,5 @@
 import net.corda.testing.DistributedTesting
 import net.corda.testing.ImageBuilding
-import net.corda.testing.Distribution
 import net.corda.testing.ParallelTestGroup
 
 import static org.gradle.api.JavaVersion.VERSION_11
@@ -643,6 +642,11 @@ task parallelRegressionTest(type: ParallelTestGroup) {
     coresPerFork 6
     memoryInGbPerFork 10
     distribute Distribution.CLASS
+}
+task myMasterTask(type:net.corda.testing.KubesTest) {
+    dockerTag = "asd"
+    fullTaskToExecutePath = "test"
+    taskToExecuteName = "test"
 }
 apply plugin: ImageBuilding
 apply plugin: DistributedTesting
