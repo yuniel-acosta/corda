@@ -34,11 +34,6 @@ class ImageBuilding implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-
-        project.tasks.create("buildWorkerImage", BuildWorkerImage) {
-            group = "Parallel Builds"
-        }
-
         def registryCredentialsForPush = new DockerRegistryCredentials(project.getObjects())
         registryCredentialsForPush.username.set("stefanotestingcr")
         registryCredentialsForPush.password.set(System.getProperty("docker.push.password") ? System.getProperty("docker.push.password") : "")
@@ -144,6 +139,7 @@ class ImageBuilding implements Plugin<Project> {
 
 
 class BuildWorkerImage extends DefaultTask {
+    String sha
     @TaskAction
     void buildImage() {
         DockerClient client = DockerClientBuilder.getInstance(
@@ -161,11 +157,11 @@ class BuildWorkerImage extends DefaultTask {
         String imageId = client.buildImageCmd()
                 .withBaseDirectory(project.rootDir)
                 .withDockerfile(project.file("testing/Dockerfile"))
-                .withTag(System.getProperty("docker.provided.tag", "githash"))
+                .withTag(sha)
                 .exec(new BuildImageResultCallback()).awaitImageId()
 
-        client.pushImageCmd(imageId)
-                .withTag(System.getProperty("docker.provided.tag", "githash"))
+        client.pushImageCmd("stefanotestingcr.azurecr.io/testing")
+                .withTag(sha)
                 .exec(new PushImageResultCallback()).awaitCompletion()
     }
 }

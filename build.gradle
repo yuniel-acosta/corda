@@ -1,3 +1,4 @@
+import net.corda.testing.BuildWorkerImage
 import net.corda.testing.DistributedTesting
 import net.corda.testing.ImageBuilding
 import net.corda.testing.KubesTest
@@ -657,4 +658,9 @@ String gitSha() {
     def sha = 'git rev-parse --verify --short HEAD'.execute().text.trim()
     println "Git sha: $sha"
     return sha
+}
+
+tasks.register("buildWorkerImage", BuildWorkerImage) {
+    group = "Parallel Builds"
+    sha = gitSha()
 }
