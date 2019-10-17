@@ -155,9 +155,9 @@ class BuildWorkerImage extends DefaultTask {
         // /home/root/.m2
         // BuildImageResultCallback would need to be implemented
         String imageId = client.buildImageCmd()
-                .withBaseDirectory(project.rootDir)
-                .withDockerfile(project.file("testing/Dockerfile"))
-                .withTag(sha)
+                .withBaseDirectory(new File("."))
+                .withDockerfile(new File(new File("testing"), "Dockerfile"))
+//                .withTag(sha)
                 .exec(new BuildImageResultCallback()).awaitImageId()
 
         client.pushImageCmd("stefanotestingcr.azurecr.io/testing")
