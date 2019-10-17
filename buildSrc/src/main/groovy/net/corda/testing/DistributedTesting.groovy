@@ -41,6 +41,9 @@ class DistributedTesting implements Plugin<Project> {
             List<String> tests = Arrays.asList(grouper.groups.get(tg))
             project.subprojects { Project p ->
                 p.tasks.withType(Test) { Test t ->
+                    if (t.hasProperty("ignoreForDistribution")) {
+                        return
+                    }
                     println "Configuring test for includes: $t: $tests"
                     t.configure {
                         doFirst {
@@ -48,6 +51,7 @@ class DistributedTesting implements Plugin<Project> {
                             filter {
                                 tests.forEach {
                                     includeTestsMatching it
+                                    failOnNoMatchingTests false
                                 }
                             }
                         }
