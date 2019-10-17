@@ -162,9 +162,9 @@ class BuildWorkerImage extends DefaultTask {
         registryCredentialsForPush.password.set(pw)
 
         def ac = new AuthConfig()
-        ac.registryAddress = registryCredentialsForPush.url
-        ac.username = registryCredentialsForPush.username
-        ac.password = registryCredentialsForPush.password
+        ac.registryAddress = registryCredentialsForPush.url.get()
+        ac.username = registryCredentialsForPush.username.get()
+        ac.password = registryCredentialsForPush.password.get()
 
         // TODO somehow also add gradle and maven cache to img:
         // /tmp/gradle
