@@ -146,7 +146,7 @@ class BuildWorkerImage extends DefaultTask {
         def pw = System.getProperty("docker.push.password")
         if (pw == null) throw new RuntimeException("missing docker password")
 
-        DockerPullImage pullTask = new DockerPullImage().with {
+        DockerPullImage pullTask = project.tasks.create("pullBaseImageZZZ", DockerPullImage) {
             repository = "stefanotestingcr.azurecr.io/buildbase"
             tag = "latest"
             doFirst {
