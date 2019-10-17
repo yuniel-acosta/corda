@@ -148,6 +148,7 @@ class BuildWorkerImage extends DefaultTask {
     void buildImage() {
         DockerClient client = DockerClientBuilder.getInstance(
                 DefaultDockerClientConfig.createDefaultConfigBuilder()
+                        .withRegistryUrl("tcp://localhost:2375")
                         .withRegistryUsername("stefanotestingcr")
                         .withRegistryPassword(System.getProperty("docker.push.password"))
                         .build()
