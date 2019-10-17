@@ -146,34 +146,19 @@ class BuildWorkerImage extends DefaultTask {
         def pw = System.getProperty("docker.push.password")
         if (pw == null) throw new RuntimeException("missing docker password")
 
-        DockerPullImage pullTask = project.tasks.create("pullBaseImageZZZ", DockerPullImage) {
-            repository = "stefanotestingcr.azurecr.io/buildbase"
-            tag = "latest"
-            doFirst {
-                registryCredentials = registryCredentialsForPush
-            }
-        }
+        DockerClient client = createClient()
+        def ac = auth(pw)
 
-        DockerClient client = pullTask.dockerClient
-
-        def registryCredentialsForPush = new DockerRegistryCredentials(project.getObjects())
-        registryCredentialsForPush.username.set("stefanotestingcr")
-        registryCredentialsForPush.password.set(pw)
-
-        def ac = new AuthConfig()
-        ac.registryAddress = registryCredentialsForPush.url.get()
-        ac.username = registryCredentialsForPush.username.get()
-        ac.password = registryCredentialsForPush.password.get()
-
-        // TODO somehow also add gradle and maven cache to img:
-        // /tmp/gradle
-        // /home/root/.m2
-        // BuildImageResultCallback would need to be implemented
+        // don't think this is needed when auth is properly configured
         client.pullImageCmd("stefanotestingcr.azurecr.io/buildbase")
                 .withTag("latest")
                 .withAuthConfig(ac)
                 .exec(new PullImageResultCallback()).awaitCompletion()
 
+        // TODO somehow also add gradle and maven cache to img:
+        // /tmp/gradle
+        // /home/root/.m2
+        // BuildImageResultCallback would need to be implemented
         String imageId = client.buildImageCmd()
                 .withBaseDirectory(new File("."))
                 .withDockerfile(new File(new File("testing"), "Dockerfile"))
@@ -184,5 +169,26 @@ class BuildWorkerImage extends DefaultTask {
                 .withTag(sha)
                 .withAuthConfig(ac)
                 .exec(new PushImageResultCallback()).awaitCompletion()
+    }
+
+    DockerClient createClient() {
+        DockerPullImage pullTask = project.tasks.create("gimmeclient", DockerPullImage) {
+            repository = "stefanotestingcr.azurecr.io/buildbase"
+            tag = "latest"
+        }
+        pullTask.dockerClient
+    }
+
+    AuthConfig auth(String pw) {
+        def registryCredentialsForPush = new DockerRegistryCredentials(project.getObjects())
+        registryCredentialsForPush.username.set("stefanotestingcr")
+        registryCredentialsForPush.password.set(pw)
+
+        def ac = new AuthConfig()
+        ac.registryAddress = registryCredentialsForPush.url.get()
+        ac.username = registryCredentialsForPush.username.get()
+        ac.password = registryCredentialsForPush.password.get()
+
+        ac
     }
 }
