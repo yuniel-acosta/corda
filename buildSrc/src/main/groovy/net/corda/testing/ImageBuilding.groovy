@@ -23,7 +23,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
-
 /**
  this plugin is responsible for setting up all the required docker image building tasks required for producing and pushing an
  image of the current build output to a remote container registry
@@ -144,6 +143,9 @@ class BuildWorkerImage extends DefaultTask {
 
     @TaskAction
     void buildImage() {
+        if(System.getProperty("docker.push.password") == null) throw new RuntimeException("missing docker password")
+
+
         DockerClient client = DockerClientBuilder.getInstance(
                 DefaultDockerClientConfig.createDefaultConfigBuilder()
                         .withRegistryUrl("tcp://localhost:2375")
