@@ -601,7 +601,7 @@ task allParallelIntegrationTest(type: ParallelTestGroup) {
     streamOutput false
     coresPerFork 6
     memoryInGbPerFork 10
-    distribute Distribution.CLASS
+    distribute net.corda.testing.Distribution.CLASS
 }
 task allParallelSlowIntegrationTest(type: ParallelTestGroup) {
     testGroups "slowIntegrationTest"
@@ -609,7 +609,7 @@ task allParallelSlowIntegrationTest(type: ParallelTestGroup) {
     streamOutput false
     coresPerFork 6
     memoryInGbPerFork 10
-    distribute Distribution.CLASS
+    distribute net.corda.testing.Distribution.CLASS
 }
 task allParallelSmokeTest(type: ParallelTestGroup) {
     testGroups "smokeTest"
@@ -617,7 +617,7 @@ task allParallelSmokeTest(type: ParallelTestGroup) {
     streamOutput true
     coresPerFork 6
     memoryInGbPerFork 10
-    distribute Distribution.METHOD
+    distribute net.corda.testing.Distribution.METHOD
 }
 task allParallelUnitTest(type: ParallelTestGroup) {
     testGroups "test"
@@ -625,7 +625,7 @@ task allParallelUnitTest(type: ParallelTestGroup) {
     streamOutput false
     coresPerFork 5
     memoryInGbPerFork 6
-    distribute Distribution.CLASS
+    distribute net.corda.testing.Distribution.CLASS
 }
 task allParallelUnitAndIntegrationTest(type: ParallelTestGroup) {
     testGroups "test", "integrationTest"
@@ -633,7 +633,7 @@ task allParallelUnitAndIntegrationTest(type: ParallelTestGroup) {
     streamOutput false
     coresPerFork 6
     memoryInGbPerFork 10
-    distribute Distribution.CLASS
+    distribute net.corda.testing.Distribution.CLASS
 }
 task parallelRegressionTest(type: ParallelTestGroup) {
     testGroups "test", "integrationTest", "slowIntegrationTest", "smokeTest"
@@ -641,14 +641,15 @@ task parallelRegressionTest(type: ParallelTestGroup) {
     streamOutput false
     coresPerFork 6
     memoryInGbPerFork 10
-    distribute Distribution.CLASS
-}
-task myMasterTask(type:net.corda.testing.KubesTest) {
-    dockerTag = "asd"
-    fullTaskToExecutePath = "test"
-    taskToExecuteName = "test"
+    distribute net.corda.testing.Distribution.CLASS
 }
 apply plugin: ImageBuilding
 apply plugin: DistributedTesting
 
+task myMasterTask(type: net.corda.testing.KubesTest) {
+    group = "parallel builds"
+    dockerTag = "asd"
+    fullTaskToExecutePath = "test"
+    taskToExecuteName = "test"
+}
 
