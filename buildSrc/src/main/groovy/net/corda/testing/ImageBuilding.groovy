@@ -13,6 +13,7 @@ import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
 import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
 import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.BuildImageResultCallback
@@ -23,6 +24,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
+
 /**
  this plugin is responsible for setting up all the required docker image building tasks required for producing and pushing an
  image of the current build output to a remote container registry
@@ -143,16 +145,22 @@ class BuildWorkerImage extends DefaultTask {
 
     @TaskAction
     void buildImage() {
-        if(System.getProperty("docker.push.password") == null) throw new RuntimeException("missing docker password")
+        def pw = System.getProperty("docker.push.password")
+        if (pw == null) throw new RuntimeException("missing docker password")
 
 
         DockerClient client = DockerClientBuilder.getInstance(
                 DefaultDockerClientConfig.createDefaultConfigBuilder()
                         .withRegistryUrl("tcp://localhost:2375")
                         .withRegistryUsername("stefanotestingcr")
-                        .withRegistryPassword(System.getProperty("docker.push.password"))
+                        .withRegistryPassword(pw)
                         .build()
         ).build()
+
+
+        def ac = new AuthConfig()
+        ac.username = "stefanotestingcr"
+        ac.password = pw
 
         // TODO somehow also add gradle and maven cache to img:
         // /tmp/gradle
@@ -160,6 +168,7 @@ class BuildWorkerImage extends DefaultTask {
         // BuildImageResultCallback would need to be implemented
         client.pullImageCmd("stefanotestingcr.azurecr.io/buildbase")
                 .withTag("latest")
+                .withAuthConfig(ac)
                 .exec(new PullImageResultCallback()).awaitCompletion()
 
         String imageId = client.buildImageCmd()
@@ -170,6 +179,7 @@ class BuildWorkerImage extends DefaultTask {
 
         client.pushImageCmd("stefanotestingcr.azurecr.io/testing")
                 .withTag(sha)
+                .withAuthConfig(ac)
                 .exec(new PushImageResultCallback()).awaitCompletion()
     }
 }
