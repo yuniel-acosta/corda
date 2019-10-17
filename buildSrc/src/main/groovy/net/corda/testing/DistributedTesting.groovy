@@ -18,13 +18,17 @@ class DistributedTesting implements Plugin<Project> {
     }
 
     static class GroupTests extends DefaultTask {
-        Map<String, String> groups = new HashMap<>()
+        Map<String, List<String>> groups = new HashMap<>()
 
         @TaskAction
         def group() {
             println "Grouping tests"
-            groups.put("1", "test1")
-            groups.put("2", "test2")
+            groups.put("1", Arrays.asList("test1", "test2"))
+            groups.put("2", Arrays.asList("test3", "test4"))
+        }
+
+        List<String> includesForTest(Test t) {
+            return groups.get(t.path, Arrays.asList("test1"))
         }
     }
 
@@ -36,22 +40,21 @@ class DistributedTesting implements Plugin<Project> {
         @TaskAction
         def run() {
             println "Configuring test tasks"
-            def tg = "1"
             def grouper = project.tasks.withType(GroupTests).first()
-            List<String> tests = Arrays.asList(grouper.groups.get(tg))
             project.subprojects { Project p ->
                 p.tasks.withType(Test) { Test t ->
                     if (t.hasProperty("ignoreForDistribution")) {
                         return
                     }
-                    println "Configuring test for includes: $t: $tests"
+                    def includes = grouper.includesForTest(t)
+                    println "Configuring test for includes: $t: $includes"
                     t.configure {
                         doFirst {
                             println "Running modified test: $t"
                             filter {
-                                tests.forEach {
+                                failOnNoMatchingTests false
+                                includes.forEach {
                                     includeTestsMatching it
-                                    failOnNoMatchingTests false
                                 }
                             }
                         }
