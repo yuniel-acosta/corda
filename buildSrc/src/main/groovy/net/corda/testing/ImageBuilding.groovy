@@ -13,6 +13,7 @@ import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
 import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
 import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.core.command.BuildImageResultCallback
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
@@ -154,6 +155,15 @@ class BuildWorkerImage extends DefaultTask {
         }
 
         DockerClient client = pullTask.dockerClient
+
+        def registryCredentialsForPush = new DockerRegistryCredentials(project.getObjects())
+        registryCredentialsForPush.username.set("stefanotestingcr")
+        registryCredentialsForPush.password.set(pw)
+
+        def ac = new AuthConfig()
+        ac.registryAddress = registryCredentialsForPush.url.get()
+        ac.username = registryCredentialsForPush.username.get()
+        ac.password = registryCredentialsForPush.password.get()
 
         // TODO somehow also add gradle and maven cache to img:
         // /tmp/gradle
