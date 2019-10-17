@@ -13,9 +13,6 @@ import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
 import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
 import com.github.dockerjava.api.DockerClient
-import com.github.dockerjava.api.model.AuthConfig
-import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.BuildImageResultCallback
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
@@ -148,23 +145,15 @@ class BuildWorkerImage extends DefaultTask {
         def pw = System.getProperty("docker.push.password")
         if (pw == null) throw new RuntimeException("missing docker password")
 
+        DockerPullImage pullTask = new DockerPullImage().with {
+            repository = "stefanotestingcr.azurecr.io/buildbase"
+            tag = "latest"
+            doFirst {
+                registryCredentials = registryCredentialsForPush
+            }
+        }
 
-        DockerClient client = DockerClientBuilder.getInstance(
-                DefaultDockerClientConfig.createDefaultConfigBuilder()
-//                        .withRegistryUrl('https://index.docker.io/v1/')
-                        .withRegistryUsername("stefanotestingcr")
-                        .withRegistryPassword(pw)
-                        .build()
-        ).build()
-
-        def registryCredentialsForPush = new DockerRegistryCredentials(project.getObjects())
-        registryCredentialsForPush.username.set("stefanotestingcr")
-        registryCredentialsForPush.password.set(pw)
-
-        def ac = new AuthConfig()
-        ac.registryAddress = registryCredentialsForPush.url.get()
-        ac.username = registryCredentialsForPush.username.get()
-        ac.password = registryCredentialsForPush.password.get()
+        DockerClient client = pullTask.dockerClient
 
         // TODO somehow also add gradle and maven cache to img:
         // /tmp/gradle
