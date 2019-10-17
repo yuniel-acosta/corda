@@ -16,6 +16,7 @@ import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.BuildImageResultCallback
+import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -140,6 +141,7 @@ class ImageBuilding implements Plugin<Project> {
 
 class BuildWorkerImage extends DefaultTask {
     String sha
+
     @TaskAction
     void buildImage() {
         DockerClient client = DockerClientBuilder.getInstance(
@@ -154,6 +156,10 @@ class BuildWorkerImage extends DefaultTask {
         // /tmp/gradle
         // /home/root/.m2
         // BuildImageResultCallback would need to be implemented
+        client.pullImageCmd("stefanotestingcr.azurecr.io/buildbase")
+                .withTag("latest")
+                .exec(new PullImageResultCallback()).awaitCompletion()
+
         String imageId = client.buildImageCmd()
                 .withBaseDirectory(new File("."))
                 .withDockerfile(new File(new File("testing"), "Dockerfile"))
