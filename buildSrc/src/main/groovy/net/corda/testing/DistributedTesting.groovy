@@ -38,16 +38,21 @@ class DistributedTesting implements Plugin<Project> {
             println "Configuring test tasks"
             def tg = "1"
             def grouper = project.tasks.withType(GroupTests).first()
-            def test = grouper.groups.get(tg)
-            project.allprojects { Project p ->
+            List<String> tests = Arrays.asList(grouper.groups.get(tg))
+            project.subprojects { Project p ->
                 p.tasks.withType(Test) { Test t ->
+                    println "Configuring test for includes: $t: $tests"
                     t.configure {
-                        println "Configuring test for includes: $t: $test"
-                        it.includes = [test]
-                        it.doFirst {
-                            println "Running modified test: $it"
+                        doFirst {
+                            println "Running modified test: $t"
+                            filter {
+                                tests.forEach {
+                                    includeTestsMatching it
+                                }
+                            }
                         }
                     }
+//                    t.testNameIncludePatterns = tests
                 }
             }
             println "Running worker tests"
