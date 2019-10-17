@@ -151,16 +151,20 @@ class BuildWorkerImage extends DefaultTask {
 
         DockerClient client = DockerClientBuilder.getInstance(
                 DefaultDockerClientConfig.createDefaultConfigBuilder()
-                        .withRegistryUrl('https://index.docker.io/v1/')
+//                        .withRegistryUrl('https://index.docker.io/v1/')
                         .withRegistryUsername("stefanotestingcr")
                         .withRegistryPassword(pw)
                         .build()
         ).build()
 
+        def registryCredentialsForPush = new DockerRegistryCredentials(project.getObjects())
+        registryCredentialsForPush.username.set("stefanotestingcr")
+        registryCredentialsForPush.password.set(pw)
 
         def ac = new AuthConfig()
-        ac.username = "stefanotestingcr"
-        ac.password = pw
+        ac.registryAddress = registryCredentialsForPush.url
+        ac.username = registryCredentialsForPush.username
+        ac.password = registryCredentialsForPush.password
 
         // TODO somehow also add gradle and maven cache to img:
         // /tmp/gradle
