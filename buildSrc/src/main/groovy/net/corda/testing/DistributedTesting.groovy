@@ -1,8 +1,10 @@
 package net.corda.testing
 
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.testing.Test
 
 /**
@@ -15,8 +17,54 @@ class DistributedTesting implements Plugin<Project> {
         return proj.hasProperty(property) ? Integer.parseInt(proj.property(property).toString()) : defaultValue
     }
 
+    static class GroupTests extends DefaultTask {
+        Map<String, String> groups = new HashMap<>()
+        @TaskAction
+        def group() {
+            println "Grouping tests"
+            groups.put("1", "test1")
+            groups.put("2", "test2")
+        }
+    }
+
+    static class RunWorkerTests extends DefaultTask {
+        RunWorkerTests() {
+            group = "parallel builds"
+        }
+        @TaskAction
+        def run() {
+            println "Running worker tests"
+            def tg = "1"
+            def grouper = project.withType(GroupTests).first()
+            def test= grouper.groups.get(tg)
+            project.withType(Test) { Test t ->
+                t.configure {
+                    println "Configuring test for includes: $t"
+                    it.includes = [ test ]
+                }
+            }
+        }
+    }
+
     @Override
     void apply(Project project) {
+        def g = project.tasks.create("groupParallelTests", GroupTests)
+        def wt = project.tasks.create("runWorkerTests", RunWorkerTests) {
+            group = "parallel builds"
+            dependsOn(g)
+        }
+        project.subprojects { Project p ->
+            def list = p.tasks.create("listTests", DefaultTask) {
+                doFirst {
+                    println "Listing tests for project $p"
+                }
+            }
+            g.dependsOn(list)
+            p.tasks.withType(Test) { Test t ->
+                wt.finalizedBy(t)
+            }
+        }
+
         if (System.getProperty("kubenetize") != null) {
 
             def forks = getPropertyAsInt(project, "dockerForks", 1)
