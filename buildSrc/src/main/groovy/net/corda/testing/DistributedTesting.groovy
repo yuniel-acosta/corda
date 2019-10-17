@@ -19,6 +19,7 @@ class DistributedTesting implements Plugin<Project> {
 
     static class GroupTests extends DefaultTask {
         Map<String, String> groups = new HashMap<>()
+
         @TaskAction
         def group() {
             println "Grouping tests"
@@ -31,18 +32,25 @@ class DistributedTesting implements Plugin<Project> {
         RunWorkerTests() {
             group = "parallel builds"
         }
+
         @TaskAction
         def run() {
-            println "Running worker tests"
+            println "Configuring test tasks"
             def tg = "1"
-            def grouper = project.withType(GroupTests).first()
-            def test= grouper.groups.get(tg)
-            project.withType(Test) { Test t ->
-                t.configure {
-                    println "Configuring test for includes: $t"
-                    it.includes = [ test ]
+            def grouper = project.tasks.withType(GroupTests).first()
+            def test = grouper.groups.get(tg)
+            project.allprojects { Project p ->
+                p.tasks.withType(Test) { Test t ->
+                    t.configure {
+                        println "Configuring test for includes: $t: $test"
+                        it.includes = [test]
+                        it.doFirst {
+                            println "Running modified test: $it"
+                        }
+                    }
                 }
             }
+            println "Running worker tests"
         }
     }
 
