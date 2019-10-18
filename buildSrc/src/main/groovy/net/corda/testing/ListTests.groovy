@@ -57,11 +57,7 @@ class ListTests extends DefaultTask {
     }
 
     Set<String> findTestsIn(Test task) {
-        def cp = task.project.getExtensions().getByType(SourceSetContainer)
-                .toList()
-                .findAll { it.name.contains("test") }
-                .collect { it.output.classesDirs.toList() }
-                .flatten()
+        def cp = testClassesToScan(task)
         if (cp.isEmpty()) return Collections.emptySet()
 
         logger.lifecycle("Listing tests for $task, scanning ${cp.toList()}")
@@ -82,6 +78,16 @@ class ListTests extends DefaultTask {
                 .toSet()
         logger.lifecycle("Found ${tests.size()} tests")
         return tests
+    }
+
+    private List<?> testClassesToScan(Test task) {
+        // TODO absolutely not sure what the best way is to find where tests are located for a test task.
+        // using source sets out of sheer desperation
+        task.project.getExtensions().getByType(SourceSetContainer)
+                .toList()
+                .findAll { it.name.contains("test") }
+                .collect { it.output.classesDirs.toList() }
+                .flatten()
     }
 
     Set<String> findTestsIn(ClassInfo testClass) {
