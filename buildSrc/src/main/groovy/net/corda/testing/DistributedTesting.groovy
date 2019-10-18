@@ -11,6 +11,11 @@ import org.gradle.api.tasks.testing.Test
  */
 class DistributedTesting implements Plugin<Project> {
 
+    /*
+    Example run:
+    ./gradlew --parallel runAllTestWorker "-PparallelTestTasks=integrationTest" --stacktrace
+     */
+
     @Override
     void apply(Project project) {
         def groupTask = project.tasks.register("groupAllTests", GroupTests) {
