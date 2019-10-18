@@ -13,10 +13,10 @@ class DistributedTesting implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        def groupTask = project.tasks.register("groupTests", GroupTests) {
+        def groupTask = project.tasks.register("groupAllTests", GroupTests) {
             it.subprojects = true
         }
-        def run = project.tasks.register("runTestWorker", RunWorkerTests) {
+        def run = project.tasks.register("runAllTestWorker", RunTestWorker) {
             it.group = "parallel builds"
             it.dependsOn groupTask
         }
@@ -39,7 +39,7 @@ class DistributedTestModule implements Plugin<Project> {
             it.dependsOn list
             it.subprojects = false
         }
-        def run = target.tasks.register("runTestWorker", RunWorkerTests) {
+        def run = target.tasks.register("runTestWorker", RunTestWorker) {
             it.dependsOn group
         }
         target.tasks.withType(Test)
@@ -81,8 +81,8 @@ class GroupTests extends DefaultTask {
     }
 }
 
-class RunWorkerTests extends DefaultTask {
-    RunWorkerTests() {
+class RunTestWorker extends DefaultTask {
+    RunTestWorker() {
         group = "parallel builds"
     }
 
@@ -103,7 +103,6 @@ class RunWorkerTests extends DefaultTask {
                             doFirst {
                                 println "Running modified test: $t"
                                 filter {
-                                    failOnNoMatchingTests false
                                     includes.forEach {
                                         includeTestsMatching it
                                     }
