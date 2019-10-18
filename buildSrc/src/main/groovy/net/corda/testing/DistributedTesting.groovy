@@ -16,6 +16,10 @@ class DistributedTesting implements Plugin<Project> {
         def groupTask = project.tasks.register("groupAllTests", GroupTests) {
             it.subprojects = true
         }
+        // runAllTestWorker has intentionally different name than runTestWorker.
+        // this is because if the name was the same, calling ./gradlew runTestWorker
+        // launches all of these tasks which is not what we want.
+        // user has to qualify the task which might confuse some
         def run = project.tasks.register("runAllTestWorker", RunTestWorker) {
             it.group = "parallel builds"
             it.dependsOn groupTask
