@@ -133,6 +133,6 @@ class DistributedTestingDynamicParameters {
     }
 
     static int numberOfWorkers(Project project) {
-        return (project.property("parallelTestWorkers") as Integer) ?: 0
+        return (project.property("parallelTestWorkers") as Integer) ?: 1
     }
 }
