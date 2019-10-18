@@ -80,7 +80,7 @@ class ListTests extends DefaultTask {
         return tests
     }
 
-    private List<?> testClassesToScan(Test task) {
+    private Collection<File> testClassesToScan(Test task) {
         // TODO absolutely not sure what the best way is to find where tests are located for a test task.
         // using source sets out of sheer desperation
         task.project.getExtensions().getByType(SourceSetContainer)
