@@ -4,6 +4,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.testing.Test
 
 /**
@@ -13,19 +14,19 @@ class DistributedTesting implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        def groupTask = project.tasks.create("groupTests", GroupTests) {
-            subprojects = true
+        def groupTask = project.tasks.register("groupTests", GroupTests) {
+            it.subprojects = true
         }
-        def run = project.tasks.create("runTestWorker", RunWorkerTests) {
-            group = "parallel builds"
-            dependsOn(groupTask)
+        def run = project.tasks.register("runTestWorker", RunWorkerTests) {
+            it.group = "parallel builds"
+            it.dependsOn groupTask
         }
         project.subprojects { Project p ->
             p.pluginManager.apply(DistributedTestModule)
-            p.tasks.withType(ListTests) { groupTask.dependsOn(it) }
+            p.tasks.withType(ListTests) { listing -> groupTask.configure { it.dependsOn(listing) } }
             p.tasks.withType(Test)
                     .findAll { DistributedTestingDynamicParameters.shouldRunTest(p, it.name) }
-                    .forEach { run.finalizedBy(it) }
+                    .forEach { test -> run.configure { it.finalizedBy(test) } }
         }
     }
 
@@ -34,18 +35,18 @@ class DistributedTesting implements Plugin<Project> {
 class DistributedTestModule implements Plugin<Project> {
     @Override
     void apply(Project target) {
-        def list = target.create("listTests", ListTests)
-        def group = target.create("groupTests", GroupTests) {
-            dependsOn list
-            subprojects = false
+        def list = target.tasks.register("listTests", ListTests)
+        def group = target.tasks.register("groupTests", GroupTests) {
+            it.dependsOn list
+            it.subprojects = false
         }
-        def run = target.create("runTestWorker", RunWorkerTests) {
-            dependsOn group
+        TaskProvider<RunWorkerTests> run = target.tasks.register("runTestWorker", RunWorkerTests) {
+            it.dependsOn group
         }
         target.tasks.withType(Test)
                 .findAll { DistributedTestingDynamicParameters.shouldRunTest(target, it.name) }
-                .forEach {
-                    run.finalizedBy(it)
+                .forEach { test ->
+                    run.configure { it.finalizedBy(test) }
                 }
     }
 }
@@ -66,6 +67,7 @@ class GroupTests extends DefaultTask {
         }
 
         listers.forEach { ListTests it ->
+            // TODO proper grouping
             it.tests.forEach { Map.Entry<Test, Set<String>> tests ->
                 testsToRun.put(tests.key, tests.value.take(1).toSet())
             }

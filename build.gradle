@@ -1,6 +1,4 @@
 import net.corda.testing.BuildWorkerImage
-import net.corda.testing.DistributedTesting
-import net.corda.testing.ImageBuilding
 
 import static org.gradle.api.JavaVersion.VERSION_11
 import static org.gradle.api.JavaVersion.VERSION_1_8
@@ -594,8 +592,8 @@ buildScan {
     termsOfServiceAgree = 'yes'
 }
 
-apply plugin: ImageBuilding
-apply plugin: DistributedTesting
+apply plugin: net.corda.testing.ImageBuilding
+apply plugin: net.corda.testing.DistributedTesting
 
 tasks.register("masterParallelTests", net.corda.testing.KubesTest) {
     group = "parallel builds"
