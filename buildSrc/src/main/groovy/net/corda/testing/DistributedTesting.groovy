@@ -13,7 +13,7 @@ class DistributedTesting implements Plugin<Project> {
 
     /*
     Example run:
-    ./gradlew --parallel runAllTestWorker "-PparallelTestTasks=integrationTest" --stacktrace
+    ./gradlew --parallel runAllTestWorker "-PparallelTestTasks=integrationTest" "-PparallelTestWorkers=6" "-PparallelTestWorkerId=3"
      */
 
     @Override
