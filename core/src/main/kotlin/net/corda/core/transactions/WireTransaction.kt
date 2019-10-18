@@ -163,7 +163,8 @@ class WireTransaction(componentGroups: List<ComponentGroup>, val privacySalt: Pr
         )
     }
 
-    private fun toLedgerTransactionInternal(
+    // SGX: temporarily make this public
+    fun toLedgerTransactionInternal(
             resolveIdentity: (PublicKey) -> Party?,
             resolveAttachment: (SecureHash) -> Attachment?,
             resolveStateRefAsSerialized: (StateRef) -> SerializedBytes<TransactionState<ContractState>>?,
@@ -172,8 +173,8 @@ class WireTransaction(componentGroups: List<ComponentGroup>, val privacySalt: Pr
     ): LedgerTransaction {
         // Look up public keys to authenticated identities.
         val authenticatedCommands = commands.lazyMapped { cmd, _ ->
-            val parties = cmd.signers.mapNotNull { pk -> resolveIdentity(pk) }
-            CommandWithParties(cmd.signers, parties, cmd.value)
+//            val parties = cmd.signers.mapNotNull { pk -> resolveIdentity(pk) }
+            CommandWithParties(cmd.signers, emptyList(), cmd.value)
         }
 
         val serializedResolvedInputs = inputs.map { ref ->

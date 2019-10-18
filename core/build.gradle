@@ -76,6 +76,9 @@ dependencies {
 
     compile group: "io.github.classgraph", name: "classgraph", version: class_graph_version
 
+    compile "com.r3.sgx:api-core-common:$sgxjvm_version"
+    compile "com.r3.sgx:enclavelet-host-client:$sgxjvm_version"
+
     // JDK11: required by Quasar at run-time
     testRuntimeOnly "com.esotericsoftware:kryo:4.0.2"
 

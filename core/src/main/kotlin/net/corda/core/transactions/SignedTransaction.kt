@@ -51,7 +51,8 @@ data class SignedTransaction(val txBits: SerializedBytes<CoreTransaction>,
     }
 
     init {
-        require(sigs.isNotEmpty()) { "Tried to instantiate a ${SignedTransaction::class.java.simpleName} without any signatures " }
+        // require(sigs.isNotEmpty()) { "Tried to instantiate a ${SignedTransaction::class.java.simpleName} without any signatures " }
+        // TODO: ^ why?
     }
 
     /** Cache the deserialized form of the transaction. This is useful when building a transaction or collecting signatures. */

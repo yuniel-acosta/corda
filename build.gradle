@@ -1,7 +1,9 @@
+/*
 import net.corda.testing.DistributedTesting
 import net.corda.testing.ImageBuilding
 import net.corda.testing.Distribution
 import net.corda.testing.ParallelTestGroup
+*/
 
 import static org.gradle.api.JavaVersion.VERSION_11
 import static org.gradle.api.JavaVersion.VERSION_1_8
@@ -129,6 +131,7 @@ buildscript {
         ext.fontawesomefx_commons_version = '8.15'
         ext.fontawesomefx_fontawesome_version = '4.7.0-5'
     }
+    ext.sgxjvm_version = constants.getProperty('sgxjvm_version')
 
     // Name of the IntelliJ SDK created for the deterministic Java rt.jar.
     // ext.deterministic_idea_sdk = '1.8 (Deterministic)'
@@ -173,6 +176,9 @@ buildscript {
         classpath "net.i2p.crypto:eddsa:$eddsa_version" // Needed for ServiceIdentityGenerator in the build environment.
         classpath "org.owasp:dependency-check-gradle:${dependency_checker_version}"
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:$artifactory_plugin_version"
+        classpath "com.r3.sgx:sgx-jvm-plugin-enclave:$sgxjvm_version"
+        classpath "com.r3.sgx:sgx-jvm-plugin-host:$sgxjvm_version"
+
         // Capsule gradle plugin forked and maintained locally to support Gradle 5.x
         // See https://github.com/corda/gradle-capsule-plugin
         classpath "us.kirchmeier:gradle-capsule-plugin:1.0.4_r3"
@@ -183,6 +189,7 @@ plugins {
     // Add the shadow plugin to the plugins classpath for the entire project.
     id 'com.github.johnrengelman.shadow' version '2.0.4' apply false
     id "com.gradle.build-scan" version "2.2.1"
+    id 'com.r3.sgx.enclave' version "1.0" apply false
     id 'com.bmuschko.docker-remote-api'
 }
 
@@ -335,6 +342,13 @@ allprojects {
         maven { url "$artifactory_contextUrl/corda-dependencies" }
         maven { url 'https://jitpack.io' }
         maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+        maven {
+            url = "https://software.r3.com/artifactory/sgxjvm"
+            credentials { creds ->
+                creds.username = System.getenv("OBLIVIUM_MAVEN_USERNAME")
+                creds.password = System.getenv("OBLIVIUM_MAVEN_PASSWORD")
+            }
+        }
     }
 
     configurations {
@@ -596,6 +610,10 @@ buildScan {
     termsOfServiceAgree = 'yes'
 }
 
+/*
+
+// SGX: docker plugin version conflict with SGXJVM
+
 task allParallelIntegrationTest(type: ParallelTestGroup) {
     testGroups "integrationTest"
     numberOfShards 10
@@ -630,5 +648,5 @@ task allParallelUnitAndIntegrationTest(type: ParallelTestGroup) {
 }
 apply plugin: ImageBuilding
 apply plugin: DistributedTesting
-
+*/
 

@@ -154,7 +154,8 @@ open class OpaqueBytes(bytes: ByteArray) : ByteSequence(bytes, 0, bytes.size) {
     }
 
     init {
-        require(bytes.isNotEmpty()) { "Byte Array must not be empty" }
+       // require(bytes.isNotEmpty()) { "Byte Array must not be empty" }
+        // ^ why?
     }
 
     /**
