@@ -3,6 +3,7 @@ package net.corda.testing
 import io.github.classgraph.ClassGraph
 import io.github.classgraph.ClassInfo
 import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.testing.Test
 
@@ -56,14 +57,21 @@ class ListTests extends DefaultTask {
     }
 
     Set<String> findTestsIn(Test task) {
-        logger.lifecycle("Listing tests for $task")
-        return new ClassGraph()
+        def cp = task.project.getExtensions().getByType(SourceSetContainer)
+                .toList()
+                .findAll { it.name.contains("test") }
+                .collect { it.output.classesDirs.toList() }
+                .flatten()
+        if (cp.isEmpty()) return Collections.emptySet()
+
+        logger.lifecycle("Listing tests for $task, scanning ${cp.toList()}")
+        def tests = new ClassGraph()
                 .enableClassInfo()
                 .enableMethodInfo()
                 .ignoreClassVisibility()
                 .ignoreMethodVisibility()
                 .enableAnnotationInfo()
-                .overrideClasspath(task.candidateClassFiles)
+                .overrideClasspath(cp)
                 .scan()
                 .getClassesWithMethodAnnotation("org.junit.Test")
                 .collect { it.getSubclasses() + Collections.singletonList(it) }
@@ -72,6 +80,8 @@ class ListTests extends DefaultTask {
                 .collect { ClassInfo testClass -> findTestsIn(testClass) }
                 .flatten()
                 .toSet()
+        logger.lifecycle("Found ${tests.size()} tests")
+        return tests
     }
 
     Set<String> findTestsIn(ClassInfo testClass) {
@@ -90,7 +100,7 @@ class ListTests extends DefaultTask {
     def discoverTests() {
         tests = new HashMap<>()
         project.tasks.withType(Test)
-                .findAll { DistributedTestingDynamicParameters.shouldRunTest(project, it.name) }
+                .findAll { DistributedTestingDynamicParameters.shouldRunTest(project, it) }
                 .forEach { tests.put(it, findTestsIn(it)) }
     }
 }

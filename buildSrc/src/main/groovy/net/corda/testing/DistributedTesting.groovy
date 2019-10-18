@@ -4,7 +4,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.testing.Test
 
 /**
@@ -25,7 +24,7 @@ class DistributedTesting implements Plugin<Project> {
             p.pluginManager.apply(DistributedTestModule)
             p.tasks.withType(ListTests) { listing -> groupTask.configure { it.dependsOn(listing) } }
             p.tasks.withType(Test)
-                    .findAll { DistributedTestingDynamicParameters.shouldRunTest(p, it.name) }
+                    .findAll { DistributedTestingDynamicParameters.shouldRunTest(p, it) }
                     .forEach { test -> run.configure { it.finalizedBy(test) } }
         }
     }
@@ -40,12 +39,15 @@ class DistributedTestModule implements Plugin<Project> {
             it.dependsOn list
             it.subprojects = false
         }
-        TaskProvider<RunWorkerTests> run = target.tasks.register("runTestWorker", RunWorkerTests) {
+        def run = target.tasks.register("runTestWorker", RunWorkerTests) {
             it.dependsOn group
         }
         target.tasks.withType(Test)
-                .findAll { DistributedTestingDynamicParameters.shouldRunTest(target, it.name) }
+                .findAll { DistributedTestingDynamicParameters.shouldRunTest(target, it) }
                 .forEach { test ->
+                    list.configure {
+                        it.dependsOn(test.name + "Classes")
+                    }
                     run.configure { it.finalizedBy(test) }
                 }
     }
@@ -68,8 +70,8 @@ class GroupTests extends DefaultTask {
 
         listers.forEach { ListTests it ->
             // TODO proper grouping
-            it.tests.forEach { Map.Entry<Test, Set<String>> tests ->
-                testsToRun.put(tests.key, tests.value.take(1).toSet())
+            it.tests.forEach { test, tests ->
+                testsToRun.put(test, tests.take(1).toSet())
             }
         }
     }
@@ -90,7 +92,7 @@ class RunWorkerTests extends DefaultTask {
         def grouper = project.tasks.withType(GroupTests).first()
         project.subprojects { Project p ->
             p.tasks.withType(Test)
-                    .findAll { DistributedTestingDynamicParameters.shouldRunTest(project, it.name) }
+                    .findAll { DistributedTestingDynamicParameters.shouldRunTest(project, it) }
                     .forEach { Test t ->
                         if (t.hasProperty("ignoreForDistribution")) {
                             return
@@ -117,10 +119,11 @@ class RunWorkerTests extends DefaultTask {
 
 class DistributedTestingDynamicParameters {
 
-    static boolean shouldRunTest(Project project, String testTaskName) {
+    static boolean shouldRunTest(Project project, Test test) {
         def targets = testTaskNames(project)
         if (targets == ["all"]) return true
-        return targets.contains(testTaskName)
+        if (!targets.contains(test.name)) return false
+        return !test.hasProperty("ignoreForDistribution")
     }
 
     static Set<String> testTaskNames(Project project) {
