@@ -1,0 +1,38 @@
+Manifest-Version: 1.0
+Corda-Platform-Version: 5
+Automatic-Module-Name: net.corda.contracts.kotlin
+Cordapp-Contract-Version: 1
+Sealed: true
+Corda-Vendor: Corda Open Source
+Min-Platform-Version: 5
+Cordapp-Contract-Vendor: Corda Open Source
+Corda-Revision: 50012224e99dc0171b84809de53b2664fa1041ca
+Cordapp-Contract-Name: CorDapp Example
+Target-Platform-Version: 5
+Corda-Release-Version: 5.0-SNAPSHOT-LOCAL
+Cordapp-Contract-Licence: Apache License, Version 2.0
+
+Name: com/r3/corda/sgx/poc/TheContract.class
+SHA-256-Digest: E5d7cnH/xikozRbO2Yg29wlnaW1NpdbM3ZzDyoQ6Mm8=
+
+Name: com/r3/corda/sgx/poc/TheContract$TheCommand$Transfer.class
+SHA-256-Digest: P+K6QdjZFSeXWOISkkbG0cUVtnRdA2bdAoWZ6imDrfI=
+
+Name: com/r3/corda/sgx/poc/TheContract$TheCommand.class
+SHA-256-Digest: bDDUlZAhqQdMGO83Na1TrlZL+7MYS6l2tHZLgdzl4e4=
+
+Name: META-INF/contracts-kotlin.kotlin_module
+SHA-256-Digest: axXVpG94WclLeDbTIg/suumPvgogKrevDD8x1F3Q5+0=
+
+Name: com/r3/corda/sgx/poc/TheContract$TheCommand$Issue.class
+SHA-256-Digest: 6oQGlnyjTWgk6SawxMyNipcg/aggZ1Fjky1auZNIP+4=
+
+Name: com/r3/corda/sgx/poc/TheContract$Companion.class
+SHA-256-Digest: /umEcxV7Iqhm7XvNirtETe1hJXGdQmKqJ/9f4lbv0pg=
+
+Name: com/r3/corda/sgx/poc/SecretToken.class
+SHA-256-Digest: neCivESxa6aKf8P19m+rVnoCYNSFjRzJXw2YNMtbJQA=
+
+Name: com/r3/corda/sgx/poc/TransactionView.class
+SHA-256-Digest: WfrZmsPQuCTirALtbjt7MYIY+xTN793NK1FtYZwSnmA=
+
