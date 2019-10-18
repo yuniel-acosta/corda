@@ -1,8 +1,6 @@
 import net.corda.testing.BuildWorkerImage
 import net.corda.testing.DistributedTesting
 import net.corda.testing.ImageBuilding
-import net.corda.testing.KubesTest
-import net.corda.testing.ParallelTestGroup
 
 import static org.gradle.api.JavaVersion.VERSION_11
 import static org.gradle.api.JavaVersion.VERSION_1_8
@@ -596,58 +594,10 @@ buildScan {
     termsOfServiceAgree = 'yes'
 }
 
-task allParallelIntegrationTest(type: ParallelTestGroup) {
-    testGroups "integrationTest"
-    numberOfShards 10
-    streamOutput false
-    coresPerFork 6
-    memoryInGbPerFork 10
-    distribute net.corda.testing.Distribution.CLASS
-}
-task allParallelSlowIntegrationTest(type: ParallelTestGroup) {
-    testGroups "slowIntegrationTest"
-    numberOfShards 4
-    streamOutput false
-    coresPerFork 6
-    memoryInGbPerFork 10
-    distribute net.corda.testing.Distribution.CLASS
-}
-task allParallelSmokeTest(type: ParallelTestGroup) {
-    testGroups "smokeTest"
-    numberOfShards 4
-    streamOutput true
-    coresPerFork 6
-    memoryInGbPerFork 10
-    distribute net.corda.testing.Distribution.METHOD
-}
-task allParallelUnitTest(type: ParallelTestGroup) {
-    testGroups "test"
-    numberOfShards 10
-    streamOutput false
-    coresPerFork 5
-    memoryInGbPerFork 6
-    distribute net.corda.testing.Distribution.CLASS
-}
-task allParallelUnitAndIntegrationTest(type: ParallelTestGroup) {
-    testGroups "test", "integrationTest"
-    numberOfShards 15
-    streamOutput false
-    coresPerFork 6
-    memoryInGbPerFork 10
-    distribute net.corda.testing.Distribution.CLASS
-}
-task parallelRegressionTest(type: ParallelTestGroup) {
-    testGroups "test", "integrationTest", "slowIntegrationTest", "smokeTest"
-    numberOfShards 5
-    streamOutput false
-    coresPerFork 6
-    memoryInGbPerFork 10
-    distribute net.corda.testing.Distribution.CLASS
-}
 apply plugin: ImageBuilding
 apply plugin: DistributedTesting
 
-tasks.register("masterParallelTests", KubesTest) {
+tasks.register("masterParallelTests", net.corda.testing.KubesTest) {
     group = "parallel builds"
     dockerTag = gitSha()
     fullTaskToExecutePath = "test"

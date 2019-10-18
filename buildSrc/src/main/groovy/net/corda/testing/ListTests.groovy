@@ -3,8 +3,8 @@ package net.corda.testing
 import io.github.classgraph.ClassGraph
 import io.github.classgraph.ClassInfo
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.testing.Test
 
 import java.util.stream.Collectors
 
@@ -41,70 +41,56 @@ interface TestLister {
     List<String> getAllTestsDiscovered()
 }
 
-class ListTests extends DefaultTask implements TestLister {
+class ListTests extends DefaultTask {
 
-    public static final String DISTRIBUTION_PROPERTY = "distributeBy"
+    Map<Test, Set<String>> tests
 
-    FileCollection scanClassPath
-    List<String> allTests
-    Distribution distribution = System.getProperty(DISTRIBUTION_PROPERTY) ? Distribution.valueOf(System.getProperty(DISTRIBUTION_PROPERTY)) : Distribution.METHOD
-
-    def getTestsForFork(int fork, int forks, Integer seed) {
-        def gitSha = new BigInteger(project.hasProperty("corda_revision") ? project.property("corda_revision").toString() : "0", 36)
-        if (fork >= forks) {
-            throw new IllegalArgumentException("requested shard ${fork + 1} for total shards ${forks}")
-        }
-        def seedToUse = seed ? (seed + ((String) this.getPath()).hashCode() + gitSha.intValue()) : 0
-        return new ListShufflerAndAllocator(allTests).getTestsForFork(fork, forks, seedToUse)
+    Set<String> testsIn(Test task) {
+        if (tests == null) throw new IllegalStateException("task should have been ran: $this")
+        tests.get(task)
     }
 
-    @Override
-    public List<String> getAllTestsDiscovered() {
-        return new ArrayList<>(allTests)
+    Set<String> allTests() {
+        if (tests == null) throw new IllegalStateException("task should have been ran: $this")
+        tests.collect { it.value }.flatten().toSet()
+    }
+
+    Set<String> findTestsIn(Test task) {
+        logger.lifecycle("Listing tests for $task")
+        return new ClassGraph()
+                .enableClassInfo()
+                .enableMethodInfo()
+                .ignoreClassVisibility()
+                .ignoreMethodVisibility()
+                .enableAnnotationInfo()
+                .overrideClasspath(task.candidateClassFiles)
+                .scan()
+                .getClassesWithMethodAnnotation("org.junit.Test")
+                .collect { it.getSubclasses() + Collections.singletonList(it) }
+                .flatten()
+                .toSet()
+                .collect { ClassInfo testClass -> findTestsIn(testClass) }
+                .flatten()
+                .toSet()
+    }
+
+    Set<String> findTestsIn(ClassInfo testClass) {
+        def hasSetup = testClass.getMethodInfo().any { it.hasAnnotation("org.junit.BeforeClass") }
+
+        if (hasSetup) {
+            return [testClass.name + ".*"].toSet()
+        }
+        return testClass.getMethodInfo()
+                .filter { m -> m.hasAnnotation("org.junit.Test") }
+                .collect { m -> testClass.name + "." + m.name }
+                .toSet()
     }
 
     @TaskAction
     def discoverTests() {
-        switch (distribution) {
-            case Distribution.METHOD:
-                Collection<String> results = new ClassGraph()
-                        .enableClassInfo()
-                        .enableMethodInfo()
-                        .ignoreClassVisibility()
-                        .ignoreMethodVisibility()
-                        .enableAnnotationInfo()
-                        .overrideClasspath(scanClassPath)
-                        .scan()
-                        .getClassesWithMethodAnnotation("org.junit.Test")
-                        .collect { c -> (c.getSubclasses() + Collections.singletonList(c)) }
-                        .flatten()
-                        .collect { ClassInfo c ->
-                            c.getMethodInfo().filter { m -> m.hasAnnotation("org.junit.Test") }.collect { m -> c.name + "." + m.name }
-                        }.flatten()
-                        .toSet()
-
-                this.allTests = results.stream().sorted().collect(Collectors.toList())
-                break
-            case Distribution.CLASS:
-                Collection<String> results = new ClassGraph()
-                        .enableClassInfo()
-                        .enableMethodInfo()
-                        .ignoreClassVisibility()
-                        .ignoreMethodVisibility()
-                        .enableAnnotationInfo()
-                        .overrideClasspath(scanClassPath)
-                        .scan()
-                        .getClassesWithMethodAnnotation("org.junit.Test")
-                        .collect { c -> (c.getSubclasses() + Collections.singletonList(c)) }
-                        .flatten()
-                        .collect { ClassInfo c -> c.name }.flatten()
-                        .toSet()
-                this.allTests = results.stream().sorted().collect(Collectors.toList())
-                break
-        }
+        tests = new HashMap<>()
+        project.tasks.withType(Test)
+                .findAll { DistributedTestingDynamicParameters.shouldRunTest(project, it.name) }
+                .forEach { tests.put(it, findTestsIn(it)) }
     }
-}
-
-public enum Distribution {
-    CLASS, METHOD
 }
