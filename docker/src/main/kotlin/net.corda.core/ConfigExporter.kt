@@ -65,6 +65,7 @@ fun main(args: Array<String>) {
 
     val command = args[0]
 
+    println("Anthony's version")
     when (command) {
         "TEST-NET-COMBINE" -> {
             val testNetConf = args[1]
