@@ -9,5 +9,5 @@ import net.corda.core.identity.Party
 data class Asset(val id: Int,
                  val owner: Party,
                  val issuer: Party): ContractState {
-    override val participants: List<AbstractParty> get() = listOf(owner)
+    override val participants: List<AbstractParty> = listOf(owner)
 }

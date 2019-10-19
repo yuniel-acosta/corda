@@ -8,7 +8,7 @@ import java.security.cert.X509Certificate
 
 @CordaSerializable
 data class EnclaveInitResponse(
-        val trustRoot: X509Certificate,
+        val trustRoot: ByteArray,
         val publicKeys: List<Pair<SignatureType, PublicKey>>,
         val sealingPayload: OpaqueBytes? = null
 )

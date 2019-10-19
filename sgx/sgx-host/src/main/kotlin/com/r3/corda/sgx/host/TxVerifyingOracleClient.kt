@@ -15,11 +15,12 @@ import net.corda.core.serialization.serialize
 import net.corda.core.transactions.ComponentGroup
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
+import java.io.File
 
 //@CordaService
 class TxVerifyingOracleClient(val services: ServiceHub): SingletonSerializeAsToken() {
 
-    val enclaveId: EnclaveInitResponse
+    lateinit var enclaveId: EnclaveInitResponse
     val proxy: TxValidatingOracleProxy
 
     val notarizedTxKey get() =
@@ -28,29 +29,38 @@ class TxVerifyingOracleClient(val services: ServiceHub): SingletonSerializeAsTok
     val verifiedTxKey get() =
         enclaveId.publicKeys.single { it.first == SignatureType.TRANSACTION_VERIFIED }.second
 
+    private val enclaveFile = File("/home/igor/projects/corda/sgx/tx-verifying-enclave/build/enclave/Simulation/enclave.signed.so")
+
+    private val target = "localhost:8080"
+
     init {
-        proxy = TxValidatingOracleProxy(services)
-        val initToken = EnclaveInput.Init(ledgerRootIdentity = services.identityService.trustRoot)
-        val output = proxy.invoke(initToken) as EnclaveOutput.SignedInitResponse
+        proxy = TxValidatingOracleProxy.Remote(services, target)
+    }
+
+    @Synchronized
+    fun start() {
+        val output = proxy.connect().use {
+            it.invoke(EnclaveInput.Init(ledgerRootIdentity = services.identityService.trustRoot.encoded))
+                    as EnclaveOutput.SignedInitResponse
+        }
 
         // Cannot validate it without remote attestation
         enclaveId = output.signedContent
     }
 
-    fun getEnclaveSignature(tx: WireTransaction): DigitalSignature.WithKey {
 
+    fun getEnclaveSignature(tx: WireTransaction): DigitalSignature.WithKey {
         val outputMsg = getSignatureOverChain(
                 SignedTransaction(tx, emptyList()),
                 SignatureType.TRANSACTION_VERIFIED) as EnclaveOutput.TransactionVerified
-
         return DigitalSignature.WithKey(
                 by = verifiedTxKey,
                 bytes = outputMsg.txSignature.bytes
         )
-
     }
 
-    fun getSignatureOverChain(txId: SecureHash, sigType: SignatureType): EnclaveOutput {
+    fun getSignatureOverChain(txId: SecureHash,
+                              sigType: SignatureType): EnclaveOutput {
         val tx = services.validatedTransactions.getTransaction(txId)
                 ?: throw TransactionResolutionException(txId)
         return getSignatureOverChain(tx, sigType)
@@ -85,26 +95,23 @@ class TxVerifyingOracleClient(val services: ServiceHub): SingletonSerializeAsTok
             inputStates.add(signedOutputStates)
         }
 
+        // TODO: use signed network parameters
         val netparam = services.networkParametersService.lookup(wireTx.networkParametersHash!!)
                 ?: throw TransactionResolutionException(txId)
-
-        // Fake signature
-        val signedNetParam = SignedDataWithCert<NetworkParameters>(
-                raw = netparam.serialize(),
-                sig = DigitalSignatureWithCert(by = services.identityService.trustRoot, bytes = ByteArray(0))
-        )
 
         val txResolutionPayload = TransactionResolutionPayload(
                 tx = tx,
                 inputStates = inputStates,
                 attachments = attachmentsData,
-                netparam = signedNetParam,
+                netparam = netparam,
                 attestedEnclaveIds = emptyList() //< No other oracles for now
         )
 
-        return proxy.invoke(EnclaveInput.InputMessage(
-                request = TransactionSigningRequest(txId = txId, signatureType = sigType),
-                payload = txResolutionPayload
-        ))
+        return proxy.connect().use {
+            it.invoke(EnclaveInput.InputMessage(
+                    request = TransactionSigningRequest(txId = txId, signatureType = sigType),
+                    payload = txResolutionPayload
+            ))
+        }
     }
 }

@@ -28,11 +28,21 @@ class TransactionVerifyingEnclavelet: AMQPEnclavelet<EnclaveInput, EnclaveOutput
         override fun process(input: EnclaveInput): EnclaveOutput {
             return when(input) {
                 is EnclaveInput.Init -> {
-                    getOrInitialize(input).publicId
+
+                    System.out.println("Transaction validating oracle initialization...")
+
+                    val result = getOrInitialize(input).publicId
+
+                    System.out.println("Transaction signing keys provisioned")
+
+                    result
                 }
                 is EnclaveInput.InputMessage -> {
                     val keys = (getOrInitialize() ?: throw IllegalStateException("Uninitialized enclave"))
                             .keys
+
+                    println("------------------------------------------------------")
+                    println("Received signing request of type ${input.request.signatureType} for transaction id ${input.request.txId}")
 
                     // Verify transaction resolution payload
                     val checkedResolutionData = verifyTxResolutionPayload(
@@ -40,15 +50,20 @@ class TransactionVerifyingEnclavelet: AMQPEnclavelet<EnclaveInput, EnclaveOutput
                             input.payload,
                             keys.getValue(SignatureType.TRANSACTION_NOTARIZED).public)
 
+
                     // Don't verify transaction if already signed by another transaction validity oracle
                     if (!checkSignatureOfValidity(input.payload, keys.values.map {it.public})) {
                         val resolvedTx = input.payload.tx.toLedgerTransactionSgx(checkedResolutionData)
                         resolvedTx.verify()
                     }
 
+                    println("Verified!")
+                    println("------------------------------------------------------")
+
                     when (input.request.signatureType) {
-                        SignatureType.TRANSACTION_VERIFIED -> EnclaveOutput.TransactionVerified(
-                                sign(input.request.txId, keys.getValue(SignatureType.TRANSACTION_VERIFIED).private))
+                        SignatureType.TRANSACTION_VERIFIED ->
+                            EnclaveOutput.TransactionVerified(
+                                    signBytes(input.request.txId.bytes, keys.getValue(SignatureType.TRANSACTION_VERIFIED).private))
 
                         SignatureType.TRANSACTION_NOTARIZED -> {
                             // Check all required signatures
@@ -94,12 +109,9 @@ class TransactionVerifyingEnclavelet: AMQPEnclavelet<EnclaveInput, EnclaveOutput
             it.id to it
         }.toMap()
 
-        // TODO: Add signature check!
-        val netparam = amqpSerializationEnv.asContextEnv {
-            payload.netparam.raw.deserialize()
-        }
+        // TODO: use signed netparam!
 
-        val netparamMap = mapOf(payload.netparam.raw.hash to netparam)
+        val netparamMap = mapOf(payload.netparam.serialize().hash to payload.netparam)
 
         return TransactionResolutionData(
                 emptyMap(),
@@ -146,9 +158,7 @@ class TransactionVerifyingEnclavelet: AMQPEnclavelet<EnclaveInput, EnclaveOutput
 
         val responseContentSignature = signatureScheme.sign(
                 attestedKeyPair.private,
-                amqpSerializationEnv.asContextEnv {
-                    responseContent.serialize()
-                }.bytes)
+                responseContent.serialize().bytes)
 
         val response = EnclaveOutput.SignedInitResponse(
                 signedContent = responseContent,
@@ -162,14 +172,17 @@ class TransactionVerifyingEnclavelet: AMQPEnclavelet<EnclaveInput, EnclaveOutput
                         Pair(SignatureType.TRANSACTION_VERIFIED, txVerifiedKey),
                         Pair(SignatureType.TRANSACTION_NOTARIZED, txNotarizedKey))
         )
+
         state_ = state
         return state
     }
 
     private fun <T: Any> sign(value: T, key: PrivateKey): OpaqueBytes {
-        val serialized = amqpSerializationEnv.asContextEnv {
-            value.serialize()
-        }
+        val serialized = value.serialize()
         return OpaqueBytes(signatureScheme.sign(key, serialized.bytes))
+    }
+
+    private fun signBytes(data: ByteArray, key: PrivateKey): OpaqueBytes {
+        return OpaqueBytes(signatureScheme.sign(key, data))
     }
  }

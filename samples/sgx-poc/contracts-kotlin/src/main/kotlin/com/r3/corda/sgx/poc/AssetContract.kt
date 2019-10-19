@@ -5,6 +5,7 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.requireSingleCommand
 import net.corda.core.contracts.requireThat
 import net.corda.core.transactions.LedgerTransaction
+import java.lang.Integer.min
 
 class AssetContract : Contract {
     companion object {
@@ -16,6 +17,7 @@ class AssetContract : Contract {
      * considered valid.
      */
     override fun verify(tx: LedgerTransaction) {
+
         val command = tx.commands.requireSingleCommand<Command>()
 
         when (command.value) {
@@ -37,9 +39,20 @@ class AssetContract : Contract {
                 "Same id" using (input.id == output.id)
             }
         }
-
         val requiredSigners = (tx.inputsOfType<Asset>() + tx.outputsOfType<Asset>()).map { it.owner.owningKey }
         requireThat { "Missing signer" using (command.signers.containsAll(requiredSigners)) }
+
+        // hackish verification done log message
+        if (System.getProperty("sgx.mode") != null) {
+            val str = tx.toString()
+            var offset = 0;
+            while (offset < str.length) {
+                val nextOffset = min(offset + 512, str.length - 1)
+                System.out.print(str.substring(offset, nextOffset + 1))
+                offset = nextOffset + 1
+            }
+            System.out.println("")
+        }
     }
 
     /**

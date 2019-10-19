@@ -37,8 +37,11 @@ dependencies {
     // CorDapp dependencies.
     cordaRuntime "org.slf4j:slf4j-simple:$slf4j_version"
 
+    compile "com.r3.sgx:native-host-simulation:$sgxjvm_version"
+
     cordapp project(":samples:sgx-poc:contracts-kotlin")
     compile project(":sgx:sgx-host")
+
 }
 
 tasks.withType(KotlinCompile) {

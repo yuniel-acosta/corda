@@ -45,7 +45,7 @@ class MyAMQPSerializationScheme :
 }
 
 fun <T> SerializationEnvironment.asContextEnv(inheritable: Boolean = false, callable: (SerializationEnvironment) -> T): T {
-    /*
+
     val property = if (inheritable) _inheritableContextSerializationEnv else _contextSerializationEnv
     property.set(this)
     try {
@@ -53,11 +53,7 @@ fun <T> SerializationEnvironment.asContextEnv(inheritable: Boolean = false, call
     } finally {
         property.set(null)
     }
-
-       DISABLED IN MOCK MODE
-
-     */
-    return callable(this)
+//    return callable(this)
 }
 
 inline fun <reified T: Any> ByteBuffer.deserialize(env: SerializationEnvironment): T {

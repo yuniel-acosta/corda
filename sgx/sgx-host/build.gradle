@@ -18,7 +18,6 @@ dependencies {
 
     compile "com.r3.sgx:api-core-common:$sgxjvm_version"
     compile "com.r3.sgx:api-core-host:$sgxjvm_version"
-    compile "com.r3.sgx:enclavelet-host-client:$sgxjvm_version"
     compile "com.r3.sgx:native-host-simulation:$sgxjvm_version"
 
     // For mocking internal services

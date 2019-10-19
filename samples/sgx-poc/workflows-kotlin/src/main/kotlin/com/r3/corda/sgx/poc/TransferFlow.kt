@@ -10,12 +10,13 @@ import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 import java.lang.IllegalStateException
 import com.r3.corda.sgx.poc.contracts.*
+import com.r3.corda.sgx.poc.internal.TransactionValidityOracle
 
 object TransferFlow {
 
     @InitiatingFlow
     @StartableByRPC
-    class Initiator(val id: Int, val receipient: Party) : FlowLogic<SignedTransaction>() {
+    class Initiator(val id: Int, val receipient: Party, val enclaveSig: Boolean = false) : FlowLogic<SignedTransaction>() {
 
         companion object {
             object GENERATING_TRANSACTION : ProgressTracker.Step("Generating transaction")
@@ -69,10 +70,17 @@ object TransferFlow {
             // Stage 3.
             progressTracker.currentStep = SIGNING_TRANSACTION
             // Sign the transaction.
+
             val partSignedTx = serviceHub.signInitialTransaction(txBuilder)
 
+            // Ask verifying enclave to check and sign
+            if (enclaveSig) {
+                val sig = serviceHub.cordaService(TransactionValidityOracle::class.java).invoke(partSignedTx.tx)
+                sig.verify(partSignedTx.tx.id)
+            }
             // Step 4
             progressTracker.currentStep = GATHERING_SIGS
+
             val session = initiateFlow(receipient)
             val signedTx = subFlow(CollectSignaturesFlow(partSignedTx, setOf(session)))
 
@@ -93,7 +101,7 @@ object TransferFlow {
                 }
             }
             val tx = subFlow(signTxFlow)
-            val enclaveSig = TxVerifyingOracleClient(serviceHub).getEnclaveSignature(tx.tx)
+
             subFlow(ReceiveFinalityFlow(session, tx.id))
         }
     }

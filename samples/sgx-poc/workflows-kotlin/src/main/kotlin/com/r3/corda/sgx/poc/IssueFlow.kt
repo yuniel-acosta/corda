@@ -6,6 +6,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sgx.host.TxVerifyingOracleClient
 import com.r3.corda.sgx.poc.contracts.Asset
 import com.r3.corda.sgx.poc.contracts.AssetContract
+import com.r3.corda.sgx.poc.internal.TransactionValidityOracle
 import net.corda.core.contracts.Command
 import net.corda.core.flows.*
 import net.corda.core.transactions.SignedTransaction
@@ -15,7 +16,7 @@ import net.corda.core.utilities.ProgressTracker.Step
 
     @InitiatingFlow
     @StartableByRPC
-    class IssueFlow(val id: Int) : FlowLogic<SignedTransaction>() {
+    class IssueFlow(val id: Int, val enclaveSig: Boolean = false) : FlowLogic<SignedTransaction>() {
 
         companion object {
             object GENERATING_TRANSACTION : Step("Generating transaction")
@@ -38,7 +39,7 @@ import net.corda.core.utilities.ProgressTracker.Step
             )
         }
 
-        override val progressTracker = tracker()
+       // override val progressTracker = tracker()
 
         /**
          * The flow logic is encapsulated within the call() method.
@@ -49,7 +50,7 @@ import net.corda.core.utilities.ProgressTracker.Step
             val notary = serviceHub.networkMapCache.notaryIdentities[0]
 
             // Stage 1.
-            progressTracker.currentStep = GENERATING_TRANSACTION
+            //progressTracker.currentStep = GENERATING_TRANSACTION
             // Generate an unsigned transaction.
             val self = serviceHub.myInfo.legalIdentities.first()
             val secretAsset = Asset(id, self, self)
@@ -59,24 +60,28 @@ import net.corda.core.utilities.ProgressTracker.Step
                     .addCommand(txCommand)
 
             // Stage 2.
-            progressTracker.currentStep = VERIFYING_TRANSACTION
+            //progressTracker.currentStep = VERIFYING_TRANSACTION
             // Verify that the transaction is valid.
             txBuilder.verify(serviceHub)
 
             // Stage 3.
-            progressTracker.currentStep = SIGNING_TRANSACTION
+            //progressTracker.currentStep = SIGNING_TRANSACTION
             // Sign the transaction.
             val partSignedTx = serviceHub.signInitialTransaction(txBuilder)
             check(partSignedTx.notary == notary)
 
-            // Ask verifying enclave to sign and check
-            val enclaveSig = TxVerifyingOracleClient(serviceHub).getEnclaveSignature(partSignedTx.tx)
+
+            if (enclaveSig) {
+                serviceHub.cordaService(TransactionValidityOracle::class.java)
+                        .invoke(partSignedTx.tx)
+            }
+
 
             // Stage 5.
-            progressTracker.currentStep = FINALISING_TRANSACTION
+            //progressTracker.currentStep = FINALISING_TRANSACTION
             val notarised = subFlow(FinalityFlow(partSignedTx, emptyList()))
 
-            return notarised
+            return partSignedTx
         }
     }
 

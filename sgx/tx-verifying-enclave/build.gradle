@@ -25,13 +25,21 @@ dependencies {
      */
 }
 
-    docker {
-        registryCredentials {
-            url = "localhost:5000"
-            username = "username"
-            password = "password"
-        }
+def dockerUsername = System.getenv('OBLIVIUM_CONTAINER_REGISTRY_USERNAME')
+def dockerPassword = System.getenv('OBLIVIUM_CONTAINER_REGISTRY_PASSWORD')
+
+baseRegistry {
+    username = dockerUsername
+    password = dockerPassword
+}
+
+docker {
+    registryCredentials {
+        url = "localhost:5000"
+        username = "username"
+        password = "password"
     }
+}
 
 shadowJar {
     archiveBaseName = 'tx-verifying-enclave'

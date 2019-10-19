@@ -3,26 +3,43 @@ package com.r3.corda.sgx.host.connector
 import com.google.protobuf.ByteString
 import com.r3.sgx.core.common.Handler
 import com.r3.sgx.core.common.LeafSender
+import com.r3.sgx.core.host.EnclaveHandle
 import com.r3.sgx.enclavelethost.grpc.ClientMessage
 import com.r3.sgx.enclavelethost.grpc.EnclaveletHostGrpc
 import com.r3.sgx.enclavelethost.grpc.ServerMessage
+import io.grpc.ManagedChannel
 import io.grpc.stub.StreamObserver
-import java.lang.IllegalStateException
 import java.nio.ByteBuffer
 import java.util.concurrent.CompletableFuture
 
-class GrpcHandlerConnector(private val rpcProxy: EnclaveletHostGrpc.EnclaveletHostStub): HandlerConnector {
+class GrpcEnclaveHandle<CONNECTION>(
+        channel: ManagedChannel,
+        private val handler: Handler<CONNECTION>
+): EnclaveHandle<CONNECTION> {
 
-    private var stream: StreamObserver<ClientMessage>? = null
+    val rpcProxy:  EnclaveletHostGrpc.EnclaveletHostStub
+    private lateinit var stream: StreamObserver<ClientMessage>
 
-    @Synchronized
-    override fun <CONNECTION> setDownstream(downstream: Handler<CONNECTION>): CONNECTION {
-        require(stream == null) { "Handler already connected" }
+    init {
+        rpcProxy = createRpcProxy(channel)
+    }
+
+    companion object {
+
+        private fun createRpcProxy(channel: ManagedChannel): EnclaveletHostGrpc.EnclaveletHostStub {
+            return EnclaveletHostGrpc.newStub(channel)
+                    .withCompression("gzip")
+                    .withWaitForReady()
+        }
+
+    }
+
+    override val connection: CONNECTION by lazy {
         val connection = CompletableFuture<CONNECTION>()
         val localStream = rpcProxy.openSession(
                 object : StreamObserver<ServerMessage> {
                     override fun onNext(value: ServerMessage) {
-                        downstream.onReceive(connection.get(), value.blob.asReadOnlyByteBuffer())
+                        handler.onReceive(connection.get(), value.blob.asReadOnlyByteBuffer())
                     }
 
                     override fun onCompleted() {
@@ -32,14 +49,13 @@ class GrpcHandlerConnector(private val rpcProxy: EnclaveletHostGrpc.EnclaveletHo
                         throw t
                     }
                 })
-        connection.complete(downstream.connect(Sender(localStream)))
+        connection.complete(handler.connect(Sender(localStream)))
         stream = localStream
-        return connection.get()
+        connection.get()
     }
 
-    override fun close() {
-        stream?.onCompleted() ?: throw IllegalStateException("Non connected handler")
-        stream = null
+    override fun destroy() {
+        stream.onCompleted()
     }
 
     class Sender(val stream: StreamObserver<ClientMessage>): LeafSender()  {

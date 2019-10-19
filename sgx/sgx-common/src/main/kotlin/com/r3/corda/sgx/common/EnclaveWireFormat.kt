@@ -29,7 +29,7 @@ data class TransactionResolutionPayload(
 
         val inputStates: List<SignedData<Pair<SecureHash, ComponentGroup>>>,
 
-        val netparam: SignedDataWithCert<NetworkParameters>,
+        val netparam: NetworkParameters,
 
         val attestedEnclaveIds: List<EnclaveAttestedIdentity>
 )
@@ -38,7 +38,7 @@ sealed class EnclaveInput {
 
     @CordaSerializable
     data class Init(
-            val ledgerRootIdentity: X509Certificate
+            val ledgerRootIdentity: ByteArray
     ): EnclaveInput()
 
     @CordaSerializable

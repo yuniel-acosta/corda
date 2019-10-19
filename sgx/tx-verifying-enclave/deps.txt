@@ -1,0 +1,1562 @@
+Java version: 1.8
+Java source compatibility: 1.8
+Java target compatibility: 1.8
+Quasar version: 0.7.10
+Quasar classifier: jdk8
+
+------------------------------------------------------------
+Project :sgx:tx-verifying-enclave
+------------------------------------------------------------
+
+annotationProcessor - Annotation processors and their dependencies for source set 'main'.
+No dependencies
+
+api - API dependencies for compilation 'main' (target  (jvm)). (n)
+No dependencies
+
+apiDependenciesMetadata
++--- project :sgx:sgx-common FAILED
++--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    +--- com.google.protobuf:protobuf-java:3.5.1
+|    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71
+|    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71
+|    |    |    \--- org.jetbrains:annotations:13.0
+|    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71
+|    |         \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    +--- net.i2p.crypto:eddsa:0.2.0
+|    \--- org.whispersystems:curve25519-java:0.5.0
+\--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+     +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+     +--- net.i2p.crypto:eddsa:0.2.0
+     +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+     \--- com.google.protobuf:protobuf-java:3.5.1
+
+apiElements - API elements for main. (n)
+No dependencies
+
+archives - Configuration for archive artifacts.
+No dependencies
+
+compile - Dependencies for compilation 'main' (target  (jvm)) (deprecated, use 'implementation ' instead).
++--- project :sgx:sgx-common
+|    +--- project :serialization
+|    |    +--- project :core
+|    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71
+|    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71
+|    |    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71
+|    |    |    |    |    \--- org.jetbrains:annotations:13.0
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71
+|    |    |    |         \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |    +--- org.slf4j:jcl-over-slf4j:1.7.26
+|    |    |    |    \--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- com.github.ben-manes.caffeine:caffeine:2.7.0
+|    |    |    |    +--- org.checkerframework:checker-qual:2.6.0 -> 2.8.1
+|    |    |    |    \--- com.google.errorprone:error_prone_annotations:2.3.3
+|    |    |    +--- io.reactivex:rxjava:1.3.8
+|    |    |    +--- org.apache.commons:commons-lang3:3.9
+|    |    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    |    +--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- org.bouncycastle:bcpkix-jdk15on:1.60
+|    |    |    |    \--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    +--- org.hibernate:hibernate-core:5.4.3.Final
+|    |    |    |    +--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    |    +--- org.javassist:javassist:3.24.0-GA
+|    |    |    |    +--- net.bytebuddy:byte-buddy:1.9.10
+|    |    |    |    +--- antlr:antlr:2.7.7
+|    |    |    |    +--- org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.1.1.Final
+|    |    |    |    +--- org.jboss:jandex:2.0.5.Final
+|    |    |    |    +--- com.fasterxml:classmate:1.3.4
+|    |    |    |    +--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    +--- org.dom4j:dom4j:2.1.1
+|    |    |    |    +--- org.hibernate.common:hibernate-commons-annotations:5.1.0.Final
+|    |    |    |    |    \--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.xml.bind:jaxb-api:2.3.1
+|    |    |    |    |    \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    \--- org.glassfish.jaxb:jaxb-runtime:2.3.1
+|    |    |    |         +--- javax.xml.bind:jaxb-api:2.3.1 (*)
+|    |    |    |         +--- org.glassfish.jaxb:txw2:2.3.1
+|    |    |    |         +--- com.sun.istack:istack-commons-runtime:3.0.7
+|    |    |    |         +--- org.jvnet.staxex:stax-ex:1.8
+|    |    |    |         +--- com.sun.xml.fastinfoset:FastInfoset:1.2.15
+|    |    |    |         \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    |    +--- com.r3.sgx:enclave-utils:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    |    \--- co.paralleluniverse:quasar-core:0.7.10
+|    |    |         +--- io.dropwizard.metrics:metrics-core:3.2.3
+|    |    |         +--- com.google.guava:guava:20.0 -> 28.0-jre
+|    |    |         |    +--- com.google.guava:failureaccess:1.0.1
+|    |    |         |    +--- com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava
+|    |    |         |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |         |    +--- org.checkerframework:checker-qual:2.8.1
+|    |    |         |    +--- com.google.errorprone:error_prone_annotations:2.3.2 -> 2.3.3
+|    |    |         |    +--- com.google.j2objc:j2objc-annotations:1.3
+|    |    |         |    \--- org.codehaus.mojo:animal-sniffer-annotations:1.17
+|    |    |         +--- org.hdrhistogram:HdrHistogram:2.1.9
+|    |    |         +--- org.latencyutils:LatencyUtils:2.0.3
+|    |    |         +--- com.esotericsoftware:kryo:4.0.0
+|    |    |         |    +--- com.esotericsoftware:reflectasm:1.11.3
+|    |    |         |    +--- com.esotericsoftware:minlog:1.3.0
+|    |    |         |    \--- org.objenesis:objenesis:2.2
+|    |    |         \--- de.javakaffee:kryo-serializers:0.42
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71 (*)
+|    |    +--- org.apache.activemq:artemis-commons:2.6.2
+|    |    |    +--- org.jboss.logging:jboss-logging:3.3.1.Final -> 3.3.2.Final
+|    |    |    +--- io.netty:netty-buffer:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-transport:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-resolver:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-handler:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-codec:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    \--- commons-beanutils:commons-beanutils:1.9.3
+|    |    |         \--- commons-collections:commons-collections:3.2.2
+|    |    +--- org.ow2.asm:asm:7.1
+|    |    +--- com.google.guava:guava:28.0-jre (*)
+|    |    +--- org.apache.qpid:proton-j:0.33.0
+|    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    +--- org.iq80.snappy:snappy:0.4
+|    |    \--- com.github.ben-manes.caffeine:caffeine:2.7.0 (*)
+|    +--- project :core (*)
+|    +--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    \--- org.whispersystems:curve25519-java:0.5.0
+|    +--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    \--- com.google.protobuf:protobuf-java:3.5.1
+|    +--- com.r3.sgx:enclavelet-host-client:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:enclavelet-host-common:2.0-nightly-124-g8b002e6457
+|    |    |    +--- io.grpc:grpc-protobuf:1.13.2
+|    |    |    |    +--- io.grpc:grpc-core:1.13.2
+|    |    |    |    |    +--- io.grpc:grpc-context:1.13.2
+|    |    |    |    |    +--- com.google.code.gson:gson:2.7
+|    |    |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    |    |    +--- com.google.errorprone:error_prone_annotations:2.1.2 -> 2.3.3
+|    |    |    |    |    +--- com.google.code.findbugs:jsr305:3.0.0 -> 3.0.2
+|    |    |    |    |    +--- io.opencensus:opencensus-api:0.12.3
+|    |    |    |    |    \--- io.opencensus:opencensus-contrib-grpc-metrics:0.12.3
+|    |    |    |    |         \--- io.opencensus:opencensus-api:0.12.3
+|    |    |    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    |    +--- com.google.api.grpc:proto-google-common-protos:1.0.0
+|    |    |    |    \--- io.grpc:grpc-protobuf-lite:1.13.2
+|    |    |    |         +--- io.grpc:grpc-core:1.13.2 (*)
+|    |    |    |         \--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    +--- io.grpc:grpc-stub:1.13.2
+|    |    |    |    \--- io.grpc:grpc-core:1.13.2 (*)
+|    |    |    \--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.core:jackson-databind:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    \--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-databind:2.9.8 (*)
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    \--- org.jetbrains.kotlin:kotlin-reflect:1.3.10 -> 1.2.71 (*)
+|    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.8
+|    |    |    +--- org.yaml:snakeyaml:1.23
+|    |    |    \--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    |    \--- com.fasterxml.jackson.core:jackson-databind:2.9.8 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.3.30 -> 1.2.71 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|    |    \--- io.grpc:grpc-netty:1.13.2
+|    |         +--- io.grpc:grpc-core:[1.13.2] -> 1.13.2 (*)
+|    |         +--- io.netty:netty-codec-http2:[4.1.25.Final] -> 4.1.22.Final
+|    |         |    +--- io.netty:netty-codec-http:4.1.22.Final
+|    |         |    |    \--- io.netty:netty-codec:4.1.22.Final (*)
+|    |         |    \--- io.netty:netty-handler:4.1.22.Final (*)
+|    |         \--- io.netty:netty-handler-proxy:4.1.25.Final -> 4.1.22.Final
+|    |              +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |              +--- io.netty:netty-codec-socks:4.1.22.Final
+|    |              |    \--- io.netty:netty-codec:4.1.22.Final (*)
+|    |              \--- io.netty:netty-codec-http:4.1.22.Final (*)
+|    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{prefer 1.2.71} -> 1.2.71 (*)
++--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
+\--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
+
+compileClasspath - Compile classpath for compilation 'main' (target  (jvm)).
++--- project :sgx:sgx-common
+|    +--- project :serialization
+|    |    +--- project :core
+|    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71
+|    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71
+|    |    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71
+|    |    |    |    |    \--- org.jetbrains:annotations:13.0
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71
+|    |    |    |         \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |    +--- org.slf4j:jcl-over-slf4j:1.7.26
+|    |    |    |    \--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- com.github.ben-manes.caffeine:caffeine:2.7.0
+|    |    |    |    +--- org.checkerframework:checker-qual:2.6.0 -> 2.8.1
+|    |    |    |    \--- com.google.errorprone:error_prone_annotations:2.3.3
+|    |    |    +--- io.reactivex:rxjava:1.3.8
+|    |    |    +--- org.apache.commons:commons-lang3:3.9
+|    |    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    |    +--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- org.bouncycastle:bcpkix-jdk15on:1.60
+|    |    |    |    \--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    +--- org.hibernate:hibernate-core:5.4.3.Final
+|    |    |    |    +--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    |    +--- org.javassist:javassist:3.24.0-GA
+|    |    |    |    +--- net.bytebuddy:byte-buddy:1.9.10
+|    |    |    |    +--- antlr:antlr:2.7.7
+|    |    |    |    +--- org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.1.1.Final
+|    |    |    |    +--- org.jboss:jandex:2.0.5.Final
+|    |    |    |    +--- com.fasterxml:classmate:1.3.4
+|    |    |    |    +--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    +--- org.dom4j:dom4j:2.1.1
+|    |    |    |    +--- org.hibernate.common:hibernate-commons-annotations:5.1.0.Final
+|    |    |    |    |    \--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.xml.bind:jaxb-api:2.3.1
+|    |    |    |    |    \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    \--- org.glassfish.jaxb:jaxb-runtime:2.3.1
+|    |    |    |         +--- javax.xml.bind:jaxb-api:2.3.1 (*)
+|    |    |    |         +--- org.glassfish.jaxb:txw2:2.3.1
+|    |    |    |         +--- com.sun.istack:istack-commons-runtime:3.0.7
+|    |    |    |         +--- org.jvnet.staxex:stax-ex:1.8
+|    |    |    |         +--- com.sun.xml.fastinfoset:FastInfoset:1.2.15
+|    |    |    |         \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    |    +--- com.r3.sgx:enclave-utils:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    |    \--- co.paralleluniverse:quasar-core:0.7.10
+|    |    |         +--- io.dropwizard.metrics:metrics-core:3.2.3
+|    |    |         +--- com.google.guava:guava:20.0 -> 28.0-jre
+|    |    |         |    +--- com.google.guava:failureaccess:1.0.1
+|    |    |         |    +--- com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava
+|    |    |         |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |         |    +--- org.checkerframework:checker-qual:2.8.1
+|    |    |         |    +--- com.google.errorprone:error_prone_annotations:2.3.2 -> 2.3.3
+|    |    |         |    +--- com.google.j2objc:j2objc-annotations:1.3
+|    |    |         |    \--- org.codehaus.mojo:animal-sniffer-annotations:1.17
+|    |    |         +--- org.hdrhistogram:HdrHistogram:2.1.9
+|    |    |         +--- org.latencyutils:LatencyUtils:2.0.3
+|    |    |         +--- com.esotericsoftware:kryo:4.0.0
+|    |    |         |    +--- com.esotericsoftware:reflectasm:1.11.3
+|    |    |         |    +--- com.esotericsoftware:minlog:1.3.0
+|    |    |         |    \--- org.objenesis:objenesis:2.2
+|    |    |         \--- de.javakaffee:kryo-serializers:0.42
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71 (*)
+|    |    +--- org.apache.activemq:artemis-commons:2.6.2
+|    |    |    +--- org.jboss.logging:jboss-logging:3.3.1.Final -> 3.3.2.Final
+|    |    |    +--- io.netty:netty-buffer:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-transport:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-resolver:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-handler:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-codec:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    \--- commons-beanutils:commons-beanutils:1.9.3
+|    |    |         \--- commons-collections:commons-collections:3.2.2
+|    |    +--- org.ow2.asm:asm:7.1
+|    |    +--- com.google.guava:guava:28.0-jre (*)
+|    |    +--- org.apache.qpid:proton-j:0.33.0
+|    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    +--- org.iq80.snappy:snappy:0.4
+|    |    \--- com.github.ben-manes.caffeine:caffeine:2.7.0 (*)
+|    +--- project :core (*)
+|    +--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    \--- net.i2p.crypto:eddsa:0.2.0
+|    +--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    \--- net.i2p.crypto:eddsa:0.2.0
+|    \--- com.r3.sgx:enclavelet-host-client:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|         +--- com.r3.sgx:enclavelet-host-common:2.0-nightly-124-g8b002e6457
+|         |    +--- io.grpc:grpc-protobuf:1.13.2
+|         |    |    +--- io.grpc:grpc-core:1.13.2
+|         |    |    |    +--- io.grpc:grpc-context:1.13.2
+|         |    |    |    +--- com.google.code.gson:gson:2.7
+|         |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|         |    |    |    +--- com.google.errorprone:error_prone_annotations:2.1.2 -> 2.3.3
+|         |    |    |    +--- com.google.code.findbugs:jsr305:3.0.0 -> 3.0.2
+|         |    |    |    +--- io.opencensus:opencensus-api:0.12.3
+|         |    |    |    \--- io.opencensus:opencensus-contrib-grpc-metrics:0.12.3
+|         |    |    |         \--- io.opencensus:opencensus-api:0.12.3
+|         |    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|         |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|         |    |    +--- com.google.api.grpc:proto-google-common-protos:1.0.0
+|         |    |    \--- io.grpc:grpc-protobuf-lite:1.13.2
+|         |    |         +--- io.grpc:grpc-core:1.13.2 (*)
+|         |    |         \--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|         |    +--- io.grpc:grpc-stub:1.13.2
+|         |    |    \--- io.grpc:grpc-core:1.13.2 (*)
+|         |    \--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|         +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|         +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|         \--- com.fasterxml.jackson.core:jackson-databind:2.9.8
+|              +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|              \--- com.fasterxml.jackson.core:jackson-core:2.9.8
++--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
++--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
+\--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{prefer 1.2.71} -> 1.2.71 (*)
+
+compileOnly - Compile only dependencies for compilation 'main' (target  (jvm)).
+No dependencies
+
+compileOnlyDependenciesMetadata
+No dependencies
+
+default - Configuration for default artifacts.
++--- project :sgx:sgx-common
+|    +--- project :serialization
+|    |    +--- project :core
+|    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71
+|    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71
+|    |    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71
+|    |    |    |    |    \--- org.jetbrains:annotations:13.0
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71
+|    |    |    |         \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |    +--- org.slf4j:jcl-over-slf4j:1.7.26
+|    |    |    |    \--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- com.github.ben-manes.caffeine:caffeine:2.7.0
+|    |    |    |    +--- org.checkerframework:checker-qual:2.6.0 -> 2.8.1
+|    |    |    |    \--- com.google.errorprone:error_prone_annotations:2.3.3
+|    |    |    +--- io.reactivex:rxjava:1.3.8
+|    |    |    +--- org.apache.commons:commons-lang3:3.9
+|    |    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    |    +--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- org.bouncycastle:bcpkix-jdk15on:1.60
+|    |    |    |    \--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    +--- org.hibernate:hibernate-core:5.4.3.Final
+|    |    |    |    +--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    |    +--- org.javassist:javassist:3.24.0-GA
+|    |    |    |    +--- net.bytebuddy:byte-buddy:1.9.10
+|    |    |    |    +--- antlr:antlr:2.7.7
+|    |    |    |    +--- org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.1.1.Final
+|    |    |    |    +--- org.jboss:jandex:2.0.5.Final
+|    |    |    |    +--- com.fasterxml:classmate:1.3.4
+|    |    |    |    +--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    +--- org.dom4j:dom4j:2.1.1
+|    |    |    |    +--- org.hibernate.common:hibernate-commons-annotations:5.1.0.Final
+|    |    |    |    |    \--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.xml.bind:jaxb-api:2.3.1
+|    |    |    |    |    \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    \--- org.glassfish.jaxb:jaxb-runtime:2.3.1
+|    |    |    |         +--- javax.xml.bind:jaxb-api:2.3.1 (*)
+|    |    |    |         +--- org.glassfish.jaxb:txw2:2.3.1
+|    |    |    |         +--- com.sun.istack:istack-commons-runtime:3.0.7
+|    |    |    |         +--- org.jvnet.staxex:stax-ex:1.8
+|    |    |    |         +--- com.sun.xml.fastinfoset:FastInfoset:1.2.15
+|    |    |    |         \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    |    +--- com.r3.sgx:enclave-utils:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    |    \--- co.paralleluniverse:quasar-core:0.7.10
+|    |    |         +--- io.dropwizard.metrics:metrics-core:3.2.3
+|    |    |         +--- com.google.guava:guava:20.0 -> 28.0-jre
+|    |    |         |    +--- com.google.guava:failureaccess:1.0.1
+|    |    |         |    +--- com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava
+|    |    |         |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |         |    +--- org.checkerframework:checker-qual:2.8.1
+|    |    |         |    +--- com.google.errorprone:error_prone_annotations:2.3.2 -> 2.3.3
+|    |    |         |    +--- com.google.j2objc:j2objc-annotations:1.3
+|    |    |         |    \--- org.codehaus.mojo:animal-sniffer-annotations:1.17
+|    |    |         +--- org.hdrhistogram:HdrHistogram:2.1.9
+|    |    |         +--- org.latencyutils:LatencyUtils:2.0.3
+|    |    |         +--- com.esotericsoftware:kryo:4.0.0
+|    |    |         |    +--- com.esotericsoftware:reflectasm:1.11.3
+|    |    |         |    +--- com.esotericsoftware:minlog:1.3.0
+|    |    |         |    \--- org.objenesis:objenesis:2.2
+|    |    |         \--- de.javakaffee:kryo-serializers:0.42
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71 (*)
+|    |    +--- org.apache.activemq:artemis-commons:2.6.2
+|    |    |    +--- org.jboss.logging:jboss-logging:3.3.1.Final -> 3.3.2.Final
+|    |    |    +--- io.netty:netty-buffer:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-transport:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-resolver:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-handler:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-codec:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    \--- commons-beanutils:commons-beanutils:1.9.3
+|    |    |         \--- commons-collections:commons-collections:3.2.2
+|    |    +--- org.ow2.asm:asm:7.1
+|    |    +--- com.google.guava:guava:28.0-jre (*)
+|    |    +--- org.apache.qpid:proton-j:0.33.0
+|    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    +--- org.iq80.snappy:snappy:0.4
+|    |    \--- com.github.ben-manes.caffeine:caffeine:2.7.0 (*)
+|    +--- project :core (*)
+|    +--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    \--- org.whispersystems:curve25519-java:0.5.0
+|    +--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    \--- com.google.protobuf:protobuf-java:3.5.1
+|    +--- com.r3.sgx:enclavelet-host-client:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:enclavelet-host-common:2.0-nightly-124-g8b002e6457
+|    |    |    +--- io.grpc:grpc-protobuf:1.13.2
+|    |    |    |    +--- io.grpc:grpc-core:1.13.2
+|    |    |    |    |    +--- io.grpc:grpc-context:1.13.2
+|    |    |    |    |    +--- com.google.code.gson:gson:2.7
+|    |    |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    |    |    +--- com.google.errorprone:error_prone_annotations:2.1.2 -> 2.3.3
+|    |    |    |    |    +--- com.google.code.findbugs:jsr305:3.0.0 -> 3.0.2
+|    |    |    |    |    +--- io.opencensus:opencensus-api:0.12.3
+|    |    |    |    |    \--- io.opencensus:opencensus-contrib-grpc-metrics:0.12.3
+|    |    |    |    |         \--- io.opencensus:opencensus-api:0.12.3
+|    |    |    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    |    +--- com.google.api.grpc:proto-google-common-protos:1.0.0
+|    |    |    |    \--- io.grpc:grpc-protobuf-lite:1.13.2
+|    |    |    |         +--- io.grpc:grpc-core:1.13.2 (*)
+|    |    |    |         \--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    +--- io.grpc:grpc-stub:1.13.2
+|    |    |    |    \--- io.grpc:grpc-core:1.13.2 (*)
+|    |    |    \--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.core:jackson-databind:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    \--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-databind:2.9.8 (*)
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    \--- org.jetbrains.kotlin:kotlin-reflect:1.3.10 -> 1.2.71 (*)
+|    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.8
+|    |    |    +--- org.yaml:snakeyaml:1.23
+|    |    |    \--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    |    \--- com.fasterxml.jackson.core:jackson-databind:2.9.8 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.3.30 -> 1.2.71 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|    |    \--- io.grpc:grpc-netty:1.13.2
+|    |         +--- io.grpc:grpc-core:[1.13.2] -> 1.13.2 (*)
+|    |         +--- io.netty:netty-codec-http2:[4.1.25.Final] -> 4.1.22.Final
+|    |         |    +--- io.netty:netty-codec-http:4.1.22.Final
+|    |         |    |    \--- io.netty:netty-codec:4.1.22.Final (*)
+|    |         |    \--- io.netty:netty-handler:4.1.22.Final (*)
+|    |         \--- io.netty:netty-handler-proxy:4.1.25.Final -> 4.1.22.Final
+|    |              +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |              +--- io.netty:netty-codec-socks:4.1.22.Final
+|    |              |    \--- io.netty:netty-codec:4.1.22.Final (*)
+|    |              \--- io.netty:netty-codec-http:4.1.22.Final (*)
+|    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{prefer 1.2.71} -> 1.2.71 (*)
++--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
++--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
+\--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{prefer 1.2.71} -> 1.2.71 (*)
+
+dockerJava - The Docker Java libraries to be used for this project.
++--- com.aries:docker-java-shaded:3.1.0-rc-7
++--- org.slf4j:slf4j-simple:1.7.5
+|    \--- org.slf4j:slf4j-api:1.7.5
+\--- javax.activation:activation:1.1.1
+
+implementation - Implementation only dependencies for compilation 'main' (target  (jvm)). (n)
+\--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71 (n)
+
+implementationDependenciesMetadata
++--- project :sgx:sgx-common FAILED
++--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    +--- com.google.protobuf:protobuf-java:3.5.1
+|    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71
+|    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71
+|    |    |    \--- org.jetbrains:annotations:13.0
+|    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71
+|    |         \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    +--- net.i2p.crypto:eddsa:0.2.0
+|    \--- org.whispersystems:curve25519-java:0.5.0
++--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    +--- net.i2p.crypto:eddsa:0.2.0
+|    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    \--- com.google.protobuf:protobuf-java:3.5.1
+\--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{prefer 1.2.71} -> 1.2.71 (*)
+
+jacocoAgent - The Jacoco agent to use to get coverage data.
+\--- org.jacoco:org.jacoco.agent:0.8.3
+
+jacocoAnt - The Jacoco ant tasks to use to get execute Gradle tasks.
+\--- org.jacoco:org.jacoco.ant:0.8.3
+     +--- org.jacoco:org.jacoco.core:0.8.3
+     |    +--- org.ow2.asm:asm:7.0
+     |    +--- org.ow2.asm:asm-commons:7.0
+     |    |    +--- org.ow2.asm:asm:7.0
+     |    |    +--- org.ow2.asm:asm-tree:7.0
+     |    |    |    \--- org.ow2.asm:asm:7.0
+     |    |    \--- org.ow2.asm:asm-analysis:7.0
+     |    |         \--- org.ow2.asm:asm-tree:7.0 (*)
+     |    \--- org.ow2.asm:asm-tree:7.0 (*)
+     +--- org.jacoco:org.jacoco.report:0.8.3
+     |    \--- org.jacoco:org.jacoco.core:0.8.3 (*)
+     \--- org.jacoco:org.jacoco.agent:0.8.3
+
+kapt
+No dependencies
+
+kaptTest
+No dependencies
+
+kotlinCompilerClasspath
+\--- org.jetbrains.kotlin:kotlin-compiler-embeddable:1.2.71
+     +--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71
+     |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71
+     |    \--- org.jetbrains:annotations:13.0
+     +--- org.jetbrains.kotlin:kotlin-script-runtime:1.2.71
+     \--- org.jetbrains.kotlin:kotlin-reflect:1.2.71
+          \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+
+kotlinCompilerPluginClasspath
++--- org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:1.2.71
+\--- org.jetbrains.kotlin:kotlin-allopen:1.2.71
+
+partialEnclaveDebug
+\--- com.r3.sgx:native-enclave-debug:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+
+partialEnclaveRelease
+\--- com.r3.sgx:native-enclave-release:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+
+partialEnclaveSimulation
+\--- com.r3.sgx:native-enclave-simulation:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+
+runtime - Runtime dependencies for compilation 'main' (target  (jvm)) (deprecated, use 'runtimeOnly ' instead).
++--- project :sgx:sgx-common
+|    +--- project :serialization
+|    |    +--- project :core
+|    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71
+|    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71
+|    |    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71
+|    |    |    |    |    \--- org.jetbrains:annotations:13.0
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71
+|    |    |    |         \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |    +--- org.slf4j:jcl-over-slf4j:1.7.26
+|    |    |    |    \--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- com.github.ben-manes.caffeine:caffeine:2.7.0
+|    |    |    |    +--- org.checkerframework:checker-qual:2.6.0 -> 2.8.1
+|    |    |    |    \--- com.google.errorprone:error_prone_annotations:2.3.3
+|    |    |    +--- io.reactivex:rxjava:1.3.8
+|    |    |    +--- org.apache.commons:commons-lang3:3.9
+|    |    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    |    +--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- org.bouncycastle:bcpkix-jdk15on:1.60
+|    |    |    |    \--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    +--- org.hibernate:hibernate-core:5.4.3.Final
+|    |    |    |    +--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    |    +--- org.javassist:javassist:3.24.0-GA
+|    |    |    |    +--- net.bytebuddy:byte-buddy:1.9.10
+|    |    |    |    +--- antlr:antlr:2.7.7
+|    |    |    |    +--- org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.1.1.Final
+|    |    |    |    +--- org.jboss:jandex:2.0.5.Final
+|    |    |    |    +--- com.fasterxml:classmate:1.3.4
+|    |    |    |    +--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    +--- org.dom4j:dom4j:2.1.1
+|    |    |    |    +--- org.hibernate.common:hibernate-commons-annotations:5.1.0.Final
+|    |    |    |    |    \--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.xml.bind:jaxb-api:2.3.1
+|    |    |    |    |    \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    \--- org.glassfish.jaxb:jaxb-runtime:2.3.1
+|    |    |    |         +--- javax.xml.bind:jaxb-api:2.3.1 (*)
+|    |    |    |         +--- org.glassfish.jaxb:txw2:2.3.1
+|    |    |    |         +--- com.sun.istack:istack-commons-runtime:3.0.7
+|    |    |    |         +--- org.jvnet.staxex:stax-ex:1.8
+|    |    |    |         +--- com.sun.xml.fastinfoset:FastInfoset:1.2.15
+|    |    |    |         \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    |    +--- com.r3.sgx:enclave-utils:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    |    \--- co.paralleluniverse:quasar-core:0.7.10
+|    |    |         +--- io.dropwizard.metrics:metrics-core:3.2.3
+|    |    |         +--- com.google.guava:guava:20.0 -> 28.0-jre
+|    |    |         |    +--- com.google.guava:failureaccess:1.0.1
+|    |    |         |    +--- com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava
+|    |    |         |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |         |    +--- org.checkerframework:checker-qual:2.8.1
+|    |    |         |    +--- com.google.errorprone:error_prone_annotations:2.3.2 -> 2.3.3
+|    |    |         |    +--- com.google.j2objc:j2objc-annotations:1.3
+|    |    |         |    \--- org.codehaus.mojo:animal-sniffer-annotations:1.17
+|    |    |         +--- org.hdrhistogram:HdrHistogram:2.1.9
+|    |    |         +--- org.latencyutils:LatencyUtils:2.0.3
+|    |    |         +--- com.esotericsoftware:kryo:4.0.0
+|    |    |         |    +--- com.esotericsoftware:reflectasm:1.11.3
+|    |    |         |    +--- com.esotericsoftware:minlog:1.3.0
+|    |    |         |    \--- org.objenesis:objenesis:2.2
+|    |    |         \--- de.javakaffee:kryo-serializers:0.42
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71 (*)
+|    |    +--- org.apache.activemq:artemis-commons:2.6.2
+|    |    |    +--- org.jboss.logging:jboss-logging:3.3.1.Final -> 3.3.2.Final
+|    |    |    +--- io.netty:netty-buffer:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-transport:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-resolver:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-handler:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-codec:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    \--- commons-beanutils:commons-beanutils:1.9.3
+|    |    |         \--- commons-collections:commons-collections:3.2.2
+|    |    +--- org.ow2.asm:asm:7.1
+|    |    +--- com.google.guava:guava:28.0-jre (*)
+|    |    +--- org.apache.qpid:proton-j:0.33.0
+|    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    +--- org.iq80.snappy:snappy:0.4
+|    |    \--- com.github.ben-manes.caffeine:caffeine:2.7.0 (*)
+|    +--- project :core (*)
+|    +--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    \--- org.whispersystems:curve25519-java:0.5.0
+|    +--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    \--- com.google.protobuf:protobuf-java:3.5.1
+|    +--- com.r3.sgx:enclavelet-host-client:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:enclavelet-host-common:2.0-nightly-124-g8b002e6457
+|    |    |    +--- io.grpc:grpc-protobuf:1.13.2
+|    |    |    |    +--- io.grpc:grpc-core:1.13.2
+|    |    |    |    |    +--- io.grpc:grpc-context:1.13.2
+|    |    |    |    |    +--- com.google.code.gson:gson:2.7
+|    |    |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    |    |    +--- com.google.errorprone:error_prone_annotations:2.1.2 -> 2.3.3
+|    |    |    |    |    +--- com.google.code.findbugs:jsr305:3.0.0 -> 3.0.2
+|    |    |    |    |    +--- io.opencensus:opencensus-api:0.12.3
+|    |    |    |    |    \--- io.opencensus:opencensus-contrib-grpc-metrics:0.12.3
+|    |    |    |    |         \--- io.opencensus:opencensus-api:0.12.3
+|    |    |    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    |    +--- com.google.api.grpc:proto-google-common-protos:1.0.0
+|    |    |    |    \--- io.grpc:grpc-protobuf-lite:1.13.2
+|    |    |    |         +--- io.grpc:grpc-core:1.13.2 (*)
+|    |    |    |         \--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    +--- io.grpc:grpc-stub:1.13.2
+|    |    |    |    \--- io.grpc:grpc-core:1.13.2 (*)
+|    |    |    \--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.core:jackson-databind:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    \--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-databind:2.9.8 (*)
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    \--- org.jetbrains.kotlin:kotlin-reflect:1.3.10 -> 1.2.71 (*)
+|    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.8
+|    |    |    +--- org.yaml:snakeyaml:1.23
+|    |    |    \--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    |    \--- com.fasterxml.jackson.core:jackson-databind:2.9.8 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.3.30 -> 1.2.71 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|    |    \--- io.grpc:grpc-netty:1.13.2
+|    |         +--- io.grpc:grpc-core:[1.13.2] -> 1.13.2 (*)
+|    |         +--- io.netty:netty-codec-http2:[4.1.25.Final] -> 4.1.22.Final
+|    |         |    +--- io.netty:netty-codec-http:4.1.22.Final
+|    |         |    |    \--- io.netty:netty-codec:4.1.22.Final (*)
+|    |         |    \--- io.netty:netty-handler:4.1.22.Final (*)
+|    |         \--- io.netty:netty-handler-proxy:4.1.25.Final -> 4.1.22.Final
+|    |              +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |              +--- io.netty:netty-codec-socks:4.1.22.Final
+|    |              |    \--- io.netty:netty-codec:4.1.22.Final (*)
+|    |              \--- io.netty:netty-codec-http:4.1.22.Final (*)
+|    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{prefer 1.2.71} -> 1.2.71 (*)
++--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
+\--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
+
+runtimeClasspath - Runtime classpath of compilation 'main' (target  (jvm)).
++--- project :sgx:sgx-common
+|    +--- project :serialization
+|    |    +--- project :core
+|    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71
+|    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71
+|    |    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71
+|    |    |    |    |    \--- org.jetbrains:annotations:13.0
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71
+|    |    |    |         \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |    +--- org.slf4j:jcl-over-slf4j:1.7.26
+|    |    |    |    \--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- com.github.ben-manes.caffeine:caffeine:2.7.0
+|    |    |    |    +--- org.checkerframework:checker-qual:2.6.0 -> 2.8.1
+|    |    |    |    \--- com.google.errorprone:error_prone_annotations:2.3.3
+|    |    |    +--- io.reactivex:rxjava:1.3.8
+|    |    |    +--- org.apache.commons:commons-lang3:3.9
+|    |    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    |    +--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- org.bouncycastle:bcpkix-jdk15on:1.60
+|    |    |    |    \--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    +--- org.hibernate:hibernate-core:5.4.3.Final
+|    |    |    |    +--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    |    +--- org.javassist:javassist:3.24.0-GA
+|    |    |    |    +--- net.bytebuddy:byte-buddy:1.9.10
+|    |    |    |    +--- antlr:antlr:2.7.7
+|    |    |    |    +--- org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.1.1.Final
+|    |    |    |    +--- org.jboss:jandex:2.0.5.Final
+|    |    |    |    +--- com.fasterxml:classmate:1.3.4
+|    |    |    |    +--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    +--- org.dom4j:dom4j:2.1.1
+|    |    |    |    +--- org.hibernate.common:hibernate-commons-annotations:5.1.0.Final
+|    |    |    |    |    \--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.xml.bind:jaxb-api:2.3.1
+|    |    |    |    |    \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    \--- org.glassfish.jaxb:jaxb-runtime:2.3.1
+|    |    |    |         +--- javax.xml.bind:jaxb-api:2.3.1 (*)
+|    |    |    |         +--- org.glassfish.jaxb:txw2:2.3.1
+|    |    |    |         +--- com.sun.istack:istack-commons-runtime:3.0.7
+|    |    |    |         +--- org.jvnet.staxex:stax-ex:1.8
+|    |    |    |         +--- com.sun.xml.fastinfoset:FastInfoset:1.2.15
+|    |    |    |         \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    |    +--- com.r3.sgx:enclave-utils:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    |    \--- co.paralleluniverse:quasar-core:0.7.10
+|    |    |         +--- io.dropwizard.metrics:metrics-core:3.2.3
+|    |    |         +--- com.google.guava:guava:20.0 -> 28.0-jre
+|    |    |         |    +--- com.google.guava:failureaccess:1.0.1
+|    |    |         |    +--- com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava
+|    |    |         |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |         |    +--- org.checkerframework:checker-qual:2.8.1
+|    |    |         |    +--- com.google.errorprone:error_prone_annotations:2.3.2 -> 2.3.3
+|    |    |         |    +--- com.google.j2objc:j2objc-annotations:1.3
+|    |    |         |    \--- org.codehaus.mojo:animal-sniffer-annotations:1.17
+|    |    |         +--- org.hdrhistogram:HdrHistogram:2.1.9
+|    |    |         +--- org.latencyutils:LatencyUtils:2.0.3
+|    |    |         +--- com.esotericsoftware:kryo:4.0.0
+|    |    |         |    +--- com.esotericsoftware:reflectasm:1.11.3
+|    |    |         |    +--- com.esotericsoftware:minlog:1.3.0
+|    |    |         |    \--- org.objenesis:objenesis:2.2
+|    |    |         \--- de.javakaffee:kryo-serializers:0.42
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71 (*)
+|    |    +--- org.apache.activemq:artemis-commons:2.6.2
+|    |    |    +--- org.jboss.logging:jboss-logging:3.3.1.Final -> 3.3.2.Final
+|    |    |    +--- io.netty:netty-buffer:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-transport:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-resolver:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-handler:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-codec:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    \--- commons-beanutils:commons-beanutils:1.9.3
+|    |    |         \--- commons-collections:commons-collections:3.2.2
+|    |    +--- org.ow2.asm:asm:7.1
+|    |    +--- com.google.guava:guava:28.0-jre (*)
+|    |    +--- org.apache.qpid:proton-j:0.33.0
+|    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    +--- org.iq80.snappy:snappy:0.4
+|    |    \--- com.github.ben-manes.caffeine:caffeine:2.7.0 (*)
+|    +--- project :core (*)
+|    +--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    \--- org.whispersystems:curve25519-java:0.5.0
+|    +--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    \--- com.google.protobuf:protobuf-java:3.5.1
+|    +--- com.r3.sgx:enclavelet-host-client:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:enclavelet-host-common:2.0-nightly-124-g8b002e6457
+|    |    |    +--- io.grpc:grpc-protobuf:1.13.2
+|    |    |    |    +--- io.grpc:grpc-core:1.13.2
+|    |    |    |    |    +--- io.grpc:grpc-context:1.13.2
+|    |    |    |    |    +--- com.google.code.gson:gson:2.7
+|    |    |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    |    |    +--- com.google.errorprone:error_prone_annotations:2.1.2 -> 2.3.3
+|    |    |    |    |    +--- com.google.code.findbugs:jsr305:3.0.0 -> 3.0.2
+|    |    |    |    |    +--- io.opencensus:opencensus-api:0.12.3
+|    |    |    |    |    \--- io.opencensus:opencensus-contrib-grpc-metrics:0.12.3
+|    |    |    |    |         \--- io.opencensus:opencensus-api:0.12.3
+|    |    |    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    |    +--- com.google.api.grpc:proto-google-common-protos:1.0.0
+|    |    |    |    \--- io.grpc:grpc-protobuf-lite:1.13.2
+|    |    |    |         +--- io.grpc:grpc-core:1.13.2 (*)
+|    |    |    |         \--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    +--- io.grpc:grpc-stub:1.13.2
+|    |    |    |    \--- io.grpc:grpc-core:1.13.2 (*)
+|    |    |    \--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.core:jackson-databind:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    \--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-databind:2.9.8 (*)
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    \--- org.jetbrains.kotlin:kotlin-reflect:1.3.10 -> 1.2.71 (*)
+|    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.8
+|    |    |    +--- org.yaml:snakeyaml:1.23
+|    |    |    \--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    |    \--- com.fasterxml.jackson.core:jackson-databind:2.9.8 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.3.30 -> 1.2.71 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|    |    \--- io.grpc:grpc-netty:1.13.2
+|    |         +--- io.grpc:grpc-core:[1.13.2] -> 1.13.2 (*)
+|    |         +--- io.netty:netty-codec-http2:[4.1.25.Final] -> 4.1.22.Final
+|    |         |    +--- io.netty:netty-codec-http:4.1.22.Final
+|    |         |    |    \--- io.netty:netty-codec:4.1.22.Final (*)
+|    |         |    \--- io.netty:netty-handler:4.1.22.Final (*)
+|    |         \--- io.netty:netty-handler-proxy:4.1.25.Final -> 4.1.22.Final
+|    |              +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |              +--- io.netty:netty-codec-socks:4.1.22.Final
+|    |              |    \--- io.netty:netty-codec:4.1.22.Final (*)
+|    |              \--- io.netty:netty-codec-http:4.1.22.Final (*)
+|    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{prefer 1.2.71} -> 1.2.71 (*)
++--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
++--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
+\--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{prefer 1.2.71} -> 1.2.71 (*)
+
+runtimeElements - Elements of runtime for main. (n)
+No dependencies
+
+runtimeOnly - Runtime only dependencies for compilation 'main' (target  (jvm)). (n)
+No dependencies
+
+runtimeOnlyDependenciesMetadata
+No dependencies
+
+sgxBinutils
+\--- com.r3.sgx:native-binutils:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+
+sgxEnclave
+No dependencies
+
+shadow
+No dependencies
+
+signTool
+\--- com.r3.sgx:native-sign-tool:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+
+testAnnotationProcessor - Annotation processors and their dependencies for source set 'test'.
+No dependencies
+
+testApi - API dependencies for compilation 'test' (target  (jvm)). (n)
+No dependencies
+
+testApiDependenciesMetadata
++--- project :sgx:sgx-common FAILED
++--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    +--- com.google.protobuf:protobuf-java:3.5.1
+|    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71
+|    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71
+|    |    |    \--- org.jetbrains:annotations:13.0
+|    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71
+|    |         \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    +--- net.i2p.crypto:eddsa:0.2.0
+|    \--- org.whispersystems:curve25519-java:0.5.0
+\--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+     +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+     +--- net.i2p.crypto:eddsa:0.2.0
+     +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+     \--- com.google.protobuf:protobuf-java:3.5.1
+
+testCompile - Dependencies for compilation 'test' (target  (jvm)) (deprecated, use 'testImplementation ' instead).
++--- project :sgx:sgx-common
+|    +--- project :serialization
+|    |    +--- project :core
+|    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71
+|    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71
+|    |    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71
+|    |    |    |    |    \--- org.jetbrains:annotations:13.0
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71
+|    |    |    |         \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |    +--- org.slf4j:jcl-over-slf4j:1.7.26
+|    |    |    |    \--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- com.github.ben-manes.caffeine:caffeine:2.7.0
+|    |    |    |    +--- org.checkerframework:checker-qual:2.6.0 -> 2.8.1
+|    |    |    |    \--- com.google.errorprone:error_prone_annotations:2.3.3
+|    |    |    +--- io.reactivex:rxjava:1.3.8
+|    |    |    +--- org.apache.commons:commons-lang3:3.9
+|    |    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    |    +--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- org.bouncycastle:bcpkix-jdk15on:1.60
+|    |    |    |    \--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    +--- org.hibernate:hibernate-core:5.4.3.Final
+|    |    |    |    +--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    |    +--- org.javassist:javassist:3.24.0-GA
+|    |    |    |    +--- net.bytebuddy:byte-buddy:1.9.10
+|    |    |    |    +--- antlr:antlr:2.7.7
+|    |    |    |    +--- org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.1.1.Final
+|    |    |    |    +--- org.jboss:jandex:2.0.5.Final
+|    |    |    |    +--- com.fasterxml:classmate:1.3.4
+|    |    |    |    +--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    +--- org.dom4j:dom4j:2.1.1
+|    |    |    |    +--- org.hibernate.common:hibernate-commons-annotations:5.1.0.Final
+|    |    |    |    |    \--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.xml.bind:jaxb-api:2.3.1
+|    |    |    |    |    \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    \--- org.glassfish.jaxb:jaxb-runtime:2.3.1
+|    |    |    |         +--- javax.xml.bind:jaxb-api:2.3.1 (*)
+|    |    |    |         +--- org.glassfish.jaxb:txw2:2.3.1
+|    |    |    |         +--- com.sun.istack:istack-commons-runtime:3.0.7
+|    |    |    |         +--- org.jvnet.staxex:stax-ex:1.8
+|    |    |    |         +--- com.sun.xml.fastinfoset:FastInfoset:1.2.15
+|    |    |    |         \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    |    +--- com.r3.sgx:enclave-utils:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    |    \--- co.paralleluniverse:quasar-core:0.7.10
+|    |    |         +--- io.dropwizard.metrics:metrics-core:3.2.3
+|    |    |         +--- com.google.guava:guava:20.0 -> 28.0-jre
+|    |    |         |    +--- com.google.guava:failureaccess:1.0.1
+|    |    |         |    +--- com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava
+|    |    |         |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |         |    +--- org.checkerframework:checker-qual:2.8.1
+|    |    |         |    +--- com.google.errorprone:error_prone_annotations:2.3.2 -> 2.3.3
+|    |    |         |    +--- com.google.j2objc:j2objc-annotations:1.3
+|    |    |         |    \--- org.codehaus.mojo:animal-sniffer-annotations:1.17
+|    |    |         +--- org.hdrhistogram:HdrHistogram:2.1.9
+|    |    |         +--- org.latencyutils:LatencyUtils:2.0.3
+|    |    |         +--- com.esotericsoftware:kryo:4.0.0
+|    |    |         |    +--- com.esotericsoftware:reflectasm:1.11.3
+|    |    |         |    +--- com.esotericsoftware:minlog:1.3.0
+|    |    |         |    \--- org.objenesis:objenesis:2.2
+|    |    |         \--- de.javakaffee:kryo-serializers:0.42
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71 (*)
+|    |    +--- org.apache.activemq:artemis-commons:2.6.2
+|    |    |    +--- org.jboss.logging:jboss-logging:3.3.1.Final -> 3.3.2.Final
+|    |    |    +--- io.netty:netty-buffer:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-transport:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-resolver:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-handler:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-codec:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    \--- commons-beanutils:commons-beanutils:1.9.3
+|    |    |         \--- commons-collections:commons-collections:3.2.2
+|    |    +--- org.ow2.asm:asm:7.1
+|    |    +--- com.google.guava:guava:28.0-jre (*)
+|    |    +--- org.apache.qpid:proton-j:0.33.0
+|    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    +--- org.iq80.snappy:snappy:0.4
+|    |    \--- com.github.ben-manes.caffeine:caffeine:2.7.0 (*)
+|    +--- project :core (*)
+|    +--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    \--- org.whispersystems:curve25519-java:0.5.0
+|    +--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    \--- com.google.protobuf:protobuf-java:3.5.1
+|    +--- com.r3.sgx:enclavelet-host-client:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:enclavelet-host-common:2.0-nightly-124-g8b002e6457
+|    |    |    +--- io.grpc:grpc-protobuf:1.13.2
+|    |    |    |    +--- io.grpc:grpc-core:1.13.2
+|    |    |    |    |    +--- io.grpc:grpc-context:1.13.2
+|    |    |    |    |    +--- com.google.code.gson:gson:2.7
+|    |    |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    |    |    +--- com.google.errorprone:error_prone_annotations:2.1.2 -> 2.3.3
+|    |    |    |    |    +--- com.google.code.findbugs:jsr305:3.0.0 -> 3.0.2
+|    |    |    |    |    +--- io.opencensus:opencensus-api:0.12.3
+|    |    |    |    |    \--- io.opencensus:opencensus-contrib-grpc-metrics:0.12.3
+|    |    |    |    |         \--- io.opencensus:opencensus-api:0.12.3
+|    |    |    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    |    +--- com.google.api.grpc:proto-google-common-protos:1.0.0
+|    |    |    |    \--- io.grpc:grpc-protobuf-lite:1.13.2
+|    |    |    |         +--- io.grpc:grpc-core:1.13.2 (*)
+|    |    |    |         \--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    +--- io.grpc:grpc-stub:1.13.2
+|    |    |    |    \--- io.grpc:grpc-core:1.13.2 (*)
+|    |    |    \--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.core:jackson-databind:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    \--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-databind:2.9.8 (*)
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    \--- org.jetbrains.kotlin:kotlin-reflect:1.3.10 -> 1.2.71 (*)
+|    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.8
+|    |    |    +--- org.yaml:snakeyaml:1.23
+|    |    |    \--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    |    \--- com.fasterxml.jackson.core:jackson-databind:2.9.8 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.3.30 -> 1.2.71 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|    |    \--- io.grpc:grpc-netty:1.13.2
+|    |         +--- io.grpc:grpc-core:[1.13.2] -> 1.13.2 (*)
+|    |         +--- io.netty:netty-codec-http2:[4.1.25.Final] -> 4.1.22.Final
+|    |         |    +--- io.netty:netty-codec-http:4.1.22.Final
+|    |         |    |    \--- io.netty:netty-codec:4.1.22.Final (*)
+|    |         |    \--- io.netty:netty-handler:4.1.22.Final (*)
+|    |         \--- io.netty:netty-handler-proxy:4.1.25.Final -> 4.1.22.Final
+|    |              +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |              +--- io.netty:netty-codec-socks:4.1.22.Final
+|    |              |    \--- io.netty:netty-codec:4.1.22.Final (*)
+|    |              \--- io.netty:netty-codec-http:4.1.22.Final (*)
+|    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{prefer 1.2.71} -> 1.2.71 (*)
++--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
+\--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
+
+testCompileClasspath - Compile classpath for compilation 'test' (target  (jvm)).
++--- project :sgx:sgx-common
+|    +--- project :serialization
+|    |    +--- project :core
+|    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71
+|    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71
+|    |    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71
+|    |    |    |    |    \--- org.jetbrains:annotations:13.0
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71
+|    |    |    |         \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |    +--- org.slf4j:jcl-over-slf4j:1.7.26
+|    |    |    |    \--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- com.github.ben-manes.caffeine:caffeine:2.7.0
+|    |    |    |    +--- org.checkerframework:checker-qual:2.6.0 -> 2.8.1
+|    |    |    |    \--- com.google.errorprone:error_prone_annotations:2.3.3
+|    |    |    +--- io.reactivex:rxjava:1.3.8
+|    |    |    +--- org.apache.commons:commons-lang3:3.9
+|    |    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    |    +--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- org.bouncycastle:bcpkix-jdk15on:1.60
+|    |    |    |    \--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    +--- org.hibernate:hibernate-core:5.4.3.Final
+|    |    |    |    +--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    |    +--- org.javassist:javassist:3.24.0-GA
+|    |    |    |    +--- net.bytebuddy:byte-buddy:1.9.10
+|    |    |    |    +--- antlr:antlr:2.7.7
+|    |    |    |    +--- org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.1.1.Final
+|    |    |    |    +--- org.jboss:jandex:2.0.5.Final
+|    |    |    |    +--- com.fasterxml:classmate:1.3.4
+|    |    |    |    +--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    +--- org.dom4j:dom4j:2.1.1
+|    |    |    |    +--- org.hibernate.common:hibernate-commons-annotations:5.1.0.Final
+|    |    |    |    |    \--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.xml.bind:jaxb-api:2.3.1
+|    |    |    |    |    \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    \--- org.glassfish.jaxb:jaxb-runtime:2.3.1
+|    |    |    |         +--- javax.xml.bind:jaxb-api:2.3.1 (*)
+|    |    |    |         +--- org.glassfish.jaxb:txw2:2.3.1
+|    |    |    |         +--- com.sun.istack:istack-commons-runtime:3.0.7
+|    |    |    |         +--- org.jvnet.staxex:stax-ex:1.8
+|    |    |    |         +--- com.sun.xml.fastinfoset:FastInfoset:1.2.15
+|    |    |    |         \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    |    +--- com.r3.sgx:enclave-utils:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    |    \--- co.paralleluniverse:quasar-core:0.7.10
+|    |    |         +--- io.dropwizard.metrics:metrics-core:3.2.3
+|    |    |         +--- com.google.guava:guava:20.0 -> 28.0-jre
+|    |    |         |    +--- com.google.guava:failureaccess:1.0.1
+|    |    |         |    +--- com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava
+|    |    |         |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |         |    +--- org.checkerframework:checker-qual:2.8.1
+|    |    |         |    +--- com.google.errorprone:error_prone_annotations:2.3.2 -> 2.3.3
+|    |    |         |    +--- com.google.j2objc:j2objc-annotations:1.3
+|    |    |         |    \--- org.codehaus.mojo:animal-sniffer-annotations:1.17
+|    |    |         +--- org.hdrhistogram:HdrHistogram:2.1.9
+|    |    |         +--- org.latencyutils:LatencyUtils:2.0.3
+|    |    |         +--- com.esotericsoftware:kryo:4.0.0
+|    |    |         |    +--- com.esotericsoftware:reflectasm:1.11.3
+|    |    |         |    +--- com.esotericsoftware:minlog:1.3.0
+|    |    |         |    \--- org.objenesis:objenesis:2.2
+|    |    |         \--- de.javakaffee:kryo-serializers:0.42
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71 (*)
+|    |    +--- org.apache.activemq:artemis-commons:2.6.2
+|    |    |    +--- org.jboss.logging:jboss-logging:3.3.1.Final -> 3.3.2.Final
+|    |    |    +--- io.netty:netty-buffer:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-transport:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-resolver:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-handler:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-codec:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    \--- commons-beanutils:commons-beanutils:1.9.3
+|    |    |         \--- commons-collections:commons-collections:3.2.2
+|    |    +--- org.ow2.asm:asm:7.1
+|    |    +--- com.google.guava:guava:28.0-jre (*)
+|    |    +--- org.apache.qpid:proton-j:0.33.0
+|    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    +--- org.iq80.snappy:snappy:0.4
+|    |    \--- com.github.ben-manes.caffeine:caffeine:2.7.0 (*)
+|    +--- project :core (*)
+|    +--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    \--- net.i2p.crypto:eddsa:0.2.0
+|    +--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    \--- net.i2p.crypto:eddsa:0.2.0
+|    \--- com.r3.sgx:enclavelet-host-client:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|         +--- com.r3.sgx:enclavelet-host-common:2.0-nightly-124-g8b002e6457
+|         |    +--- io.grpc:grpc-protobuf:1.13.2
+|         |    |    +--- io.grpc:grpc-core:1.13.2
+|         |    |    |    +--- io.grpc:grpc-context:1.13.2
+|         |    |    |    +--- com.google.code.gson:gson:2.7
+|         |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|         |    |    |    +--- com.google.errorprone:error_prone_annotations:2.1.2 -> 2.3.3
+|         |    |    |    +--- com.google.code.findbugs:jsr305:3.0.0 -> 3.0.2
+|         |    |    |    +--- io.opencensus:opencensus-api:0.12.3
+|         |    |    |    \--- io.opencensus:opencensus-contrib-grpc-metrics:0.12.3
+|         |    |    |         \--- io.opencensus:opencensus-api:0.12.3
+|         |    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|         |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|         |    |    +--- com.google.api.grpc:proto-google-common-protos:1.0.0
+|         |    |    \--- io.grpc:grpc-protobuf-lite:1.13.2
+|         |    |         +--- io.grpc:grpc-core:1.13.2 (*)
+|         |    |         \--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|         |    +--- io.grpc:grpc-stub:1.13.2
+|         |    |    \--- io.grpc:grpc-core:1.13.2 (*)
+|         |    \--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|         +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|         +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|         \--- com.fasterxml.jackson.core:jackson-databind:2.9.8
+|              +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|              \--- com.fasterxml.jackson.core:jackson-core:2.9.8
++--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
++--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
+\--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{prefer 1.2.71} -> 1.2.71 (*)
+
+testCompileOnly - Compile only dependencies for compilation 'test' (target  (jvm)).
+No dependencies
+
+testCompileOnlyDependenciesMetadata
+No dependencies
+
+testImplementation - Implementation only dependencies for compilation 'test' (target  (jvm)). (n)
+No dependencies
+
+testImplementationDependenciesMetadata
++--- project :sgx:sgx-common FAILED
++--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    +--- com.google.protobuf:protobuf-java:3.5.1
+|    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71
+|    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71
+|    |    |    \--- org.jetbrains:annotations:13.0
+|    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71
+|    |         \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    +--- net.i2p.crypto:eddsa:0.2.0
+|    \--- org.whispersystems:curve25519-java:0.5.0
++--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    +--- net.i2p.crypto:eddsa:0.2.0
+|    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    \--- com.google.protobuf:protobuf-java:3.5.1
+\--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{prefer 1.2.71} -> 1.2.71 (*)
+
+testRuntime - Runtime dependencies for compilation 'test' (target  (jvm)) (deprecated, use 'testRuntimeOnly ' instead).
++--- project :sgx:sgx-common
+|    +--- project :serialization
+|    |    +--- project :core
+|    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71
+|    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71
+|    |    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71
+|    |    |    |    |    \--- org.jetbrains:annotations:13.0
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71
+|    |    |    |         \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |    +--- org.slf4j:jcl-over-slf4j:1.7.26
+|    |    |    |    \--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- com.github.ben-manes.caffeine:caffeine:2.7.0
+|    |    |    |    +--- org.checkerframework:checker-qual:2.6.0 -> 2.8.1
+|    |    |    |    \--- com.google.errorprone:error_prone_annotations:2.3.3
+|    |    |    +--- io.reactivex:rxjava:1.3.8
+|    |    |    +--- org.apache.commons:commons-lang3:3.9
+|    |    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    |    +--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- org.bouncycastle:bcpkix-jdk15on:1.60
+|    |    |    |    \--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    +--- org.hibernate:hibernate-core:5.4.3.Final
+|    |    |    |    +--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    |    +--- org.javassist:javassist:3.24.0-GA
+|    |    |    |    +--- net.bytebuddy:byte-buddy:1.9.10
+|    |    |    |    +--- antlr:antlr:2.7.7
+|    |    |    |    +--- org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.1.1.Final
+|    |    |    |    +--- org.jboss:jandex:2.0.5.Final
+|    |    |    |    +--- com.fasterxml:classmate:1.3.4
+|    |    |    |    +--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    +--- org.dom4j:dom4j:2.1.1
+|    |    |    |    +--- org.hibernate.common:hibernate-commons-annotations:5.1.0.Final
+|    |    |    |    |    \--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.xml.bind:jaxb-api:2.3.1
+|    |    |    |    |    \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    \--- org.glassfish.jaxb:jaxb-runtime:2.3.1
+|    |    |    |         +--- javax.xml.bind:jaxb-api:2.3.1 (*)
+|    |    |    |         +--- org.glassfish.jaxb:txw2:2.3.1
+|    |    |    |         +--- com.sun.istack:istack-commons-runtime:3.0.7
+|    |    |    |         +--- org.jvnet.staxex:stax-ex:1.8
+|    |    |    |         +--- com.sun.xml.fastinfoset:FastInfoset:1.2.15
+|    |    |    |         \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    |    +--- com.r3.sgx:enclave-utils:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    |    \--- co.paralleluniverse:quasar-core:0.7.10
+|    |    |         +--- io.dropwizard.metrics:metrics-core:3.2.3
+|    |    |         +--- com.google.guava:guava:20.0 -> 28.0-jre
+|    |    |         |    +--- com.google.guava:failureaccess:1.0.1
+|    |    |         |    +--- com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava
+|    |    |         |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |         |    +--- org.checkerframework:checker-qual:2.8.1
+|    |    |         |    +--- com.google.errorprone:error_prone_annotations:2.3.2 -> 2.3.3
+|    |    |         |    +--- com.google.j2objc:j2objc-annotations:1.3
+|    |    |         |    \--- org.codehaus.mojo:animal-sniffer-annotations:1.17
+|    |    |         +--- org.hdrhistogram:HdrHistogram:2.1.9
+|    |    |         +--- org.latencyutils:LatencyUtils:2.0.3
+|    |    |         +--- com.esotericsoftware:kryo:4.0.0
+|    |    |         |    +--- com.esotericsoftware:reflectasm:1.11.3
+|    |    |         |    +--- com.esotericsoftware:minlog:1.3.0
+|    |    |         |    \--- org.objenesis:objenesis:2.2
+|    |    |         \--- de.javakaffee:kryo-serializers:0.42
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71 (*)
+|    |    +--- org.apache.activemq:artemis-commons:2.6.2
+|    |    |    +--- org.jboss.logging:jboss-logging:3.3.1.Final -> 3.3.2.Final
+|    |    |    +--- io.netty:netty-buffer:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-transport:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-resolver:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-handler:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-codec:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    \--- commons-beanutils:commons-beanutils:1.9.3
+|    |    |         \--- commons-collections:commons-collections:3.2.2
+|    |    +--- org.ow2.asm:asm:7.1
+|    |    +--- com.google.guava:guava:28.0-jre (*)
+|    |    +--- org.apache.qpid:proton-j:0.33.0
+|    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    +--- org.iq80.snappy:snappy:0.4
+|    |    \--- com.github.ben-manes.caffeine:caffeine:2.7.0 (*)
+|    +--- project :core (*)
+|    +--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    \--- org.whispersystems:curve25519-java:0.5.0
+|    +--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    \--- com.google.protobuf:protobuf-java:3.5.1
+|    +--- com.r3.sgx:enclavelet-host-client:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:enclavelet-host-common:2.0-nightly-124-g8b002e6457
+|    |    |    +--- io.grpc:grpc-protobuf:1.13.2
+|    |    |    |    +--- io.grpc:grpc-core:1.13.2
+|    |    |    |    |    +--- io.grpc:grpc-context:1.13.2
+|    |    |    |    |    +--- com.google.code.gson:gson:2.7
+|    |    |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    |    |    +--- com.google.errorprone:error_prone_annotations:2.1.2 -> 2.3.3
+|    |    |    |    |    +--- com.google.code.findbugs:jsr305:3.0.0 -> 3.0.2
+|    |    |    |    |    +--- io.opencensus:opencensus-api:0.12.3
+|    |    |    |    |    \--- io.opencensus:opencensus-contrib-grpc-metrics:0.12.3
+|    |    |    |    |         \--- io.opencensus:opencensus-api:0.12.3
+|    |    |    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    |    +--- com.google.api.grpc:proto-google-common-protos:1.0.0
+|    |    |    |    \--- io.grpc:grpc-protobuf-lite:1.13.2
+|    |    |    |         +--- io.grpc:grpc-core:1.13.2 (*)
+|    |    |    |         \--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    +--- io.grpc:grpc-stub:1.13.2
+|    |    |    |    \--- io.grpc:grpc-core:1.13.2 (*)
+|    |    |    \--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.core:jackson-databind:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    \--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-databind:2.9.8 (*)
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    \--- org.jetbrains.kotlin:kotlin-reflect:1.3.10 -> 1.2.71 (*)
+|    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.8
+|    |    |    +--- org.yaml:snakeyaml:1.23
+|    |    |    \--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    |    \--- com.fasterxml.jackson.core:jackson-databind:2.9.8 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.3.30 -> 1.2.71 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|    |    \--- io.grpc:grpc-netty:1.13.2
+|    |         +--- io.grpc:grpc-core:[1.13.2] -> 1.13.2 (*)
+|    |         +--- io.netty:netty-codec-http2:[4.1.25.Final] -> 4.1.22.Final
+|    |         |    +--- io.netty:netty-codec-http:4.1.22.Final
+|    |         |    |    \--- io.netty:netty-codec:4.1.22.Final (*)
+|    |         |    \--- io.netty:netty-handler:4.1.22.Final (*)
+|    |         \--- io.netty:netty-handler-proxy:4.1.25.Final -> 4.1.22.Final
+|    |              +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |              +--- io.netty:netty-codec-socks:4.1.22.Final
+|    |              |    \--- io.netty:netty-codec:4.1.22.Final (*)
+|    |              \--- io.netty:netty-codec-http:4.1.22.Final (*)
+|    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{prefer 1.2.71} -> 1.2.71 (*)
++--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
+\--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
+
+testRuntimeClasspath - Runtime classpath of compilation 'test' (target  (jvm)).
++--- project :sgx:sgx-common
+|    +--- project :serialization
+|    |    +--- project :core
+|    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71
+|    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71
+|    |    |    |    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71
+|    |    |    |    |    \--- org.jetbrains:annotations:13.0
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71
+|    |    |    |         \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib:1.2.71 (*)
+|    |    |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |    +--- org.slf4j:jcl-over-slf4j:1.7.26
+|    |    |    |    \--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- org.slf4j:slf4j-api:1.7.26
+|    |    |    +--- com.github.ben-manes.caffeine:caffeine:2.7.0
+|    |    |    |    +--- org.checkerframework:checker-qual:2.6.0 -> 2.8.1
+|    |    |    |    \--- com.google.errorprone:error_prone_annotations:2.3.3
+|    |    |    +--- io.reactivex:rxjava:1.3.8
+|    |    |    +--- org.apache.commons:commons-lang3:3.9
+|    |    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    |    +--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- org.bouncycastle:bcpkix-jdk15on:1.60
+|    |    |    |    \--- org.bouncycastle:bcprov-jdk15on:1.60
+|    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    +--- org.hibernate:hibernate-core:5.4.3.Final
+|    |    |    |    +--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.persistence:javax.persistence-api:2.2
+|    |    |    |    +--- org.javassist:javassist:3.24.0-GA
+|    |    |    |    +--- net.bytebuddy:byte-buddy:1.9.10
+|    |    |    |    +--- antlr:antlr:2.7.7
+|    |    |    |    +--- org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.1.1.Final
+|    |    |    |    +--- org.jboss:jandex:2.0.5.Final
+|    |    |    |    +--- com.fasterxml:classmate:1.3.4
+|    |    |    |    +--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    +--- org.dom4j:dom4j:2.1.1
+|    |    |    |    +--- org.hibernate.common:hibernate-commons-annotations:5.1.0.Final
+|    |    |    |    |    \--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    |    |    +--- javax.xml.bind:jaxb-api:2.3.1
+|    |    |    |    |    \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    |    \--- org.glassfish.jaxb:jaxb-runtime:2.3.1
+|    |    |    |         +--- javax.xml.bind:jaxb-api:2.3.1 (*)
+|    |    |    |         +--- org.glassfish.jaxb:txw2:2.3.1
+|    |    |    |         +--- com.sun.istack:istack-commons-runtime:3.0.7
+|    |    |    |         +--- org.jvnet.staxex:stax-ex:1.8
+|    |    |    |         +--- com.sun.xml.fastinfoset:FastInfoset:1.2.15
+|    |    |    |         \--- javax.activation:javax.activation-api:1.2.0
+|    |    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    |    +--- com.r3.sgx:enclave-utils:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    |    \--- co.paralleluniverse:quasar-core:0.7.10
+|    |    |         +--- io.dropwizard.metrics:metrics-core:3.2.3
+|    |    |         +--- com.google.guava:guava:20.0 -> 28.0-jre
+|    |    |         |    +--- com.google.guava:failureaccess:1.0.1
+|    |    |         |    +--- com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava
+|    |    |         |    +--- com.google.code.findbugs:jsr305:3.0.2
+|    |    |         |    +--- org.checkerframework:checker-qual:2.8.1
+|    |    |         |    +--- com.google.errorprone:error_prone_annotations:2.3.2 -> 2.3.3
+|    |    |         |    +--- com.google.j2objc:j2objc-annotations:1.3
+|    |    |         |    \--- org.codehaus.mojo:animal-sniffer-annotations:1.17
+|    |    |         +--- org.hdrhistogram:HdrHistogram:2.1.9
+|    |    |         +--- org.latencyutils:LatencyUtils:2.0.3
+|    |    |         +--- com.esotericsoftware:kryo:4.0.0
+|    |    |         |    +--- com.esotericsoftware:reflectasm:1.11.3
+|    |    |         |    +--- com.esotericsoftware:minlog:1.3.0
+|    |    |         |    \--- org.objenesis:objenesis:2.2
+|    |    |         \--- de.javakaffee:kryo-serializers:0.42
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.2.71 (*)
+|    |    +--- org.apache.activemq:artemis-commons:2.6.2
+|    |    |    +--- org.jboss.logging:jboss-logging:3.3.1.Final -> 3.3.2.Final
+|    |    |    +--- io.netty:netty-buffer:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-transport:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-resolver:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-common:4.1.22.Final
+|    |    |    +--- io.netty:netty-handler:4.1.24.Final -> 4.1.22.Final
+|    |    |    |    +--- io.netty:netty-buffer:4.1.22.Final (*)
+|    |    |    |    +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    |    \--- io.netty:netty-codec:4.1.22.Final
+|    |    |    |         \--- io.netty:netty-transport:4.1.22.Final (*)
+|    |    |    \--- commons-beanutils:commons-beanutils:1.9.3
+|    |    |         \--- commons-collections:commons-collections:3.2.2
+|    |    +--- org.ow2.asm:asm:7.1
+|    |    +--- com.google.guava:guava:28.0-jre (*)
+|    |    +--- org.apache.qpid:proton-j:0.33.0
+|    |    +--- io.github.classgraph:classgraph:4.8.41
+|    |    +--- org.iq80.snappy:snappy:0.4
+|    |    \--- com.github.ben-manes.caffeine:caffeine:2.7.0 (*)
+|    +--- project :core (*)
+|    +--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    \--- org.whispersystems:curve25519-java:0.5.0
+|    +--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    +--- net.i2p.crypto:eddsa:0.2.0
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    \--- com.google.protobuf:protobuf-java:3.5.1
+|    +--- com.r3.sgx:enclavelet-host-client:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457
+|    |    +--- com.r3.sgx:enclavelet-host-common:2.0-nightly-124-g8b002e6457
+|    |    |    +--- io.grpc:grpc-protobuf:1.13.2
+|    |    |    |    +--- io.grpc:grpc-core:1.13.2
+|    |    |    |    |    +--- io.grpc:grpc-context:1.13.2
+|    |    |    |    |    +--- com.google.code.gson:gson:2.7
+|    |    |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    |    |    +--- com.google.errorprone:error_prone_annotations:2.1.2 -> 2.3.3
+|    |    |    |    |    +--- com.google.code.findbugs:jsr305:3.0.0 -> 3.0.2
+|    |    |    |    |    +--- io.opencensus:opencensus-api:0.12.3
+|    |    |    |    |    \--- io.opencensus:opencensus-contrib-grpc-metrics:0.12.3
+|    |    |    |    |         \--- io.opencensus:opencensus-api:0.12.3
+|    |    |    |    +--- com.google.protobuf:protobuf-java:3.5.1
+|    |    |    |    +--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    |    +--- com.google.api.grpc:proto-google-common-protos:1.0.0
+|    |    |    |    \--- io.grpc:grpc-protobuf-lite:1.13.2
+|    |    |    |         +--- io.grpc:grpc-core:1.13.2 (*)
+|    |    |    |         \--- com.google.guava:guava:20.0 -> 28.0-jre (*)
+|    |    |    +--- io.grpc:grpc-stub:1.13.2
+|    |    |    |    \--- io.grpc:grpc-core:1.13.2 (*)
+|    |    |    \--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|    |    +--- com.r3.sgx:api-core-common:2.0-nightly-124-g8b002e6457 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.core:jackson-databind:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    \--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-databind:2.9.8 (*)
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    \--- org.jetbrains.kotlin:kotlin-reflect:1.3.10 -> 1.2.71 (*)
+|    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.8
+|    |    |    +--- org.yaml:snakeyaml:1.23
+|    |    |    \--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    +--- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.0 -> 2.9.8
+|    |    |    +--- com.fasterxml.jackson.core:jackson-core:2.9.8
+|    |    |    \--- com.fasterxml.jackson.core:jackson-databind:2.9.8 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.30 -> 1.2.71 (*)
+|    |    +--- org.jetbrains.kotlin:kotlin-reflect:1.3.30 -> 1.2.71 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.9.8
+|    |    \--- io.grpc:grpc-netty:1.13.2
+|    |         +--- io.grpc:grpc-core:[1.13.2] -> 1.13.2 (*)
+|    |         +--- io.netty:netty-codec-http2:[4.1.25.Final] -> 4.1.22.Final
+|    |         |    +--- io.netty:netty-codec-http:4.1.22.Final
+|    |         |    |    \--- io.netty:netty-codec:4.1.22.Final (*)
+|    |         |    \--- io.netty:netty-handler:4.1.22.Final (*)
+|    |         \--- io.netty:netty-handler-proxy:4.1.25.Final -> 4.1.22.Final
+|    |              +--- io.netty:netty-transport:4.1.22.Final (*)
+|    |              +--- io.netty:netty-codec-socks:4.1.22.Final
+|    |              |    \--- io.netty:netty-codec:4.1.22.Final (*)
+|    |              \--- io.netty:netty-codec-http:4.1.22.Final (*)
+|    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{prefer 1.2.71} -> 1.2.71 (*)
++--- com.r3.sgx:api-core-common:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
++--- com.r3.sgx:api-core-enclave:2.0-nightly-+ -> 2.0-nightly-124-g8b002e6457 (*)
+\--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{prefer 1.2.71} -> 1.2.71 (*)
+
+testRuntimeOnly - Runtime only dependencies for compilation 'test' (target  (jvm)). (n)
+No dependencies
+
+testRuntimeOnlyDependenciesMetadata
+No dependencies
+
+(*) - dependencies omitted (listed previously)
+
+(n) - Not resolved (configuration is not meant to be resolved)
+
+A web-based, searchable dependency report is available by adding the --scan option.
