@@ -11,7 +11,10 @@ interface ServiceHubCoreInternal : ServiceHub {
 
     val attachmentTrustCalculator: AttachmentTrustCalculator
 
+    val txVerifyingOracleClient: SigningEnclaveClient? get() = null
+
     fun createTransactionsResolver(flow: ResolveTransactionsFlow): TransactionsResolver
+
 }
 
 interface TransactionsResolver {

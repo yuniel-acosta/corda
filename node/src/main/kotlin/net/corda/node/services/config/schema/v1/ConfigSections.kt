@@ -2,6 +2,7 @@
 
 package net.corda.node.services.config.schema.v1
 
+import com.r3.corda.sgx.host.EnclaveServiceMode
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigObject
 import net.corda.common.configuration.parsing.internal.Configuration
@@ -14,20 +15,7 @@ import net.corda.common.validation.internal.Validated.Companion.invalid
 import net.corda.common.validation.internal.Validated.Companion.valid
 import net.corda.core.context.AuthServiceId
 import net.corda.core.internal.notary.NotaryServiceFlow
-import net.corda.node.services.config.AuthDataSourceType
-import net.corda.node.services.config.CertChainPolicyConfig
-import net.corda.node.services.config.CertChainPolicyType
-import net.corda.node.services.config.DevModeOptions
-import net.corda.node.services.config.FlowOverride
-import net.corda.node.services.config.FlowOverrideConfig
-import net.corda.node.services.config.FlowTimeoutConfiguration
-import net.corda.node.services.config.NetworkParameterAcceptanceSettings
-import net.corda.node.services.config.NetworkServicesConfig
-import net.corda.node.services.config.NodeH2Settings
-import net.corda.node.services.config.NodeRpcSettings
-import net.corda.node.services.config.NotaryConfig
-import net.corda.node.services.config.PasswordEncryption
-import net.corda.node.services.config.SecurityConfiguration
+import net.corda.node.services.config.*
 import net.corda.node.services.config.SecurityConfiguration.AuthService.Companion.defaultAuthServiceId
 import net.corda.node.services.config.Valid
 import net.corda.node.services.config.schema.parsers.attempt
@@ -274,5 +262,14 @@ internal object FlowOverridesConfigSpec : Configuration.Specification<FlowOverri
 
     override fun parseValid(configuration: Config): Valid<FlowOverrideConfig> {
         return valid(FlowOverrideConfig(configuration[overrides]))
+    }
+}
+
+internal object TxValidityOracleClientConfigSpec: Configuration.Specification<TxValidityOracleClientConfig>("TxValidityOracleClientConfig") {
+    private val type by enum(EnclaveServiceMode::class)
+    private val target by string()
+
+    override fun parseValid(configuration: Config): Valid<TxValidityOracleClientConfig> {
+        return valid(TxValidityOracleClientConfig(configuration[type], configuration[target]))
     }
 }

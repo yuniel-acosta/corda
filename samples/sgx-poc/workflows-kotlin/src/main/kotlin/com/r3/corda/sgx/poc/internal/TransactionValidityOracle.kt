@@ -8,7 +8,8 @@ import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.transactions.WireTransaction
 import java.util.concurrent.atomic.AtomicBoolean
 
-@CordaService
+/*
+//@CordaService
 class TransactionValidityOracle(val services: ServiceHub): SingletonSerializeAsToken() {
 
     var proxy: TxVerifyingOracleClient? = null
@@ -24,4 +25,4 @@ class TransactionValidityOracle(val services: ServiceHub): SingletonSerializeAsT
 
         return oracle.getEnclaveSignature(tx)
     }
-}
+}*/

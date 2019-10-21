@@ -1,6 +1,5 @@
 package com.r3.corda.sgx.host
 
-import com.r3.corda.sgx.common.EnclaveInitResponse
 import com.r3.corda.sgx.common.EnclaveInput
 import com.r3.corda.sgx.common.EnclaveOutput
 import com.r3.corda.sgx.enclave.*

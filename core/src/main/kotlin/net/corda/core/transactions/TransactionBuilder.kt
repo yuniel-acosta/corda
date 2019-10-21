@@ -768,6 +768,14 @@ open class TransactionBuilder(
         val wtx = toWireTransaction(services)
         val signableData = SignableData(wtx.id, signatureMetadata)
         val sig = keyManagementService.sign(signableData, publicKey)
+
+        (services as? ServiceHubCoreInternal)?.let {
+            val oracle = it.txVerifyingOracleClient
+            if (oracle != null && inputStates().isNotEmpty()) {
+                oracle.getEnclaveSignature(wtx)
+            }
+        }
+
         return SignedTransaction(wtx, listOf(sig))
     }
 }

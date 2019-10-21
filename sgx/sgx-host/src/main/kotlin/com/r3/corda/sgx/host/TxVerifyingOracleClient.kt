@@ -8,6 +8,7 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.SignedData
 import net.corda.core.internal.DigitalSignatureWithCert
 import net.corda.core.internal.SignedDataWithCert
+import net.corda.core.internal.SigningEnclaveClient
 import net.corda.core.node.NetworkParameters
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SingletonSerializeAsToken
@@ -18,17 +19,19 @@ import net.corda.core.transactions.WireTransaction
 import java.io.File
 
 //@CordaService
-class TxVerifyingOracleClient(val services: ServiceHub): SingletonSerializeAsToken() {
+class TxVerifyingOracleClient(val services: ServiceHub,
+                              val proxy: TxValidatingOracleProxy
+): SingletonSerializeAsToken(), SigningEnclaveClient {
 
     lateinit var enclaveId: EnclaveInitResponse
-    val proxy: TxValidatingOracleProxy
 
-    val notarizedTxKey get() =
+    private val notarizedTxKey get() =
         enclaveId.publicKeys.single { it.first == SignatureType.TRANSACTION_NOTARIZED }.second
 
-    val verifiedTxKey get() =
+    private val verifiedTxKey get() =
         enclaveId.publicKeys.single { it.first == SignatureType.TRANSACTION_VERIFIED }.second
 
+    /*
     private val enclaveFile = File("/home/igor/projects/corda/sgx/tx-verifying-enclave/build/enclave/Simulation/enclave.signed.so")
 
     private val target = "localhost:30080"
@@ -36,6 +39,7 @@ class TxVerifyingOracleClient(val services: ServiceHub): SingletonSerializeAsTok
     init {
         proxy = TxValidatingOracleProxy.Remote(services, target)
     }
+    */
 
     @Synchronized
     fun start() {
@@ -49,7 +53,7 @@ class TxVerifyingOracleClient(val services: ServiceHub): SingletonSerializeAsTok
     }
 
 
-    fun getEnclaveSignature(tx: WireTransaction): DigitalSignature.WithKey {
+    override fun getEnclaveSignature(tx: WireTransaction): DigitalSignature.WithKey {
         val outputMsg = getSignatureOverChain(
                 SignedTransaction(tx, emptyList()),
                 SignatureType.TRANSACTION_VERIFIED) as EnclaveOutput.TransactionVerified

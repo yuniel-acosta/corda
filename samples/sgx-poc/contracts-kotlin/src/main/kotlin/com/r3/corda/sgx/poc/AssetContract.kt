@@ -42,7 +42,7 @@ class AssetContract : Contract {
         val requiredSigners = (tx.inputsOfType<Asset>() + tx.outputsOfType<Asset>()).map { it.owner.owningKey }
         requireThat { "Missing signer" using (command.signers.containsAll(requiredSigners)) }
 
-        // hackish verification done log message
+        // hackish log message
         if (System.getProperty("sgx.mode") != null) {
             val str = tx.toString()
             var offset = 0;

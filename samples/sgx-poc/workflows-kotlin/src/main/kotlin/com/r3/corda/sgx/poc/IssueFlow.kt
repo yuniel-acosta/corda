@@ -3,10 +3,8 @@ package com.r3.corda.sgx.poc.flows
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.StartableByRPC
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.sgx.host.TxVerifyingOracleClient
 import com.r3.corda.sgx.poc.contracts.Asset
 import com.r3.corda.sgx.poc.contracts.AssetContract
-import com.r3.corda.sgx.poc.internal.TransactionValidityOracle
 import net.corda.core.contracts.Command
 import net.corda.core.flows.*
 import net.corda.core.transactions.SignedTransaction
@@ -16,7 +14,7 @@ import net.corda.core.utilities.ProgressTracker.Step
 
     @InitiatingFlow
     @StartableByRPC
-    class IssueFlow(val id: Int, val enclaveSig: Boolean = false) : FlowLogic<SignedTransaction>() {
+    class IssueFlow(val id: Int) : FlowLogic<SignedTransaction>() {
 
         companion object {
             object GENERATING_TRANSACTION : Step("Generating transaction")
@@ -69,13 +67,6 @@ import net.corda.core.utilities.ProgressTracker.Step
             // Sign the transaction.
             val partSignedTx = serviceHub.signInitialTransaction(txBuilder)
             check(partSignedTx.notary == notary)
-
-
-            if (enclaveSig) {
-                serviceHub.cordaService(TransactionValidityOracle::class.java)
-                        .invoke(partSignedTx.tx)
-            }
-
 
             // Stage 5.
             //progressTracker.currentStep = FINALISING_TRANSACTION

@@ -1,5 +1,6 @@
 package net.corda.node.services.config
 
+import com.r3.corda.sgx.host.EnclaveServiceMode
 import com.typesafe.config.Config
 import net.corda.common.configuration.parsing.internal.Configuration
 import net.corda.common.validation.internal.Validated
@@ -84,6 +85,8 @@ interface NodeConfiguration {
     val networkParameterAcceptanceSettings: NetworkParameterAcceptanceSettings?
 
     val blacklistedAttachmentSigningKeys: List<String>
+
+    val txValidityOracleClientConfig: TxValidityOracleClientConfig?
 
     companion object {
         // default to at least 8MB and a bit extra for larger heap sizes
@@ -307,3 +310,11 @@ data class SecurityConfiguration(val authService: SecurityConfiguration.AuthServ
         }
     }
 }
+
+/**
+ * Client-side configuration of SGX validity oracle
+ */
+data class TxValidityOracleClientConfig(
+        val enclaveServiceMode: EnclaveServiceMode,
+        val target: String
+)

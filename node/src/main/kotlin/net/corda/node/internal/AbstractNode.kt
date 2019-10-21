@@ -3,6 +3,9 @@ package net.corda.node.internal
 import com.codahale.metrics.MetricRegistry
 import com.google.common.collect.MutableClassToInstanceMap
 import com.google.common.util.concurrent.MoreExecutors
+import com.r3.corda.sgx.host.EnclaveServiceMode
+import com.r3.corda.sgx.host.TxValidatingOracleProxy
+import com.r3.corda.sgx.host.TxVerifyingOracleClient
 import com.zaxxer.hikari.pool.HikariPool
 import net.corda.confidential.SwapIdentitiesFlow
 import net.corda.core.CordaException
@@ -46,6 +49,7 @@ import net.corda.node.services.NotaryChangeHandler
 import net.corda.node.services.api.*
 import net.corda.node.services.attachments.NodeAttachmentTrustCalculator
 import net.corda.node.services.config.NodeConfiguration
+import net.corda.node.services.config.TxValidityOracleClientConfig
 import net.corda.node.services.config.configureWithDevSSLCertificate
 import net.corda.node.services.config.rpc.NodeRpcOptions
 import net.corda.node.services.config.shell.toShellConfig
@@ -93,6 +97,7 @@ import org.jolokia.jvmagent.JolokiaServerConfig
 import org.slf4j.Logger
 import rx.Observable
 import rx.Scheduler
+import java.io.File
 import java.io.IOException
 import java.lang.reflect.InvocationTargetException
 import java.nio.file.Path
@@ -249,6 +254,19 @@ abstract class AbstractNode<S>(val configuration: NodeConfiguration,
      */
     val nodeReadyFuture: CordaFuture<Unit> get() = networkMapCache.nodeReady.map { Unit }
 
+    val txVerifyingOracleClient: TxVerifyingOracleClient? = makeTxVerifyingOracleClient(configuration.txValidityOracleClientConfig)
+
+    private fun makeTxVerifyingOracleClient(txValidityOracleClientConfig: TxValidityOracleClientConfig?): TxVerifyingOracleClient? {
+        return txValidityOracleClientConfig?.let { config ->
+            val proxy = when (config.enclaveServiceMode) {
+                EnclaveServiceMode.MOCK -> TxValidatingOracleProxy.Mock(services)
+                EnclaveServiceMode.LOCAL -> TxValidatingOracleProxy.Simulated(services, File(txValidityOracleClientConfig.target))
+                EnclaveServiceMode.REMOTE -> TxValidatingOracleProxy.Remote(services, txValidityOracleClientConfig.target)
+            }
+            TxVerifyingOracleClient(services, proxy)
+        }
+    }
+
     open val serializationWhitelists: List<SerializationWhitelist> by lazy {
         cordappLoader.cordapps.flatMap { it.serializationWhitelists }
     }
@@ -364,6 +382,12 @@ abstract class AbstractNode<S>(val configuration: NodeConfiguration,
 
         val (keyPairs, nodeInfoAndSigned, myNotaryIdentity) = database.transaction {
             updateNodeInfo(identity, identityKeyPair, publish = true)
+        }
+
+        txVerifyingOracleClient?.apply {
+            log.info("Verifying enclave client type: ${configuration.txValidityOracleClientConfig?.enclaveServiceMode}, URI: ${configuration.txValidityOracleClientConfig?.target}")
+            start()
+            log.info("Attested enclave public keys: ${enclaveId.publicKeys.joinToString(separator = ",")}")
         }
 
         val (nodeInfo, signedNodeInfo) = nodeInfoAndSigned
@@ -1029,6 +1053,7 @@ abstract class AbstractNode<S>(val configuration: NodeConfiguration,
         override val cacheFactory: NamedCacheFactory get() = this@AbstractNode.cacheFactory
         override val networkParametersService: NetworkParametersStorage get() = this@AbstractNode.networkParametersStorage
         override val attachmentTrustCalculator: AttachmentTrustCalculator get() = this@AbstractNode.attachmentTrustCalculator
+        override val txVerifyingOracleClient: TxVerifyingOracleClient? get() = this@AbstractNode.txVerifyingOracleClient
 
         private lateinit var _myInfo: NodeInfo
         override val myInfo: NodeInfo get() = _myInfo
