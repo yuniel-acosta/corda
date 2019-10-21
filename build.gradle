@@ -596,6 +596,13 @@ apply plugin: net.corda.testing.ImageBuilding
 apply plugin: net.corda.testing.DistributedTesting
 
 tasks.register("masterParallelTests", net.corda.testing.KubesTest) {
+    /*
+     KubesTest needs to change to integrate with the rest of the plugins, I have not changed it.
+     It needs to know which tests to run (test, integrationTest, etc)
+     The worker gradle task needs to be updated
+     Running distributed tests on a specific module instead of on the whole project is not worked out fully.
+     In that case KubesTest has to pass in :module:path:runWorkerTests instead of the unqualified task name.
+     */
     group = "parallel builds"
     dockerTag = gitSha()
     fullTaskToExecutePath = "test"
