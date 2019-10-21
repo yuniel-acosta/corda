@@ -28,12 +28,12 @@ val cordaSecurityProvider = CordaSecurityProvider().also {
     Security.insertProviderAt(it, 1) // The position is 1-based.
 }
 // OID taken from https://tools.ietf.org/html/draft-ietf-curdle-pkix-00
-val `id-Curve25519ph` = ASN1ObjectIdentifier("1.3.101.112")
+val IdCurvePh = ASN1ObjectIdentifier("1.3.101.112")
 val cordaBouncyCastleProvider = BouncyCastleProvider().apply {
     putAll(EdDSASecurityProvider())
     // Override the normal EdDSA engine with one which can handle X509 keys.
     put("Signature.${EdDSAEngine.SIGNATURE_ALGORITHM}", X509EdDSAEngine::class.java.name)
-    addKeyInfoConverter(`id-Curve25519ph`, object : AsymmetricKeyInfoConverter {
+    addKeyInfoConverter(IdCurvePh, object : AsymmetricKeyInfoConverter {
         override fun generatePublic(keyInfo: SubjectPublicKeyInfo) = decodePublicKey(EDDSA_ED25519_SHA512, keyInfo.encoded)
         override fun generatePrivate(keyInfo: PrivateKeyInfo) = decodePrivateKey(EDDSA_ED25519_SHA512, keyInfo.encoded)
     })

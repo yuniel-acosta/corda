@@ -25,6 +25,7 @@ object StateContractValidationEnforcementRule {
     private val targetVersionCache = ConcurrentHashMap<URL, Int>()
 
     fun shouldEnforce(state: ContractState): Boolean {
+/*
         val jarLocation = state::class.java.protectionDomain.codeSource.location
 
         if (jarLocation == null) {
@@ -45,5 +46,8 @@ object StateContractValidationEnforcementRule {
         }
 
         return targetVersion >= 4
+*/
+// To be revisited for in-SGX execution
+        return false
     }
 }

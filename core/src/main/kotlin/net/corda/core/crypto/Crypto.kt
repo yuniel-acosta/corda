@@ -122,7 +122,7 @@ object Crypto {
     val EDDSA_ED25519_SHA512: SignatureScheme = SignatureScheme(
             4,
             "EDDSA_ED25519_SHA512",
-            AlgorithmIdentifier(`id-Curve25519ph`, null),
+            AlgorithmIdentifier(IdCurvePh, null),
             emptyList(), // Both keys and the signature scheme use the same OID in i2p library.
             // We added EdDSA to bouncy castle for certificate signing.
             cordaBouncyCastleProvider.name,

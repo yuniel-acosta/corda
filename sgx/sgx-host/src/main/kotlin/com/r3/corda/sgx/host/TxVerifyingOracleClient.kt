@@ -31,7 +31,7 @@ class TxVerifyingOracleClient(val services: ServiceHub): SingletonSerializeAsTok
 
     private val enclaveFile = File("/home/igor/projects/corda/sgx/tx-verifying-enclave/build/enclave/Simulation/enclave.signed.so")
 
-    private val target = "localhost:8080"
+    private val target = "localhost:30080"
 
     init {
         proxy = TxValidatingOracleProxy.Remote(services, target)
@@ -41,7 +41,7 @@ class TxVerifyingOracleClient(val services: ServiceHub): SingletonSerializeAsTok
     fun start() {
         val output = proxy.connect().use {
             it.invoke(EnclaveInput.Init(ledgerRootIdentity = services.identityService.trustRoot.encoded))
-                    as EnclaveOutput.SignedInitResponse
+                     as EnclaveOutput.SignedInitResponse
         }
 
         // Cannot validate it without remote attestation

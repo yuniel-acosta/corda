@@ -74,13 +74,13 @@ fun <T : Any> deserialiseComponentGroup(componentGroups: List<ComponentGroup>,
     }
 
     return components.lazyMapped { component, internalIndex ->
-        try {
+//        try {
             factory.deserialize(component, clazz.java, context)
-        } catch (e: MissingAttachmentsException) {
-            throw e
-        } catch (e: Exception) {
-            throw TransactionDeserialisationException(groupEnum, internalIndex, e)
-        }
+//        } catch (e: MissingAttachmentsException) {
+//            throw e
+ //       } catch (e: Exception) {
+//            throw TransactionDeserialisationException(groupEnum, internalIndex, e)
+//        }
     }
 }
 

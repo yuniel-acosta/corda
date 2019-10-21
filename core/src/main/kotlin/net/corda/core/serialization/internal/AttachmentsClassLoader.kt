@@ -19,7 +19,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.*
 import java.util.*
-import java.util.jar.JarInputStream
+import com.r3.sgx.utils.classloaders.MemoryClassLoader
 
 /**
  * A custom ClassLoader that knows how to load classes from a set of attachments. The attachments themselves only
@@ -38,14 +38,14 @@ class AttachmentsClassLoader(attachments: List<Attachment>,
                              private val sampleTxId: SecureHash,
                              isAttachmentTrusted: (Attachment) -> Boolean,
                              parent: ClassLoader = ClassLoader.getSystemClassLoader()) :
-        URLClassLoader(attachments.map(::toUrl).toTypedArray(), parent) {
+        SimpleAttachmentsClassLoader(attachments.single(), parent) {
 
     companion object {
         private val log = contextLogger()
 
         init {
             // Apply our own URLStreamHandlerFactory to resolve attachments
-            setOrDecorateURLStreamHandlerFactory()
+            //setOrDecorateURLStreamHandlerFactory()
         }
 
         // Jolokia and Json-simple are dependencies that were bundled by mistake within contract jars.
@@ -61,6 +61,7 @@ class AttachmentsClassLoader(attachments: List<Attachment>,
             }
         }
 
+/*
         /**
          * Apply our custom factory either directly, if `URL.setURLStreamHandlerFactory` has not been called yet,
          * or use a decorator and reflection to bypass the single-call-per-JVM restriction otherwise.
@@ -104,6 +105,7 @@ class AttachmentsClassLoader(attachments: List<Attachment>,
                 }
             }
         }
+*/
     }
 
     init {
@@ -282,12 +284,14 @@ class AttachmentsClassLoader(attachments: List<Attachment>,
      * Required to prevent classes that were excluded from the no-overlap check from being loaded by contract code.
      * As it can lead to non-determinism.
      */
+/*
     override fun loadClass(name: String?): Class<*> {
         if (ignorePackages.any { name!!.startsWith(it) }) {
             throw ClassNotFoundException(name)
         }
         return super.loadClass(name)
     }
+*/
 }
 
 /**
@@ -323,10 +327,16 @@ object AttachmentsClassLoaderBuilder {
         val serializationContext = cache.computeIfAbsent(Key(attachmentIds, params)) {
             // Create classloader and load serializers, whitelisted classes
             val transactionClassLoader = AttachmentsClassLoader(attachments, params, txId, isAttachmentTrusted, parent)
+
+            // TODO: the next line go through some fancy library for fast classpath scan that is completely irrelevant for us
+
+            /*
             val serializers = createInstancesOfClassesImplementing(transactionClassLoader, SerializationCustomSerializer::class.java)
+
             val whitelistedClasses = ServiceLoader.load(SerializationWhitelist::class.java, transactionClassLoader)
                     .flatMap { it.whitelist }
                     .toList()
+            */
 
             // Create a new serializationContext for the current transaction. In this context we will forbid
             // deserialization of objects from the future, i.e. disable forwards compatibility. This is to ensure
@@ -335,8 +345,8 @@ object AttachmentsClassLoaderBuilder {
             SerializationFactory.defaultFactory.defaultContext
                     .withPreventDataLoss()
                     .withClassLoader(transactionClassLoader)
-                    .withWhitelist(whitelistedClasses)
-                    .withCustomSerializers(serializers)
+//                    .withWhitelist(whitelistedClasses)
+//                    .withCustomSerializers(serializers)
                     .withoutCarpenter()
         }
 
