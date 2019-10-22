@@ -5,9 +5,12 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 
-@BelongsToContract(AssetContract::class)
-data class Asset(val id: Int,
-                 val owner: Party,
-                 val issuer: Party): ContractState {
+@BelongsToContract(CoinContract::class)
+data class Coin(
+        val owner: Party,
+        val issuer: Party
+): ContractState {
+
     override val participants: List<AbstractParty> = listOf(owner)
+
 }

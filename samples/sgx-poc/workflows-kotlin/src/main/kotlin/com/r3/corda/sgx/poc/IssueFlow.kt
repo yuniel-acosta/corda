@@ -3,18 +3,20 @@ package com.r3.corda.sgx.poc.flows
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.StartableByRPC
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.sgx.poc.contracts.Asset
-import com.r3.corda.sgx.poc.contracts.AssetContract
+import com.r3.corda.sgx.poc.contracts.Coin
+import com.r3.corda.sgx.poc.contracts.CoinContract
 import net.corda.core.contracts.Command
 import net.corda.core.flows.*
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.ProgressTracker.Step
+import net.corda.core.identity.Party
+
 
     @InitiatingFlow
     @StartableByRPC
-    class IssueFlow(val id: Int) : FlowLogic<SignedTransaction>() {
+    class IssueFlow(val quantity: Int, val owner: Party) : FlowLogic<SignedTransaction>() {
 
         companion object {
             object GENERATING_TRANSACTION : Step("Generating transaction")
@@ -37,7 +39,7 @@ import net.corda.core.utilities.ProgressTracker.Step
             )
         }
 
-       // override val progressTracker = tracker()
+       override val progressTracker = tracker()
 
         /**
          * The flow logic is encapsulated within the call() method.
@@ -51,27 +53,26 @@ import net.corda.core.utilities.ProgressTracker.Step
             //progressTracker.currentStep = GENERATING_TRANSACTION
             // Generate an unsigned transaction.
             val self = serviceHub.myInfo.legalIdentities.first()
-            val secretAsset = Asset(id, self, self)
-            val txCommand = Command(AssetContract.Command.Issue(), secretAsset.owner.owningKey)
+            val secretAsset = Coin(owner, self)
+            val txCommand = Command(CoinContract.Command.Issue(), secretAsset.owner.owningKey)
             val txBuilder = TransactionBuilder(notary)
-                    .addOutputState(secretAsset, AssetContract.ID)
-                    .addCommand(txCommand)
+            repeat(quantity) { txBuilder.addOutputState(Coin(owner, self), CoinContract.ID) }
+            txBuilder.addCommand(txCommand)
 
             // Stage 2.
-            //progressTracker.currentStep = VERIFYING_TRANSACTION
+            progressTracker.currentStep = VERIFYING_TRANSACTION
             // Verify that the transaction is valid.
             txBuilder.verify(serviceHub)
 
             // Stage 3.
-            //progressTracker.currentStep = SIGNING_TRANSACTION
+            progressTracker.currentStep = SIGNING_TRANSACTION
             // Sign the transaction.
             val partSignedTx = serviceHub.signInitialTransaction(txBuilder)
             check(partSignedTx.notary == notary)
 
             // Stage 5.
-            //progressTracker.currentStep = FINALISING_TRANSACTION
-            val notarised = subFlow(FinalityFlow(partSignedTx, emptyList()))
-
+            progressTracker.currentStep = FINALISING_TRANSACTION
+            subFlow(FinalityFlow(partSignedTx, emptyList()))
             return partSignedTx
         }
     }

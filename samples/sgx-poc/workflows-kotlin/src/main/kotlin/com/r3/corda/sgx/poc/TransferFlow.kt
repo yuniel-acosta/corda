@@ -1,7 +1,6 @@
 package com.r3.corda.sgx.poc.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.sgx.host.TxVerifyingOracleClient
 import net.corda.core.contracts.Command
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
@@ -15,7 +14,7 @@ object TransferFlow {
 
     @InitiatingFlow
     @StartableByRPC
-    class Initiator(val id: Int, val receipient: Party) : FlowLogic<SignedTransaction>() {
+    class Initiator(val quantity: Int, val receipient: Party) : FlowLogic<SignedTransaction>() {
 
         companion object {
             object GENERATING_TRANSACTION : ProgressTracker.Step("Generating transaction")
@@ -50,16 +49,21 @@ object TransferFlow {
             // Generate an unsigned transaction.
             val self = serviceHub.myInfo.legalIdentities.first()
 
-            val input = serviceHub.vaultService.queryBy(Asset::class.java).states
-                    .firstOrNull { (it.state.data.id == id) && (it.state.data.owner == self) }
-                    ?: throw IllegalStateException("Cannot find any unspent asset with id $id")
+            val inputs = serviceHub.vaultService.queryBy(Coin::class.java).states
+                    .filter { (it.state.data.owner == self) }
+                    .take(quantity)
+                    .toList()
 
-            val output = input.state.data.copy(owner = receipient)
-            val cmd = Command(AssetContract.Command.Transfer(), listOf(self.owningKey, receipient.owningKey))
+            if (inputs.size != quantity) {
+                throw IllegalStateException("Cannot find enough coin in wallet")
+            }
+
+            val outputs = inputs.map { it.state.data.copy(owner = receipient) }
+            val cmd = Command(CoinContract.Command.Transfer(), listOf(self.owningKey, receipient.owningKey))
             val txBuilder = TransactionBuilder(notary)
-                    .addInputState(input)
-                    .addOutputState(output, AssetContract.ID)
-                    .addCommand(cmd)
+            inputs.forEach { txBuilder.addInputState(it) }
+            outputs.forEach { txBuilder.addOutputState(it, CoinContract.ID) }
+            txBuilder.addCommand(cmd)
 
             // Stage 2.
             progressTracker.currentStep = VERIFYING_TRANSACTION
