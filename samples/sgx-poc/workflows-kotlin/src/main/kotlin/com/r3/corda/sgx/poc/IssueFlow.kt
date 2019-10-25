@@ -16,7 +16,7 @@ import net.corda.core.identity.Party
 
     @InitiatingFlow
     @StartableByRPC
-    class IssueFlow(val quantity: Int, val owner: Party) : FlowLogic<SignedTransaction>() {
+    class IssueFlow(val quantity: Int) : FlowLogic<SignedTransaction>() {
 
         companion object {
             object GENERATING_TRANSACTION : Step("Generating transaction")
@@ -53,10 +53,9 @@ import net.corda.core.identity.Party
             //progressTracker.currentStep = GENERATING_TRANSACTION
             // Generate an unsigned transaction.
             val self = serviceHub.myInfo.legalIdentities.first()
-            val secretAsset = Coin(owner, self)
-            val txCommand = Command(CoinContract.Command.Issue(), secretAsset.owner.owningKey)
+            val txCommand = Command(CoinContract.Command.Issue(), self.owningKey)
             val txBuilder = TransactionBuilder(notary)
-            repeat(quantity) { txBuilder.addOutputState(Coin(owner, self), CoinContract.ID) }
+            repeat(quantity) { txBuilder.addOutputState(Coin(self, self), CoinContract.ID) }
             txBuilder.addCommand(txCommand)
 
             // Stage 2.
