@@ -1,6 +1,8 @@
 package net.corda.transactiongenerator
 
 import net.corda.client.rpc.CordaRPCClient
+import net.corda.client.rpc.RPCException
+import net.corda.core.internal.mapNotNull
 import net.corda.core.messaging.startFlow
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.OpaqueBytes
@@ -11,6 +13,7 @@ import picocli.CommandLine
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.schedule
+import kotlin.streams.toList
 
 class Driver(val parameters: Parameters) {
 
@@ -47,13 +50,26 @@ class Driver(val parameters: Parameters) {
         logger.info("Starting driver")
         val addresses = rpcAddresses()
         logger.info("Obtained addresses")
-        val rpcClients = addresses.map {
+        val rpcClients = addresses.parallelStream().mapNotNull {
             logger.info("Attempting to connect to $it")
-            it to CordaRPCClient(it).start(parameters.username, parameters.password) }.toMap()
+            try {
+                it to CordaRPCClient(it).start(parameters.username, parameters.password)
+            } catch (e: RPCException) {
+                logger.warn("Caught RPC Exception, ignoring host $it", e)
+                null
+            }
+        }.toList().toMap()
+
+        logger.info("Started ${rpcClients.size} rpc clients, ${addresses.size - rpcClients.size} nodes not available.")
+
         val rng = Random(parameters.rngSeed)
 
-        Timer().schedule(0, 5000) {
+        while (true) {
+            // TODO: use existing clients not addresses
             val clientAddress = addresses.shuffled(rng).first()
+            if (rpcClients[clientAddress] == null) {
+                continue
+            }
             val rpcClient = rpcClients[clientAddress]!!.proxy
             val myIdentity = rpcClient.nodeInfo().legalIdentities.first()
             val notaries = rpcClient.notaryIdentities()
@@ -70,10 +86,10 @@ class Driver(val parameters: Parameters) {
             val notary = notaries.first()
             logger.info("$myIdentity -> $peer (notary $notary)")
             try {
-                val response = rpcClient.startFlow(::CashIssueAndPaymentFlow, 100.POUNDS, OpaqueBytes.of(1), peer, false, notary).returnValue.get(5, TimeUnit.SECONDS)
+                val response = rpcClient.startFlow(::CashIssueAndPaymentFlow, 100.POUNDS, OpaqueBytes.of(1), peer, false, notary).returnValue.get(30, TimeUnit.SECONDS)
                 logger.info("response: $response")
             } catch(e: Exception) {
-                logger.info(e.toString())
+                logger.info("Flow exception caught", e)
             }
         }
     }
