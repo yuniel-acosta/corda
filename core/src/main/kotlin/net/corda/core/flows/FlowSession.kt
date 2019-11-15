@@ -5,7 +5,9 @@ import net.corda.core.DoNotImplement
 import net.corda.core.KeepForDJVM
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
+import net.corda.core.utilities.Try
 import net.corda.core.utilities.UntrustworthyData
+import java.time.Duration
 
 /**
  * A [FlowSession] is a handle on a communication sequence between two paired flows, possibly running on separate nodes.
@@ -157,6 +159,15 @@ abstract class FlowSession {
      */
     @Suspendable
     abstract fun <R : Any> receive(receiveType: Class<R>, maySkipCheckpoint: Boolean): UntrustworthyData<R>
+
+    /**
+     * Suspends until [counterparty] sends us a message of type [receiveType] or [timeout] has elapsed.
+     * Either returns a [Try.Success] with the result or [Try.Failure] if the receive timed out.
+     *
+     * Return result should actually be [Try<R>], but avoided it for now because it requires casting gymnastics.
+     */
+    @Suspendable
+    abstract fun <R: Any> receive(receiveType: Class<R>, maySkipCheckpoint: Boolean, timeout: Duration): UntrustworthyData<Try<*>>
 
     /**
      * Suspends until [counterparty] sends us a message of type [receiveType].

@@ -7,6 +7,7 @@ import net.corda.core.flows.FlowSession
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.NonEmptySet
+import java.time.Duration
 import java.time.Instant
 
 // DOCSTART FlowIORequest
@@ -31,10 +32,13 @@ sealed class FlowIORequest<out R : Any> {
      * Receive messages from sessions.
      *
      * @property sessions the sessions to receive messages from.
+     * @property timeout the duration for which to wait until the message is received.
      * @return a map from session to received message.
      */
     data class Receive(
-            val sessions: NonEmptySet<FlowSession>
+            val sessions: NonEmptySet<FlowSession>,
+            val timeout: Duration? = null,
+            val timedOutSessions: Set<FlowSession> = emptySet()
     ) : FlowIORequest<Map<FlowSession, SerializedBytes<Any>>>()
 
     /**

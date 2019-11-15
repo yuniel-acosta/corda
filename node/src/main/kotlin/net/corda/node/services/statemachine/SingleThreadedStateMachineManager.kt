@@ -102,6 +102,7 @@ class SingleThreadedStateMachineManager(
     private val mutex = ThreadBox(InnerState())
     private val scheduler = FiberExecutorScheduler("Same thread scheduler", executor)
     private val timeoutScheduler = Executors.newScheduledThreadPool(1)
+    override val executorService = timeoutScheduler
     // How many Fibers are running and not suspended.  If zero and stopping is true, then we are halted.
     private val liveFibers = ReusableLatch()
     // Monitoring support.
@@ -745,7 +746,8 @@ class SingleThreadedStateMachineManager(
                 serviceHub = serviceHub,
                 checkpointSerializationContext = checkpointSerializationContext!!,
                 unfinishedFibers = unfinishedFibers,
-                waitTimeUpdateHook = { flowId, timeout -> resetCustomTimeout(flowId, timeout) }
+                waitTimeUpdateHook = { flowId, timeout -> resetCustomTimeout(flowId, timeout) },
+                stateMachineManager = this
         )
     }
 

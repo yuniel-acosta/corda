@@ -19,6 +19,16 @@ class TopLevelTransition(
     override fun transition(): TransitionResult {
         return when (event) {
             is Event.DoRemainingWork -> DoRemainingWorkTransition(context, startingState).transition()
+            is Event.ReceiveTimedOut -> {
+                builder {
+                    val newFlowIoRequest = ((currentState.checkpoint.flowState as FlowState.Started).flowIORequest as FlowIORequest.Receive).copy(timedOutSessions = setOf(event.session))
+                    val newFlowState = (currentState.checkpoint.flowState as FlowState.Started).copy(flowIORequest = newFlowIoRequest)
+                    val newCheckpoint = currentState.checkpoint.copy(flowState = newFlowState)
+                    currentState = currentState.copy(checkpoint = newCheckpoint)
+                    actions.add(Action.ScheduleEvent(Event.DoRemainingWork))
+                    FlowContinuation.ProcessEvents
+                }
+            }
             is Event.DeliverSessionMessage -> DeliverSessionMessageTransition(context, startingState, event).transition()
             is Event.Error -> errorTransition(event)
             is Event.TransactionCommitted -> transactionCommittedTransition(event)

@@ -5,6 +5,7 @@ import net.corda.core.flows.FlowSession
 import net.corda.core.flows.UnexpectedFlowEndException
 import net.corda.core.internal.FlowIORequest
 import net.corda.core.serialization.SerializedBytes
+import net.corda.core.utilities.Try
 import net.corda.core.utilities.toNonEmptySet
 import net.corda.node.services.statemachine.*
 
@@ -146,11 +147,18 @@ class StartedFlowTransition(
             }
             // send initialises to uninitialised sessions
             sendInitialSessionMessagesIfNeeded(sessionIdToSession.keys)
-            val receivedMap = receiveFromSessionsTransition(sessionIdToSession)
-            if (receivedMap == null) {
-                FlowContinuation.ProcessEvents
+            // This only captures timeouts on receives from a single counterparty at the moment.
+            // It need s to be extended in order to be able to to partial timeouts on receiveAll() too.
+            if (flowIORequest.timedOutSessions.size == 1) {
+                val serializedObject = SerializedBytes.from(Try.Failure<String>(ReceiveTimeoutException()))
+                resumeFlowLogic(mapOf(flowIORequest.sessions.single() to serializedObject))
             } else {
-                resumeFlowLogic(receivedMap)
+                val receivedMap = receiveFromSessionsTransition(sessionIdToSession)
+                if (receivedMap == null) {
+                    FlowContinuation.ProcessEvents
+                } else {
+                    resumeFlowLogic(receivedMap)
+                }
             }
         }
     }

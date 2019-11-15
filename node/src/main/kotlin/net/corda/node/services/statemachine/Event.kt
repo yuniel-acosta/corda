@@ -2,6 +2,7 @@ package net.corda.node.services.statemachine
 
 import net.corda.core.flows.Destination
 import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.FlowSession
 import net.corda.core.identity.Party
 import net.corda.core.internal.FlowIORequest
 import net.corda.core.serialization.SerializedBytes
@@ -23,6 +24,8 @@ sealed class Event {
     object DoRemainingWork : Event() {
         override fun toString() = "DoRemainingWork"
     }
+
+    data class ReceiveTimedOut(val session: FlowSession): Event()
 
     /**
      * Deliver a session message.

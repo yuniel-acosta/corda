@@ -13,7 +13,9 @@ import net.corda.core.serialization.SerializationDefaults
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.serialize
 import net.corda.core.utilities.NonEmptySet
+import net.corda.core.utilities.Try
 import net.corda.core.utilities.UntrustworthyData
+import java.time.Duration
 
 class FlowSessionImpl(
         override val destination: Destination,
@@ -65,6 +67,13 @@ class FlowSessionImpl(
         enforceNotPrimitive(receiveType)
         val request = FlowIORequest.Receive(NonEmptySet.of(this))
         return flowStateMachine.suspend(request, maySkipCheckpoint).getValue(this).checkPayloadIs(receiveType)
+    }
+
+    @Suspendable
+    override fun <R: Any> receive(receiveType: Class<R>, maySkipCheckpoint: Boolean, timeout: Duration): UntrustworthyData<Try<*>> {
+        enforceNotPrimitive(receiveType)
+        val request = FlowIORequest.Receive(NonEmptySet.of(this), timeout)
+        return flowStateMachine.suspend(request, maySkipCheckpoint).getValue(this).checkPayloadIs(Try::class.java)
     }
 
     @Suspendable

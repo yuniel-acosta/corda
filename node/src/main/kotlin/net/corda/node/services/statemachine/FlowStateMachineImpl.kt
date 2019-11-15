@@ -36,6 +36,7 @@ import org.apache.activemq.artemis.utils.ReusableLatch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KProperty1
 
@@ -76,7 +77,8 @@ class FlowStateMachineImpl<R>(override val id: StateMachineRunId,
             val serviceHub: ServiceHubInternal,
             val checkpointSerializationContext: CheckpointSerializationContext,
             val unfinishedFibers: ReusableLatch,
-            val waitTimeUpdateHook: (id: StateMachineRunId, timeout: Long) -> Unit
+            val waitTimeUpdateHook: (id: StateMachineRunId, timeout: Long) -> Unit,
+            val stateMachineManager: StateMachineManager
     )
 
     internal var transientValues: TransientReference<TransientValues>? = null
@@ -444,6 +446,9 @@ class FlowStateMachineImpl<R>(override val id: StateMachineRunId,
             )
             require(continuation == FlowContinuation.ProcessEvents) { "Expected a continuation of type ${FlowContinuation.ProcessEvents}, found $continuation " }
             unpark(SERIALIZER_BLOCKER)
+        }
+        if (ioRequest is FlowIORequest.Receive && ioRequest.timeout != null && ioRequest.sessions.size == 1) {
+            transientValues!!.value.stateMachineManager.executorService.schedule({ scheduleEvent(Event.ReceiveTimedOut(ioRequest.sessions.single())) }, ioRequest.timeout!!.toMillis(), TimeUnit.MILLISECONDS)
         }
         return uncheckedCast(processEventsUntilFlowIsResumed(
                 isDbTransactionOpenOnEntry = false,

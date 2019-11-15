@@ -10,6 +10,8 @@ import net.corda.core.utilities.Try
 import net.corda.node.services.messaging.DeduplicationHandler
 import net.corda.node.services.messaging.ReceivedMessage
 import rx.Observable
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.ScheduledExecutorService
 
 /**
  * A StateMachineManager is responsible for coordination and persistence of multiple [FlowStateMachine] objects.
@@ -84,6 +86,8 @@ interface StateMachineManager {
     fun deliverExternalEvent(event: ExternalEvent)
 
     val flowHospital: StaffedFlowHospital
+
+    val executorService: ScheduledExecutorService
 
     /**
      * Returns a snapshot of all [FlowStateMachineImpl]s currently managed.
