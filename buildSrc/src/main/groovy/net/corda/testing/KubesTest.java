@@ -11,14 +11,17 @@ import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Status;
 import io.fabric8.kubernetes.api.model.StatusCause;
 import io.fabric8.kubernetes.api.model.StatusDetails;
-import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.api.model.TolerationBuilder;
+import io.fabric8.kubernetes.api.model.batch.Job;
+import io.fabric8.kubernetes.api.model.batch.JobBuilder;
+import io.fabric8.kubernetes.api.model.batch.JobStatus;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
+import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import net.corda.testing.retry.Retry;
@@ -74,7 +77,7 @@ public class KubesTest extends DefaultTask {
 
     private static int DEFAULT_K8S_TIMEOUT_VALUE_MILLIES = 60 * 1_000;
     private static int DEFAULT_K8S_WEBSOCKET_TIMEOUT = DEFAULT_K8S_TIMEOUT_VALUE_MILLIES * 30;
-    private static int DEFAULT_POD_ALLOCATION_TIMEOUT = 60;
+    private static int DEFAULT_POD_ALLOCATION_TIMEOUT_MINUTES = 60;
 
     String dockerTag;
     String fullTaskToExecutePath;
@@ -89,21 +92,19 @@ public class KubesTest extends DefaultTask {
     public volatile List<File> testOutput = Collections.emptyList();
     public volatile List<KubePodResult> containerResults = Collections.emptyList();
     private final Set<String> remainingPods = Collections.synchronizedSet(new HashSet<>());
-
     public static String NAMESPACE = "thisisatest";
 
     int numberOfPods = 5;
 
     DistributeTestsBy distribution = DistributeTestsBy.METHOD;
     PodLogLevel podLogLevel = PodLogLevel.INFO;
+    String stableRunId = rnd64Base36(new Random(System.getProperty("buildId", "0").hashCode() + System.getProperty("user.name", "UNKNOWN_USER").hashCode() + (taskToExecuteName != null ? taskToExecuteName.hashCode() : 0)));
+    String randomId = rnd64Base36(new Random());
+    private int numberOfRetries = 3;
 
     @TaskAction
     public void runDistributedTests() {
-        String buildId = System.getProperty("buildId", "0");
-        String currentUser = System.getProperty("user.name", "UNKNOWN_USER");
 
-        String stableRunId = rnd64Base36(new Random(buildId.hashCode() + currentUser.hashCode() + taskToExecuteName.hashCode()));
-        String random = rnd64Base36(new Random());
 
         try (KubernetesClient client = getKubernetesClient()) {
             client.pods().inNamespace(NAMESPACE).list().getItems().forEach(podToDelete -> {
@@ -117,8 +118,9 @@ public class KubesTest extends DefaultTask {
         }
 
         List<Future<KubePodResult>> futures = IntStream.range(0, numberOfPods).mapToObj(i -> {
-            String podName = generatePodName(stableRunId, random, i);
-            return submitBuild(NAMESPACE, numberOfPods, i, podName, printOutput, 3);
+            String podName = generatePodName(stableRunId, randomId, i);
+            numberOfRetries = 3;
+            return submitBuild(NAMESPACE, numberOfPods, i, podName, printOutput, numberOfRetries);
         }).collect(Collectors.toList());
 
         this.testOutput = Collections.synchronizedList(futures.stream().map(it -> {
@@ -139,7 +141,7 @@ public class KubesTest extends DefaultTask {
 
     @NotNull
     private String generatePodName(String stableRunId, String random, int i) {
-        int magicMaxLength = 63;
+        int magicMaxLength = 55;
         String provisionalName = taskToExecuteName.toLowerCase() + "-" + stableRunId + "-" + random + "-" + i;
         //length = 100
         //100-63 = 37
@@ -199,6 +201,100 @@ public class KubesTest extends DefaultTask {
         }, executorService);
     }
 
+    private void runBuild(int podIdx) {
+
+        CompletableFuture<Void> completionFuture = new CompletableFuture<>();
+        Job buildJobForIdx = buildJobForFork(podIdx);
+        Job createdJob = getKubernetesClient().batch().jobs().inNamespace(NAMESPACE).create(buildJobForIdx);
+
+        try {
+            getKubernetesClient().resource(createdJob).waitUntilReady(DEFAULT_POD_ALLOCATION_TIMEOUT_MINUTES, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Could not get a slot to execute on cluster for job: " + createdJob.getMetadata().getName());
+        }
+
+        Watch jobWatcher = getKubernetesClient().resource(createdJob).watch(new Watcher<Job>() {
+            @Override
+            public void eventReceived(Action action, Job resource) {
+                Optional<JobStatus> status = Optional.ofNullable(resource.getStatus());
+
+                if (status.map(s -> s.getCompletionTime() != null).orElse(false)) {
+                    completionFuture.complete(null);
+                }
+
+                if (status.map(s -> s.getConditions().stream().anyMatch(c -> c.getType().equals("Failed"))).orElse(false)) {
+                    completionFuture.completeExceptionally(new RuntimeException());
+                }
+            }
+
+            @Override
+            public void onClose(KubernetesClientException cause) {
+                completionFuture.completeExceptionally(cause);
+            }
+        });
+
+    }
+
+    private Job buildJobForFork(int podIdx) {
+
+        String baseName = generatePodName(stableRunId, randomId, podIdx);
+        PersistentVolumeClaim pvc = createPvc(baseName + "pvc");
+
+        return new JobBuilder()
+                .withNewSpec()
+                .withTtlSecondsAfterFinished(120)
+                .withBackoffLimit(numberOfRetries)
+                .withNewTemplate()
+                .withNewMetadata()
+                .withName(baseName)
+                .endMetadata()
+                .withNewSpec()
+                .withRestartPolicy("OnFailure")
+                .withTolerations(taints.stream().map(taint -> new TolerationBuilder().withKey("key").withValue(taint).withOperator("Equal").withEffect("NoSchedule").build()).collect(Collectors.toList()))
+
+                .addNewVolume()
+                .withName("gradlecache")
+                .withNewHostPath()
+                .withType("DirectoryOrCreate")
+                .withPath("/tmp/gradle")
+                .endHostPath()
+                .endVolume()
+
+                .addNewVolume()
+                .withName("testruns")
+                .withNewPersistentVolumeClaim()
+                .withClaimName(pvc.getMetadata().getName())
+                .endPersistentVolumeClaim()
+                .endVolume()
+
+                .addNewContainer()
+                .withImage(dockerTag)
+                .withCommand("bash")
+                .withArgs()
+                .addNewEnv()
+                .withName("DRIVER_NODE_MEMORY")
+                .withValue("1024m")
+                .withName("DRIVER_WEB_MEMORY")
+                .withValue("1024m")
+                .endEnv()
+                .withName(baseName + "gradle")
+                .withNewResources()
+                .addToRequests("cpu", new Quantity(numberOfCoresPerFork.toString()))
+                .addToRequests("memory", new Quantity(memoryGbPerFork.toString()))
+                .endResources()
+                .addNewVolumeMount().withName("gradlecache").withMountPath("/tmp/gradle").endVolumeMount()
+                .addNewVolumeMount().withName("testruns").withMountPath(TEST_RUN_DIR).endVolumeMount()
+                .endContainer()
+                .addNewImagePullSecret(REGISTRY_CREDENTIALS_SECRET_NAME)
+                .withRestartPolicy("OnFailure")
+                .endSpec()
+                .endTemplate()
+                .endSpec()
+                .build();
+
+    }
+
+
     private static void addShutdownHook(Runnable hook) {
         Runtime.getRuntime().addShutdownHook(new Thread(hook));
     }
@@ -235,6 +331,8 @@ public class KubesTest extends DefaultTask {
             boolean printOutput,
             int numberOfRetries,
             PersistentVolumeClaim pvc) {
+
+
         addShutdownHook(() -> {
             System.out.println("deleting pod: " + podName);
             try (KubernetesClient client = getKubernetesClient()) {
@@ -466,7 +564,7 @@ public class KubesTest extends DefaultTask {
         try (KubernetesClient client = getKubernetesClient()) {
             getProject().getLogger().lifecycle("Waiting for pod " + pod.getMetadata().getName() + " to start before executing build");
             try {
-                client.pods().inNamespace(pod.getMetadata().getNamespace()).withName(pod.getMetadata().getName()).waitUntilReady(DEFAULT_POD_ALLOCATION_TIMEOUT, TimeUnit.MINUTES);
+                client.pods().inNamespace(pod.getMetadata().getNamespace()).withName(pod.getMetadata().getName()).waitUntilReady(DEFAULT_POD_ALLOCATION_TIMEOUT_MINUTES, TimeUnit.MINUTES);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
