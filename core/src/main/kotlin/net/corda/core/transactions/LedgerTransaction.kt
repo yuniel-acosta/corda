@@ -78,7 +78,7 @@ private constructor(
 
     init {
         if (timeWindow != null) check(notary != null) { "Transactions with time-windows must be notarised" }
-        checkNotaryWhitelisted()
+//        checkNotaryWhitelisted()
     }
 
     companion object {
