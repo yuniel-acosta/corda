@@ -2,5 +2,6 @@ package net.corda.nodeapi.internal.cryptoservice
 
 enum class SupportedCryptoServices(val userFriendlyName: String) {
     /** Identifier for [BCCryptoService]. */
-    BC_SIMPLE("file-based keystore")
+    BC_SIMPLE("file-based keystore"),
+    EXTERNAL("using grpc external crypto service")
 }
