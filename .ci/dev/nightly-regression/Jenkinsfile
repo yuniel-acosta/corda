@@ -1,0 +1,98 @@
+@Library('existing-build-control')
+import static com.r3.build.BuildControl.killAllExistingBuildsForJob
+
+killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
+
+// We need to track if we've actually executed build steps to enable changing
+// the build status at the end
+def buildSkipped = true
+
+pipeline {
+    agent { label 'gke' }
+    options {
+        timestamps()
+        buildDiscarder(logRotator(daysToKeepStr: '7', artifactDaysToKeepStr: '7'))
+    }
+    triggers {
+        pollSCM ignorePostCommitHooks: true, scmpoll_spec: '*/5 * * * *'
+    }
+
+    environment {
+        DOCKER_TAG_TO_USE = "${env.GIT_COMMIT.subSequence(0, 8)}"
+        EXECUTOR_NUMBER = "${env.EXECUTOR_NUMBER}"
+        BUILD_ID = "${env.BUILD_ID}-${env.JOB_NAME}"
+        ARTIFACTORY_CREDENTIALS = credentials('artifactory-credentials')
+    }
+
+    stages {
+        stage('Generate Build Image') {
+            when {
+                anyOf {
+                    // We need to trigger off the first build to get the
+                    // Jenkinsfile loaded for subsequent SCM poll triggering
+                    equals expected: 1, actual: currentBuild.number
+                    triggeredBy 'SCMTrigger'
+                }
+            }
+            steps {
+                script
+                {
+                    buildSkipped = false
+                }
+                withCredentials([string(credentialsId: 'container_reg_passwd', variable: 'DOCKER_PUSH_PWD')]) {
+                    sh "./gradlew " +
+                            "-Dkubenetize=true " +
+                            "-Ddocker.push.password=\"\${DOCKER_PUSH_PWD}\" " +
+                            "-Ddocker.work.dir=\"/tmp/\${EXECUTOR_NUMBER}\" " +
+                            "-Ddocker.build.tag=\"\${DOCKER_TAG_TO_USE}\"" +
+                            " clean pushBuildImage --stacktrace"
+                }
+                sh "kubectl auth can-i get pods"
+            }
+        }
+
+        stage('Regression Test') {
+            when {
+                anyOf {
+                    equals expected: 1, actual: currentBuild.number
+                    triggeredBy 'SCMTrigger'
+                }
+            }
+            steps {
+                sh "./gradlew " +
+                        "-DbuildId=\"\${BUILD_ID}\" " +
+                        "-Dkubenetize=true " +
+                        "-Ddocker.run.tag=\"\${DOCKER_TAG_TO_USE}\" " +
+                        "-Dartifactory.username=\"\${ARTIFACTORY_CREDENTIALS_USR}\" " +
+                        "-Dartifactory.password=\"\${ARTIFACTORY_CREDENTIALS_PSW}\" " +
+                        "-Dgit.branch=\"\${GIT_BRANCH}\" " +
+                        "-Dgit.target.branch=\"\${GIT_BRANCH}\" " +
+                        " parallelRegressionTest --stacktrace"
+            }
+        }
+    }
+
+
+    post {
+        always {
+            script
+            {
+                if (buildSkipped) {
+                    // We don't want to report success as this may be misleading
+                    // if something went wrong with the last legitimate build,
+                    // so propagate the previous builds status, which by extension,
+                    // will always reflect the last build that wasn't skipped
+                    echo('Build was skipped, propagating previous build result')
+                    currentBuild.result = currentBuild.getPreviousBuild().result
+                }
+            }
+
+            archiveArtifacts artifacts: '**/pod-logs/**/*.log', fingerprint: false
+            junit testResults: '**/build/test-results-xml/**/*.xml', allowEmptyResults: true
+        }
+        cleanup {
+            deleteDir() /* clean up our workspace */
+        }
+    }
+}
+
