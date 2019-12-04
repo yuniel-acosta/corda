@@ -12,11 +12,11 @@ pipeline {
     agent { label 'gke' }
     options {
         timestamps()
-        overrideIndexTriggers(false)
+//        overrideIndexTriggers(false)
         buildDiscarder(logRotator(daysToKeepStr: '7', artifactDaysToKeepStr: '7'))
     }
     triggers {
-        pollSCM ignorePostCommitHooks: true, scmpoll_spec: '*/5 * * * *'
+        pollSCM ignorePostCommitHooks: true, scmpoll_spec: '@midnight'
     }
 
     environment {
@@ -42,7 +42,7 @@ pipeline {
                     buildSkipped = false
                 }
                 withCredentials([string(credentialsId: 'container_reg_passwd', variable: 'DOCKER_PUSH_PWD')]) {
-                    sh ": ./gradlew " +
+                    sh "./gradlew " +
                             "-Dkubenetize=true " +
                             "-Ddocker.push.password=\"\${DOCKER_PUSH_PWD}\" " +
                             "-Ddocker.work.dir=\"/tmp/\${EXECUTOR_NUMBER}\" " +
@@ -61,7 +61,7 @@ pipeline {
                 }
             }
             steps {
-                sh ": ./gradlew " +
+                sh "./gradlew " +
                         "-DbuildId=\"\${BUILD_ID}\" " +
                         "-Dkubenetize=true " +
                         "-Ddocker.run.tag=\"\${DOCKER_TAG_TO_USE}\" " +
