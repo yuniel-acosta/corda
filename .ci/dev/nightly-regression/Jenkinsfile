@@ -28,14 +28,6 @@ pipeline {
 
     stages {
         stage('Generate Build Image') {
-            when {
-                anyOf {
-                    // We need to trigger off the first build to get the
-                    // Jenkinsfile loaded for subsequent SCM poll triggering
-                    equals expected: 1, actual: currentBuild.number
-                    triggeredBy 'SCMTrigger'
-                }
-            }
             steps {
                 script
                 {
