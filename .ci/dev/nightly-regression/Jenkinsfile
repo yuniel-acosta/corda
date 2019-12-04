@@ -1,9 +1,9 @@
 def buildNumber = BUILD_NUMBER as int; if (buildNumber > 1) milestone(buildNumber - 1); milestone(buildNumber) // JENKINS-43353 / JENKINS-58625
 
-// @Library('existing-build-control')
-// import static com.r3.build.BuildControl.killAllExistingBuildsForJob
+@Library('existing-build-control')
+import static com.r3.build.BuildControl.killAllExistingBuildsForJob
 
-// killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
+killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
 
 // We need to track if we've actually executed build steps to enable changing
 // the build status at the end
