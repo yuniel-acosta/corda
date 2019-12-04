@@ -46,12 +46,6 @@ pipeline {
         }
 
         stage('Regression Test') {
-            when {
-                anyOf {
-                    equals expected: 1, actual: currentBuild.number
-                    triggeredBy 'SCMTrigger'
-                }
-            }
             steps {
                 sh "./gradlew " +
                         "-DbuildId=\"\${BUILD_ID}\" " +
