@@ -6,7 +6,8 @@ import static com.r3.build.BuildControl.killAllExistingBuildsForJob
 killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
 
 currentBuild.result = 'NOT_BUILT'
-error("Exiting with ${currentBuild.result}")
+echo "Exiting with ${currentBuild.result}"
+return
 
 // We need to track if we've actually executed build steps to enable changing
 // the build status at the end
