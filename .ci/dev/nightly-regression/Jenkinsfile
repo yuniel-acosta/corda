@@ -6,9 +6,18 @@ import static com.r3.build.BuildControl.killAllExistingBuildsForJob
 killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
 
 def buildNumber = BUILD_NUMBER as int
-if (buildNumber <= 16) {
+if (buildNumber < 1) {
   currentBuild.result = 'NOT_BUILT'
   echo "Exiting with ${currentBuild.result}"
+  pipeline {
+      agent any
+      options {
+          overrideIndexTriggers(false)
+      }
+      triggers {
+          pollSCM ignorePostCommitHooks: true, scmpoll_spec: '*/5 * * * *' // '@midnight'
+      }
+  }
   return
 }
 
