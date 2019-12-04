@@ -12,6 +12,7 @@ pipeline {
     agent { label 'gke' }
     options {
         timestamps()
+        overrideIndexTriggers(false)
         buildDiscarder(logRotator(daysToKeepStr: '7', artifactDaysToKeepStr: '7'))
     }
     triggers {
