@@ -26,6 +26,10 @@ service ExternalCryptoService {
 
     rpc sign (SignRequest) returns (SignResponse) {
     }
+
+    rpc getKey (KeyRequest) returns (KeyResponse) {
+
+    }
 }
 
 message KeyRequest {
@@ -34,10 +38,14 @@ message KeyRequest {
 
 message KeyResponse {
     bytes key = 1;
+    string algorithm = 2;
+    string format = 3;
 }
 
 message SignRequest {
     bytes data = 1;
+    string alias = 2;
+    string signAlgorithm = 3;
 }
 
 message SignResponse {

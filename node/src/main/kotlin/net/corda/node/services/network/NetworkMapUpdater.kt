@@ -196,7 +196,7 @@ class NetworkMapUpdater(private val networkMapCache: NetworkMapCacheInternal,
                     .map { nodeInfosToGet ->
                         //for a set of chunked hashes, get the nodeInfo for each hash
                         CompletableFuture.supplyAsync(Supplier<List<NodeInfo>> {
-                            nodeInfosToGet.mapNotNull { nodeInfo ->
+                            val nodeInfos = nodeInfosToGet.mapNotNull { nodeInfo ->
                                 try {
                                     networkMapClient.getNodeInfo(nodeInfo)
                                 } catch (e: Exception) {
@@ -205,6 +205,7 @@ class NetworkMapUpdater(private val networkMapCache: NetworkMapCacheInternal,
                                     null
                                 }
                             }
+                            nodeInfos
                         }, executorToUseForDownloadingNodeInfos).thenAcceptAsync(Consumer { retrievedNodeInfos ->
                             // Add new node info to the network map cache, these could be new node info or modification of node info for existing nodes.
                             networkMapCache.addNodes(retrievedNodeInfos)
