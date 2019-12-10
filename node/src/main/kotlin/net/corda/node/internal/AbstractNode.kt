@@ -56,6 +56,7 @@ import net.corda.core.node.services.CordaService
 import net.corda.core.node.services.IdentityService
 import net.corda.core.node.services.KeyManagementService
 import net.corda.core.node.services.TransactionVerifierService
+import net.corda.core.node.services.vault.CordaTransactionSupport
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.serialization.SerializationWhitelist
 import net.corda.core.serialization.SerializeAsToken
@@ -95,6 +96,7 @@ import net.corda.node.services.attachments.NodeAttachmentTrustCalculator
 import net.corda.node.services.config.NodeConfiguration
 import net.corda.node.services.config.configureWithDevSSLCertificate
 import net.corda.node.services.config.rpc.NodeRpcOptions
+import net.corda.node.services.config.shell.determineUnsafeUsers
 import net.corda.node.services.config.shell.toShellConfig
 import net.corda.node.services.config.shouldInitCrashShell
 import net.corda.node.services.events.NodeSchedulerService
@@ -126,9 +128,7 @@ import net.corda.node.services.statemachine.FlowLogicRefFactoryImpl
 import net.corda.node.services.statemachine.FlowMonitor
 import net.corda.node.services.statemachine.FlowStateMachineImpl
 import net.corda.node.services.statemachine.SingleThreadedStateMachineManager
-import net.corda.node.services.statemachine.StaffedFlowHospital
 import net.corda.node.services.statemachine.StateMachineManager
-import net.corda.node.services.statemachine.StateMachineManagerInternal
 import net.corda.node.services.transactions.BasicVerifierFactoryService
 import net.corda.node.services.transactions.DeterministicVerifierFactoryService
 import net.corda.node.services.transactions.InMemoryTransactionVerifierService
@@ -155,6 +155,7 @@ import net.corda.nodeapi.internal.crypto.X509Utilities.NODE_IDENTITY_ALIAS_PREFI
 import net.corda.nodeapi.internal.cryptoservice.CryptoServiceFactory
 import net.corda.nodeapi.internal.cryptoservice.SupportedCryptoServices
 import net.corda.nodeapi.internal.cryptoservice.bouncycastle.BCCryptoService
+import net.corda.nodeapi.internal.persistence.CordaTransactionSupportImpl
 import net.corda.nodeapi.internal.persistence.CordaPersistence
 import net.corda.nodeapi.internal.persistence.CouldNotCreateDataSourceException
 import net.corda.nodeapi.internal.persistence.DatabaseConfig
@@ -534,6 +535,11 @@ abstract class AbstractNode<S>(val configuration: NodeConfiguration,
             shellConfiguration.sshdPort?.let {
                 log.info("Binding Shell SSHD server on port $it.")
             }
+
+            val unsafeUsers = determineUnsafeUsers(configuration)
+            org.crsh.ssh.term.CRaSHCommand.setUserInfo(unsafeUsers, true, false)
+            log.info("Setting unsafe users as: ${unsafeUsers}")
+
             InteractiveShell.startShell(shellConfiguration, cordappLoader.appClassLoader)
         }
     }
@@ -737,7 +743,8 @@ abstract class AbstractNode<S>(val configuration: NodeConfiguration,
      * This customizes the ServiceHub for each CordaService that is initiating flows.
      */
     // TODO Move this into its own file
-    private class AppServiceHubImpl<T : SerializeAsToken>(private val serviceHub: ServiceHub, private val flowStarter: FlowStarter) : AppServiceHub, ServiceHub by serviceHub {
+    private class AppServiceHubImpl<T : SerializeAsToken>(private val serviceHub: ServiceHub, private val flowStarter: FlowStarter,
+                                                          override val database: CordaTransactionSupport) : AppServiceHub, ServiceHub by serviceHub {
         lateinit var serviceInstance: T
         override fun <T> startTrackedFlow(flow: FlowLogic<T>): FlowProgressHandle<T> {
             val stateMachine = startFlowChecked(flow)
@@ -785,7 +792,7 @@ abstract class AbstractNode<S>(val configuration: NodeConfiguration,
         serviceClass.requireAnnotation<CordaService>()
 
         val service = try {
-            val serviceContext = AppServiceHubImpl<T>(services, flowStarter)
+            val serviceContext = AppServiceHubImpl<T>(services, flowStarter, CordaTransactionSupportImpl(database))
             val extendedServiceConstructor = serviceClass.getDeclaredConstructor(AppServiceHub::class.java).apply { isAccessible = true }
             val service = extendedServiceConstructor.newInstance(serviceContext)
             serviceContext.serviceInstance = service
