@@ -15,16 +15,18 @@ syntax = "proto3";
 
 option java_multiple_files = true;
 option java_package = "net.corda.nodeapi.internal.cryptoservice.proto";
-option java_outer_classname = "External";
-option objc_class_prefix = "HLW";
+option java_outer_classname = "ExternalCrypto";
 
 package helloworld;
 
 service ExternalCryptoService {
+
     rpc generateKeyPair (KeyRequest) returns (KeyResponse) {
+
     }
 
     rpc sign (SignRequest) returns (SignResponse) {
+
     }
 
     rpc getKey (KeyRequest) returns (KeyResponse) {
@@ -34,6 +36,7 @@ service ExternalCryptoService {
 
 message KeyRequest {
     string name = 1;
+    string uuid = 2;
 }
 
 message KeyResponse {
