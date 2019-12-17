@@ -2,6 +2,7 @@ package net.corda.nodeapi.internal.cryptoservice.external
 
 import com.google.protobuf.ByteString
 import io.grpc.ManagedChannelBuilder
+import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SignatureScheme
 import net.corda.nodeapi.internal.cryptoservice.CryptoService
 import net.corda.nodeapi.internal.cryptoservice.SupportedCryptoServices
@@ -78,8 +79,10 @@ class ExternalOverGprcCryptoServiceClient(val host: String, val port: Int) : Cry
         val externalCryptoStub = ExternalCryptoServiceGrpc
                 .newBlockingStub(ManagedChannelBuilder.forAddress(host, port).build())
 
-        val request = KeyRequest.newBuilder().setName(alias).build()
+
+        val request = KeyRequest.newBuilder().setName(alias).setScheme(scheme.toProto()).build()
         val response = externalCryptoStub.generateKeyPair(request)
+
         return object : PublicKey {
             override fun getAlgorithm(): String {
                 return response.algorithm;
@@ -97,5 +100,22 @@ class ExternalOverGprcCryptoServiceClient(val host: String, val port: Int) : Cry
 
     override fun getType(): SupportedCryptoServices {
         return SupportedCryptoServices.EXTERNAL
+    }
+}
+
+fun SignatureScheme.toProto(): net.corda.nodeapi.internal.cryptoservice.proto.SignatureScheme {
+    return net.corda.nodeapi.internal.cryptoservice.proto.SignatureScheme.newBuilder().setSchemeCodeName(this.schemeCodeName)
+            .setSchemeNumberID(this.schemeNumberID.toString()).build()
+}
+
+fun net.corda.nodeapi.internal.cryptoservice.proto.SignatureScheme.fromProto(): SignatureScheme {
+    val members = Crypto.javaClass.fields
+    return members.first { it.type == SignatureScheme::class.java && ((it.get(null) as SignatureScheme).schemeCodeName == this.schemeCodeName) }.get(null) as SignatureScheme
+}
+
+fun main(args: Array<String>) {
+    val members = Crypto.javaClass.fields
+    members.filter { it.type == SignatureScheme::class.java }.forEach {
+        println(it.get(null) as SignatureScheme)
     }
 }

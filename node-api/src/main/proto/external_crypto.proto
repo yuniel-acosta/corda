@@ -37,6 +37,7 @@ service ExternalCryptoService {
 message KeyRequest {
     string name = 1;
     string uuid = 2;
+    SignatureScheme scheme = 3;
 }
 
 message KeyResponse {
@@ -53,4 +54,9 @@ message SignRequest {
 
 message SignResponse {
     bytes data = 1;
+}
+
+message SignatureScheme {
+    string schemeNumberID = 1;
+    string schemeCodeName = 2;
 }
