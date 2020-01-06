@@ -59,8 +59,10 @@ class FlowWatchPrintingSubscriber(private val toStream: RenderPrintWriter) : Sub
     }
 
     private fun createStateMachinesTable(): TableElement {
-        val table = TableElement(1, 2, 1, 2).overflow(Overflow.HIDDEN).rightCellPadding(1)
-        val header = RowElement(true).add("Id", "Flow name", "Initiator", "Status").style(Decoration.bold.fg(Color.black).bg(Color.white))
+        val table = TableElement(2, 2, 1, 2).overflow(Overflow.HIDDEN).rightCellPadding(1)
+        val header = RowElement(true)
+                .add("Id", "Flow name", "Initiator", "Status")
+                .style(Decoration.bold.fg(Color.black).bg(Color.white))
         table.add(header)
         return table
     }
@@ -113,7 +115,7 @@ class FlowWatchPrintingSubscriber(private val toStream: RenderPrintWriter) : Sub
         fun successFormat(value: Any?): String {
             return when (value) {
                 is SignedTransaction -> "Tx ID: " + value.id.toString()
-                is kotlin.Unit -> "No return value"
+                is Unit -> "No return value"
                 null -> "No return value"
                 else -> value.toString()
             }
