@@ -38,71 +38,73 @@ object AllButBlacklisted : ClassWhitelist {
 
     private val blacklistedClasses = hashSetOf<String>(
 
-            // Known blacklisted classes.
-            Thread::class.java.name,
-            HashSet::class.java.name,
-            HashMap::class.java.name,
-            WeakHashMap::class.java.name,
-            Dictionary::class.java.name, // Deprecated (marked obsolete) in the jdk
-            Hashtable::class.java.name, // see [Dictionary]
-            ClassLoader::class.java.name,
-            Handler::class.java.name, // MemoryHandler, StreamHandler
-            Runtime::class.java.name,
-            ZipFile::class.java.name,
-            Provider::class.java.name,
-            SecurityManager::class.java.name,
-            Random::class.java.name,
-
-            // Known blacklisted interfaces.
-            Connection::class.java.name,
-            // TODO: AutoCloseable::class.java.name,
-
-            // java.security.
-            KeyStore::class.java.name,
-            AccessController::class.java.name,
-            Permission::class.java.name,
-
-            // java.net.
-            DatagramSocket::class.java.name,
-            ServerSocket::class.java.name,
-            Socket::class.java.name,
-            URLConnection::class.java.name,
-            // TODO: add more from java.net.
-
-            // java.io.
-            Console::class.java.name,
-            File::class.java.name,
-            FileDescriptor::class.java.name,
-            FilePermission::class.java.name,
-            RandomAccessFile::class.java.name,
-            Reader::class.java.name,
-            Writer::class.java.name,
-            // TODO: add more from java.io.
-
-            // java.lang.invoke classes.
-            CallSite::class.java.name, // for all CallSites eg MutableCallSite, VolatileCallSite etc.
-            LambdaMetafactory::class.java.name,
-            MethodHandle::class.java.name,
-            MethodHandleProxies::class.java.name,
-            MethodHandles::class.java.name,
-            MethodHandles.Lookup::class.java.name,
-            MethodType::class.java.name,
-            SerializedLambda::class.java.name,
-            SwitchPoint::class.java.name,
-
-            // java.lang.invoke interfaces.
-            MethodHandleInfo::class.java.name,
-
-            // java.lang.invoke exceptions.
-            LambdaConversionException::class.java.name,
-            WrongMethodTypeException::class.java.name,
-
-            // java.lang.reflect.
-            AccessibleObject::class.java.name, // For Executable, Field, Method, Constructor.
-            Modifier::class.java.name,
-            Parameter::class.java.name,
-            ReflectPermission::class.java.name
-            // TODO: add more from java.lang.reflect.
+// Some of these aren't in the SDK
+//
+//            // Known blacklisted classes.
+//            Thread::class.java.name,
+//            HashSet::class.java.name,
+//            HashMap::class.java.name,
+//            WeakHashMap::class.java.name,
+//            Dictionary::class.java.name, // Deprecated (marked obsolete) in the jdk
+//            Hashtable::class.java.name, // see [Dictionary]
+//            ClassLoader::class.java.name,
+//            Handler::class.java.name, // MemoryHandler, StreamHandler
+//            Runtime::class.java.name,
+//            ZipFile::class.java.name,
+//            Provider::class.java.name,
+//            SecurityManager::class.java.name,
+//            Random::class.java.name,
+//
+//            // Known blacklisted interfaces.
+//            Connection::class.java.name,
+//            // TODO: AutoCloseable::class.java.name,
+//
+//            // java.security.
+//            KeyStore::class.java.name,
+//            AccessController::class.java.name,
+//            Permission::class.java.name,
+//
+//            // java.net.
+//            DatagramSocket::class.java.name,
+//            ServerSocket::class.java.name,
+//            Socket::class.java.name,
+//            URLConnection::class.java.name,
+//            // TODO: add more from java.net.
+//
+//            // java.io.
+//            Console::class.java.name,
+//            File::class.java.name,
+//            FileDescriptor::class.java.name,
+//            FilePermission::class.java.name,
+//            RandomAccessFile::class.java.name,
+//            Reader::class.java.name,
+//            Writer::class.java.name,
+//            // TODO: add more from java.io.
+//
+//            // java.lang.invoke classes.
+//            CallSite::class.java.name, // for all CallSites eg MutableCallSite, VolatileCallSite etc.
+//            LambdaMetafactory::class.java.name,
+//            MethodHandle::class.java.name,
+//            MethodHandleProxies::class.java.name,
+//            MethodHandles::class.java.name,
+//            MethodHandles.Lookup::class.java.name,
+//            MethodType::class.java.name,
+//            SerializedLambda::class.java.name,
+//            SwitchPoint::class.java.name,
+//
+//            // java.lang.invoke interfaces.
+//            MethodHandleInfo::class.java.name,
+//
+//            // java.lang.invoke exceptions.
+//            LambdaConversionException::class.java.name,
+//            WrongMethodTypeException::class.java.name,
+//
+//            // java.lang.reflect.
+//            AccessibleObject::class.java.name, // For Executable, Field, Method, Constructor.
+//            Modifier::class.java.name,
+//            Parameter::class.java.name,
+//            ReflectPermission::class.java.name
+//            // TODO: add more from java.lang.reflect.
     )
 
     // Specifically exclude classes from the blacklist,

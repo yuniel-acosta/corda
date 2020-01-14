@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "net.corda.node.services.cryptoservice.android";
+option java_outer_classname = "AndroidSigningProto";
+option objc_class_prefix = "ASP";
+
+package androidsigning;
+
+service AndroidSigner {
+    rpc CreatedKeyPair (CreateKeyPairResponse) returns (Ack) {}
+    rpc Signed (SigningResponse) returns (Ack) {}
+    rpc ContainsKey (ContainsKeyResponse) returns (Ack) {}
+    rpc PublicKey (GetPublicKeyResponse) returns (Ack) {}
+}
+
+message Ack { }
+
+message CreateKeyPairResponse {
+    string id = 1;
+    string publicKey = 2;
+}
+
+message SigningResponse {
+    string id = 1;
+    bytes signature = 2;
+}
+
+message ContainsKeyResponse {
+    string sessionId = 1;
+    bool containsKey = 2;
+}
+
+message GetPublicKeyResponse {
+    string sessionId = 1;
+    bytes publicKey = 2;
+}
+
+//service AndroidSigner {
+//    rpc SignTransaction(Transaction) returns (SignedTransaction);
+//}
+//
+//message Transaction {
+//    string id = 1;
+//    bytes txBytes = 2;
+//}
+//
+//message SignedTransaction {
+//    string id = 1;
+//    bytes publicKey = 2;
+//    bytes signedTx = 3;
+//}

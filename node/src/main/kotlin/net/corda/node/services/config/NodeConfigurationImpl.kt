@@ -13,6 +13,7 @@ import net.corda.nodeapi.internal.config.FileBasedCertificateStoreSupplier
 import net.corda.nodeapi.internal.config.MutualSslConfiguration
 import net.corda.nodeapi.internal.config.SslConfiguration
 import net.corda.nodeapi.internal.config.User
+import net.corda.nodeapi.internal.cryptoservice.SupportedCryptoServices
 import net.corda.nodeapi.internal.persistence.DatabaseConfig
 import net.corda.nodeapi.internal.persistence.SchemaInitializationType
 import net.corda.tools.shell.SSHDConfiguration
@@ -77,8 +78,11 @@ data class NodeConfigurationImpl(
         override val cordappSignerKeyFingerprintBlacklist: List<String> = Defaults.cordappSignerKeyFingerprintBlacklist,
         override val networkParameterAcceptanceSettings: NetworkParameterAcceptanceSettings? =
                 Defaults.networkParameterAcceptanceSettings,
-        override val blacklistedAttachmentSigningKeys: List<String> = Defaults.blacklistedAttachmentSigningKeys
+        override val blacklistedAttachmentSigningKeys: List<String> = Defaults.blacklistedAttachmentSigningKeys,
+        override val cryptoServiceName: SupportedCryptoServices? = Defaults.cryptoServiceName,
+        override val cryptoServiceConf: Path? = Defaults.cryptoServiceConf
 ) : NodeConfiguration {
+
     internal object Defaults {
         val jmxMonitoringHttpPort: Int? = null
         val compatibilityZoneURL: URL? = null
@@ -111,6 +115,8 @@ data class NodeConfigurationImpl(
         val cordappSignerKeyFingerprintBlacklist: List<String> = DEV_PUB_KEY_HASHES.map { it.toString() }
         val networkParameterAcceptanceSettings: NetworkParameterAcceptanceSettings = NetworkParameterAcceptanceSettings()
         val blacklistedAttachmentSigningKeys: List<String> = emptyList()
+        val cryptoServiceName: SupportedCryptoServices? = null
+        val cryptoServiceConf: Path? = null
 
         fun cordappsDirectories(baseDirectory: Path) = listOf(baseDirectory / CORDAPPS_DIR_NAME_DEFAULT)
 

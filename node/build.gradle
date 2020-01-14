@@ -11,6 +11,7 @@ buildscript {
     ext.jolokia_version = constants.getProperty('jolokiaAgentVersion')
 
     dependencies {
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
         classpath group: 'com.github.docker-java', name: 'docker-java', version: '3.1.5'
     }
 }
@@ -19,7 +20,6 @@ buildscript {
 plugins {
     id 'com.google.cloud.tools.jib' version '0.9.4'
 }
-
 apply plugin: 'kotlin'
 // Java Persistence API support: create no-arg constructor
 // see: http://stackoverflow.com/questions/32038177/kotlin-with-jpa-default-constructor-hell
@@ -28,6 +28,7 @@ apply plugin: 'java'
 apply plugin: 'net.corda.plugins.quasar-utils'
 apply plugin: 'net.corda.plugins.publish-utils'
 apply plugin: 'com.jfrog.artifactory'
+apply plugin: 'com.google.protobuf'
 
 description 'Corda node modules'
 
@@ -56,6 +57,13 @@ sourceSets {
             srcDir file('src/integration-test/resources')
         }
     }
+        main {
+            java {
+                srcDirs 'build/generated/source/proto/main/grpc'
+                srcDirs 'build/generated/source/proto/main/java'
+            }
+        }
+        
     slowIntegrationTest {
         kotlin {
             compileClasspath += main.output + test.output
@@ -226,7 +234,14 @@ dependencies {
     
     // Required by JVMAgentUtil (x-compatible java 8 & 11 agent lookup mechanism)
     compile files("${System.properties['java.home']}/../lib/tools.jar")
-    
+
+    // For the Android signing service.
+    implementation 'com.google.firebase:firebase-admin:6.7.0'
+    implementation "io.grpc:grpc-netty-shaded:$grpc_version"
+    implementation "io.grpc:grpc-protobuf:$grpc_version"
+    implementation "io.grpc:grpc-stub:$grpc_version"
+    compile "org.iq80.snappy:snappy:$snappy_version"
+
     testCompile(project(':test-cli'))
     testCompile(project(':test-utils'))
 
@@ -288,6 +303,17 @@ quasar {
             "org.yaml**",
             "rx**")
 }
+
+protobuf {
+    protoc { artifact = 'com.google.protobuf:protoc:3.6.1' }
+    plugins {
+        grpc { artifact = "io.grpc:protoc-gen-grpc-java:$grpc_version" }
+    }
+    generateProtoTasks {
+        all()*.plugins { grpc {} }
+    }
+}
+
 
 jar {
     baseName 'corda-node'

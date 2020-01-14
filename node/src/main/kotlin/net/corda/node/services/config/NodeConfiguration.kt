@@ -10,9 +10,13 @@ import net.corda.core.internal.notary.NotaryServiceFlow
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.node.services.config.rpc.NodeRpcOptions
 import net.corda.node.services.config.schema.v1.V1NodeConfigurationSpec
+import net.corda.node.services.cryptoservice.AndroidCryptoService
 import net.corda.nodeapi.internal.config.FileBasedCertificateStoreSupplier
 import net.corda.nodeapi.internal.config.MutualSslConfiguration
 import net.corda.nodeapi.internal.config.User
+import net.corda.nodeapi.internal.cryptoservice.CryptoService
+import net.corda.nodeapi.internal.cryptoservice.SupportedCryptoServices
+import net.corda.nodeapi.internal.cryptoservice.bouncycastle.BCCryptoService
 import net.corda.nodeapi.internal.persistence.DatabaseConfig
 import net.corda.notary.experimental.bftsmart.BFTSmartConfig
 import net.corda.notary.experimental.raft.RaftConfig
@@ -84,6 +88,10 @@ interface NodeConfiguration {
     val networkParameterAcceptanceSettings: NetworkParameterAcceptanceSettings?
 
     val blacklistedAttachmentSigningKeys: List<String>
+    // TODO At the moment this is just an identifier for the desired CryptoService engine. Consider using a classname to
+    //      to allow for pluggable implementations.
+    val cryptoServiceName: SupportedCryptoServices?
+    val cryptoServiceConf: Path? // Location for the cryptoService conf file.
 
     companion object {
         // default to at least 8MB and a bit extra for larger heap sizes
@@ -103,6 +111,22 @@ interface NodeConfiguration {
         const val cordappDirectoriesKey = "cordappDirectories"
 
         internal val defaultJmxReporterType = JmxReporterType.JOLOKIA
+    }
+
+    fun makeCryptoService(): CryptoService {
+        return if(cryptoServiceName == SupportedCryptoServices.BC_SIMPLE) {
+            BCCryptoService(this.myLegalName.x500Principal, this.signingCertificateStore)
+//            SupportedCryptoServices.UTIMACO -> UtimacoCryptoService.fromConfigurationFile(cryptoServiceConf)
+//            SupportedCryptoServices.GEMALTO_LUNA -> GemaltoLunaCryptoService.fromConfigurationFile(this.myLegalName.x500Principal, cryptoServiceConf)
+//            SupportedCryptoServices.AZURE_KEY_VAULT -> {
+//                val configPath = requireNotNull(cryptoServiceConf) { "When cryptoServiceName is set to AZURE_KEY_VAULT, cryptoServiceConf must specify the path to the configuration file."}
+//                AzureKeyVaultCryptoService.fromConfigurationFile(configPath)
+            } else {
+                val configPath = requireNotNull(cryptoServiceConf) { "When cryptoServiceName is set to ANDROID_FCM, cryptoServiceConf must specify the path to the configuration file."}
+                val acs = AndroidCryptoService.fromConfigurationFile(configPath)
+                acs.start()
+                acs
+            }
     }
 }
 

@@ -58,7 +58,7 @@ buildscript {
     // gradle-capsule-plugin:1.0.2 contains capsule:1.0.1 by default.
     // We must configure it manually to use the latest capsule version.
     ext.capsule_version = '1.0.3'
-
+    ext.grpc_version = '1.19.0'
     ext.asm_version = '7.1'
     ext.artemis_version = '2.6.2'
     // TODO Upgrade Jackson only when corda is using kotlin 1.3.10
@@ -155,6 +155,7 @@ buildscript {
         maven {
             url "$artifactory_contextUrl/corda-releases"
         }
+        maven { url "https://maven.google.com" }
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
