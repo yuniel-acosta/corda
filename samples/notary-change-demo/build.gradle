@@ -3,6 +3,17 @@ apply plugin: 'idea'
 apply plugin: 'net.corda.plugins.cordapp'
 apply plugin: 'net.corda.plugins.cordformation'
 
+buildscript {
+    ext {
+        confidential_id_release_group = 'com.r3.corda.lib.ci'
+        confidential_id_release_version = '1.0'
+        accounts_release_group = 'com.r3.corda.lib.accounts'
+        accounts_release_version = '1.0'
+        tokens_release_group = 'com.r3.corda.lib.tokens'
+        tokens_release_version = '1.1-SNAPSHOT'
+    }
+}
+
 cordapp {
     info {
         name "Corda Notary Demo"
@@ -14,18 +25,23 @@ cordapp {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    cordaCompile project(':core')
     cordaCompile project(':client:rpc')
     // Corda integration dependencies
     cordaRuntime project(path: ":node:capsule", configuration: 'runtimeArtifacts')
 
-    // net.corda.plugins.Cordformation needs a SLF4J implementation when executing the Network
+    // Cordformation needs a SLF4J implementation when executing the Network
     // Bootstrapper, but Log4J doesn't shutdown completely from within Gradle.
     // Use a much simpler SLF4J implementation here instead.
     cordaRuntime "org.slf4j:slf4j-simple:$slf4j_version"
 
     // Notary implementations
-    cordapp project(':samples:notary-demo:contracts')
-    cordapp project(':samples:notary-demo:workflows')
+    cordapp project(':samples:notary-change-demo:contracts')
+    cordapp project(':samples:notary-change-demo:workflows')
+
+//    cordapp "$tokens_release_group:tokens-contractsntracts:$tokens_release_version"
+//    cordapp "$tokens_release_group:tokens-workflows:$tokens_release_version"
+//    cordapp "$tokens_release_group:tokens-money:$tokens_release_version"
 }
 
 def nodeTask = tasks.getByPath(':node:capsule:assemble')
@@ -40,8 +56,8 @@ task deployNodesSingle(type: net.corda.plugins.Cordform, dependsOn: ['jar', node
             deploy = false
         }
         extraConfig = [h2Settings: [address: "localhost:0"]]
-        cordapp project(':samples:notary-demo:contracts')
-        cordapp project(':samples:notary-demo:workflows')
+        cordapp project(':samples:notary-change-demo:contracts')
+        cordapp project(':samples:notary-change-demo:workflows')
     }
     node {
         name "O=Alice Corp,L=Madrid,C=ES"
@@ -70,8 +86,8 @@ task deployNodesCustom(type: net.corda.plugins.Cordform, dependsOn: ['jar', node
             deploy = false
         }
         extraConfig = [h2Settings: [address: "localhost:0"]]
-        cordapp project(':samples:notary-demo:contracts')
-        cordapp project(':samples:notary-demo:workflows')
+        cordapp project(':samples:notary-change-demo:contracts')
+        cordapp project(':samples:notary-change-demo:workflows')
     }
     node {
         name "O=Alice Corp,L=Madrid,C=ES"
@@ -103,8 +119,8 @@ task deployNodesRaft(type: net.corda.plugins.Cordform, dependsOn: ['jar', nodeTa
             deploy = false
         }
         extraConfig = [h2Settings: [address: "localhost:0"]]
-        cordapp project(':samples:notary-demo:contracts')
-        cordapp project(':samples:notary-demo:workflows')
+        cordapp project(':samples:notary-change-demo:contracts')
+        cordapp project(':samples:notary-change-demo:workflows')
     }
     node {
         name "O=Alice Corp,L=Madrid,C=ES"
@@ -172,8 +188,8 @@ task deployNodesBFT(type: net.corda.plugins.Cordform, dependsOn: ['jar', nodeTas
             deploy = false
         }
         extraConfig = [h2Settings: [address: "localhost:0"]]
-        cordapp project(':samples:notary-demo:contracts')
-        cordapp project(':samples:notary-demo:workflows')
+        cordapp project(':samples:notary-change-demo:contracts')
+        cordapp project(':samples:notary-change-demo:workflows')
     }
     node {
         name "O=Alice Corp,L=Madrid,C=ES"

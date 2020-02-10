@@ -1,0 +1,26 @@
+apply plugin: 'kotlin'
+apply plugin: 'net.corda.plugins.cordapp'
+
+description 'Corda Notary Change - Contracts'
+
+cordapp {
+    targetPlatformVersion corda_platform_version.toInteger()
+    minimumPlatformVersion 1
+    contract {
+        name "Corda Notary Change"
+        versionId 1
+        vendor "R3"
+        licence "Open Source (Apache 2)"
+    }
+}
+
+jar {
+    baseName 'corda-notary-change-demo-contracts'
+}
+
+dependencies {
+    cordaCompile project(':core')
+
+    // Tokens.
+    cordaCompile "$tokens_release_group:tokens-contracts:$tokens_release_version"
+}
