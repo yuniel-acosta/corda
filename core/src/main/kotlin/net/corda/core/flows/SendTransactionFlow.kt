@@ -122,6 +122,10 @@ open class DataVendingFlow(val otherSideSession: FlowSession, val payload: Any) 
         // data request.
         var loopCount = 0
         while (true) {
+
+            if (loopCount >= 1)
+                throw FlowException ("PoC throws: The loopCount should always be at most 1")
+
             val loopCnt = loopCount++
             logger.trace { "DataVendingFlow: Main While [$loopCnt]..." }
             val dataRequest = sendPayloadAndReceiveDataRequest(otherSideSession, payload).unwrap { request ->

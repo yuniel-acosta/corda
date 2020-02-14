@@ -13,7 +13,7 @@ import net.corda.finance.DOLLARS
 import net.corda.finance.`issued by`
 import net.corda.finance.contracts.CP_PROGRAM_ID
 import net.corda.finance.contracts.CommercialPaper
-import net.corda.finance.contracts.ICommercialPaperState
+import net.corda.chain.contracts.ICommercialPaperState
 import net.corda.finance.contracts.asset.CASH
 import net.corda.finance.contracts.asset.Cash
 import net.corda.testing.core.*
