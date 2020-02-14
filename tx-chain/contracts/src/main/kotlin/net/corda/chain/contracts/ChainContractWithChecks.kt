@@ -13,6 +13,8 @@ class ChainContractWithChecks: Contract {
 
     // Command.
     interface Commands : CommandData {
+        class ConsumeState : TypeOnlyCommandData(), Commands
+        class ReIssueState : TypeOnlyCommandData(), Commands
         class Issue : TypeOnlyCommandData(), Commands
         class Move : TypeOnlyCommandData(), Commands
     }
@@ -22,22 +24,32 @@ class ChainContractWithChecks: Contract {
         val command = tx.commands.requireSingleCommand<Commands>()
 
         when (command.value) {
+            is Commands.ConsumeState -> {
+                //"There must be one output" using(tx.outputs.size == 1)
+                //val state = tx.outputsOfType<ChainState>().single()
+            }
+            is Commands.ReIssueState -> {
+                //"There must be one output" using(tx.outputs.size == 1)
+                //val state = tx.outputsOfType<ChainState>().single()
+            }
             is Commands.Issue -> {
                 //"There must be one output" using(tx.outputs.size == 1)
                 //val state = tx.outputsOfType<ChainState>().single()
             }
             is Commands.Move -> {
-                val inputState = tx.inputsOfType<ChainStateAllParticipants>().single()
+//                val inputState = tx.inputsOfType<ChainStateAllParticipants>().single()
                 // Make sure that the signers of the commands and the input states participants are the same
-                val signers = tx.commands.single().signers
-                val inputStateParticipants = inputState.participants.map { it.owningKey }
-                "Make sure that the signers of the commands and the input states participants are the same" using
-                        (signers == inputStateParticipants)
+                // The signers of the command of the transaction of the input state
+                // should be the same as the signers of the output state?
+//                val signers = tx.commands.single().signers
+//                val inputStateParticipants = inputState.participants.map { it.owningKey }
+//                "Make sure that the signers of the commands and the input states participants are the same" using
+//                        (signers == inputStateParticipants)
 
                 // for each state, input state participants == output state participants
-                val outputState = tx.outputsOfType<ChainStateAllParticipants>().single()
-                "The participants of the input state should be the same as the participants of the output state" using
-                        (inputState.participants.toSet() == outputState.participants.toSet())
+//                val outputState = tx.outputsOfType<ChainStateAllParticipants>().single()
+//                "The participants of the input state should be the same as the participants of the output state" using
+//                        (inputState.participants.toSet() == outputState.participants.toSet())
             }
         }
     }

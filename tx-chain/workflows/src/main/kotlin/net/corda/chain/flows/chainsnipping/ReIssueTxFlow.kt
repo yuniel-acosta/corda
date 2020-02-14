@@ -1,12 +1,10 @@
-package net.corda.chain.flows.issue
+package net.corda.chain.flows.chainsnipping
 
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.chain.contracts.ChainContractWithChecks
-import net.corda.chain.flows.chainsnipping.ConsumeTxFlow
 import net.corda.chain.states.ChainStateAllParticipants
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.contracts.requireThat
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
@@ -18,7 +16,8 @@ import net.corda.core.utilities.ProgressTracker
 @StartableByService
 @InitiatingFlow
 @StartableByRPC
-class IssueChainFlowAllParticipants (
+class ReIssueTxFlow (
+        private val currentState: StateAndRef<ChainStateAllParticipants>,
         private val partyA: Party,
         private val partyB: Party
 ) : FlowLogic<SignedTransaction>()  {
@@ -41,15 +40,19 @@ class IssueChainFlowAllParticipants (
 
         // list of signers
         val command =
-                Command(ChainContractWithChecks.Commands.Issue(),
+                Command(ChainContractWithChecks.Commands.ReIssueState(),
                         listOf(partyA.owningKey, partyB.owningKey, ourIdentity.owningKey))
 
-        val state = ChainStateAllParticipants(partyA = partyA,
-                partyB = partyB, me = ourIdentity, id = UniqueIdentifier())
+//        val state = ChainStateAllParticipants(partyA = partyA,
+//                partyB = partyB, me = ourIdentity, id = UniqueIdentifier())
 
+        val currentState = currentState.state.data
+
+        //val state = currentState.state.data
         // with input state with command
         val utx = TransactionBuilder(notary = notary)
-                .addOutputState(state, ChainContractWithChecks.ID)
+                //.addInputState(currentState)
+                .addOutputState(currentState.copy(), ChainContractWithChecks.ID)
                 .addCommand(command)
 
         val ptx = serviceHub.signInitialTransaction(utx,
@@ -68,8 +71,8 @@ class IssueChainFlowAllParticipants (
 }
 
 
-@InitiatedBy(IssueChainFlowAllParticipants::class)
-class IssueChainFlowAllParticipantsResponder (
+@InitiatedBy(ReIssueTxFlow::class)
+class ReIssueTxResponder (
         private val counterpartySession: FlowSession
 ) : FlowLogic <Unit> () {
 

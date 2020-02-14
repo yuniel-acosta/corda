@@ -2,6 +2,8 @@ package net.corda.chain.flows.move
 
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.chain.contracts.ChainContractWithChecks
+import net.corda.chain.flows.chainsnipping.ConsumeTxFlow
+import net.corda.chain.flows.chainsnipping.ReIssueTxFlow
 import net.corda.chain.states.ChainStateAllParticipants
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.UniqueIdentifier
@@ -74,8 +76,20 @@ class MoveChainFlowAllParticipantsFlow (
 
         println("Tx Chain length is $i ")
 
+        // Consume old transaction
+        // Consume state
+        val consumeTx= subFlow(ConsumeTxFlow (currentState = chainStateAndRef,
+                partyA = partyA, partyB = partyB))
+
+        val reIssueTx = subFlow(ReIssueTxFlow (currentState = chainStateAndRef,
+                partyA = partyA, partyB = partyB))
+
+
         // Create New Transaction
-        val chainState = chainStateAndRef.state.data
+        //val chainState = chainStateAndRef.state.data
+
+        val reIssuedState =
+                reIssueTx.coreTransaction.outputsOfType<ChainStateAllParticipants>().single()
 
         // Create Transaction
         val notary = serviceHub.networkMapCache.notaryIdentities.single()
@@ -85,12 +99,11 @@ class MoveChainFlowAllParticipantsFlow (
                 Command(ChainContractWithChecks.Commands.Move(),
                         listOf(partyA.owningKey, partyB.owningKey, ourIdentity.owningKey))
 
-        val state = chainState.copy()
+        //val state = chainState.copy()
 
         // with input state with command
         val utx = TransactionBuilder(notary = notary)
-                .addInputState(chainStateAndRef)
-                .addOutputState(state, ChainContractWithChecks.ID)
+                .addOutputState(reIssuedState, ChainContractWithChecks.ID)
                 .addCommand(command)
 
         val ptx = serviceHub.signInitialTransaction(utx,
@@ -101,9 +114,6 @@ class MoveChainFlowAllParticipantsFlow (
         val sessionB = initiateFlow(partyB)
 
         val stx = subFlow(CollectSignaturesFlow(ptx, listOf(sessionA, sessionB)))
-
-      //  stx.toLedgerTransaction(serviceHub)
-
 
         // sessions with the non-local participants
         return subFlow(FinalityFlow(stx, listOf(sessionA, sessionB), END.childProgressTracker()))

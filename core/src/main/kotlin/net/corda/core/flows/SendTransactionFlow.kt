@@ -123,7 +123,7 @@ open class DataVendingFlow(val otherSideSession: FlowSession, val payload: Any) 
         var loopCount = 0
         while (true) {
 
-            if (loopCount >= 1)
+            if (loopCount >= 2)
                 throw FlowException ("PoC throws: The loopCount should always be at most 1")
 
             val loopCnt = loopCount++
