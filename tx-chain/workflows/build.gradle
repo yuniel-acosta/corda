@@ -34,10 +34,8 @@ dependencies {
     // cordapp project(':finance:contracts')
     cordaCompile project(':core')
     cordaCompile project(':confidential-identities')
-    //cordaCompile project(':finance:workflows')
-    //cordaCompile project(':finance:contracts')
-    
-    //cordapp project(':finance:contracts')
+
+    cordapp project (':tx-chain:contracts')
 
     testCompile project(':test-utils')
     testCompile project(path: ':core', configuration: 'testArtifacts')
@@ -69,14 +67,14 @@ artifacts {
 }
 
 jar {
-    baseName 'corda-finance-workflows'
+    baseName 'corda-tx-chain-workflows'
 }
 
 cordapp {
     targetPlatformVersion corda_platform_version.toInteger()
     minimumPlatformVersion 1
     workflow {
-        name "Corda Finance Demo"
+        name "Corda Tx Chain"
         versionId 1
         vendor "R3"
         licence "Open Source (Apache 2)"

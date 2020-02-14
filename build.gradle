@@ -433,6 +433,9 @@ dependencies {
     runtime project(':confidential-identities')
     runtime project(':finance:workflows')
     runtime project(':finance:contracts')
+    runtime project (':tx-chain:workflows')
+    runtime project (':tx-chain:contracts')
+
     runtime project(':testing:testserver')
     testCompile project(':test-utils')
     detekt 'io.gitlab.arturbosch.detekt:detekt-cli:1.0.1'

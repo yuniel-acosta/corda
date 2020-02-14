@@ -7,10 +7,19 @@ apply plugin: 'net.corda.plugins.quasar-utils'
 apply plugin: 'net.corda.plugins.cordapp'
 apply plugin: 'com.jfrog.artifactory'
 
-description 'Corda TX Chain'
+description 'Corda TX Chain - Contracts'
 
 dependencies {
     cordaCompile project(':core')
+
+    // Tokens dependencies
+    //cordaCompile "com.r3.corda.lib.tokens:tokens-contracts:1.0"
+    //cordaCompile "com.r3.corda.lib.tokens:tokens-workflows:1.0"
+    //testCompile "com.r3.corda.lib.tokens:corda-node-driver:1.0"
+
+    //Accounts dependencies
+    //cordaCompile "com.r3.corda.lib.accounts:accounts-contracts:1.0"
+
 
     testCompile project(':test-utils')
     testCompile project(path: ':core', configuration: 'testArtifacts')
@@ -26,16 +35,17 @@ dependencies {
     testCompile "org.assertj:assertj-core:$assertj_version"
 }
 
+
 configurations {
     testArtifacts.extendsFrom testRuntimeClasspath
 }
 
 jar {
-    baseName 'corda-tx-chain'
-//    manifest {
-//        attributes('Corda-Revision': 'n/a')
-//        attributes('Corda-Vendor': 'Corda Open Source')
-//    }
+    baseName 'corda-tx-chain-contracts'
+    manifest {
+        attributes('Corda-Revision': 'n/a')
+        attributes('Corda-Vendor': 'Corda Open Source')
+    }
 }
 
 cordapp {
