@@ -53,10 +53,14 @@ class MoveChainFlowAllParticipantsFlow (
                 status = Vault.StateStatus.UNCONSUMED
         )
 
-        val chainStateAndRef = serviceHub.vaultService.
+        val chainStateAndRefList = serviceHub.vaultService.
                 queryBy(criteria = criteria.and(linearStateQueryCriteria),
                         contractStateType = ChainStateAllParticipants::class.java)
-                .states.single()
+                .states
+
+        chainStateAndRefList.forEach { println("ChainStateAllParticipant =  ${it.state.data} ") }
+
+        val chainStateAndRef = chainStateAndRefList.single()
 
         // Get Chain
         var lastTxHash = chainStateAndRef.ref.txhash
@@ -88,8 +92,12 @@ class MoveChainFlowAllParticipantsFlow (
         // Create New Transaction
         //val chainState = chainStateAndRef.state.data
 
-        val reIssuedState =
-                reIssueTx.coreTransaction.outputsOfType<ChainStateAllParticipants>().single()
+//        val reIssuedState =
+//                reIssueTx.coreTransaction.outputsOfType<ChainStateAllParticipants>().single()
+
+        val reIssuedState= reIssueTx.coreTransaction.outRefsOfType<ChainStateAllParticipants>().single()
+
+        val outputState = reIssuedState.state.data.copy()
 
         // Create Transaction
         val notary = serviceHub.networkMapCache.notaryIdentities.single()
@@ -103,7 +111,8 @@ class MoveChainFlowAllParticipantsFlow (
 
         // with input state with command
         val utx = TransactionBuilder(notary = notary)
-                .addOutputState(reIssuedState, ChainContractWithChecks.ID)
+                .addInputState(reIssuedState)
+                .addOutputState(outputState, ChainContractWithChecks.ID)
                 .addCommand(command)
 
         val ptx = serviceHub.signInitialTransaction(utx,

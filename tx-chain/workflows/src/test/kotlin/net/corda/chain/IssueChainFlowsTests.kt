@@ -5,11 +5,16 @@ import net.corda.chain.flows.issue.IssueChainFlowAllParticipants
 import net.corda.chain.flows.move.MoveChainFlowAllParticipantsFlow
 import net.corda.chain.states.ChainStateAllParticipants
 import net.corda.core.concurrent.CordaFuture
+import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.node.services.Vault
+import net.corda.core.node.services.queryBy
+import net.corda.core.node.services.vault.ColumnPredicate
 import net.corda.core.node.services.vault.QueryCriteria
+import net.corda.core.node.services.vault.Sort
+import net.corda.core.node.services.vault.SortAttribute
 import net.corda.core.toFuture
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
@@ -67,13 +72,13 @@ class IssueChainFlowsTests {
 //        return d
 //    }
 
-    fun invokeChainFlowAllParticipants (node: StartedMockNode, partyA: Party, partyB: Party) : CordaFuture<SignedTransaction> {
+    private fun invokeChainFlowAllParticipants (node: StartedMockNode, partyA: Party, partyB: Party) : CordaFuture<SignedTransaction> {
         val d = node.startFlow(IssueChainFlowAllParticipants (partyA = partyA, partyB = partyB))
         mockNetwork.runNetwork()
         return d
     }
 
-    fun moveChainFlowAllParticipants (node: StartedMockNode, partyA: Party, partyB: Party, linearId: UniqueIdentifier) : CordaFuture<SignedTransaction> {
+    private fun moveChainFlowAllParticipants (node: StartedMockNode, partyA: Party, partyB: Party, linearId: UniqueIdentifier) : CordaFuture<SignedTransaction> {
         val d = node.startFlow(MoveChainFlowAllParticipantsFlow (partyA = partyA, partyB = partyB, linearId = linearId))
         mockNetwork.runNetwork()
         return d
@@ -81,83 +86,64 @@ class IssueChainFlowsTests {
 
     @Test
     fun `Chain Test`() {
+
+        var newSize = 0
+        var prevSize = 0
+
         val partyA = nodeA.info.legalIdentities.single()
         val partyB = nodeB.info.legalIdentities.single()
         val partyC = nodeC.info.legalIdentities.single()
-
 
         // issue tokens
 //        val txIssue1 = issueTokens(nodeA,600.0).getOrThrow()
 //        val fungibleToken1 = txIssue1.coreTransaction.outputsOfType<FungibleToken>().single()
 //        assertEquals (fungibleToken1.amount.quantity, 600L)
 
-        val nodeAVaultUpdate = nodeA.services.vaultService.updates.toFuture()
-        val nodeBVaultUpdate = nodeB.services.vaultService.updates.toFuture()
-        val nodeCVaultUpdate = nodeC.services.vaultService.updates.toFuture()
-
         val txChainFlow1= invokeChainFlowAllParticipants (nodeA, partyB, partyC).getOrThrow()
         val chainState1= txChainFlow1.coreTransaction.outputsOfType<ChainStateAllParticipants>().single()
+        val chainLinearID = chainState1.linearId
 
         assertEquals(chainState1.participants.toSet(), setOf(partyA, partyB, partyC))
         println("chainState1 = $chainState1")
 
-        val a1= nodeAVaultUpdate.get()
-        val b1= nodeBVaultUpdate.get()
-       // val c1= nodeCVaultUpdate.get()
-
-        val chainStatesA1= nodeA.services.vaultService.queryBy (contractStateType = ChainStateAllParticipants::class.java)
-        val chainStatesB1= nodeB.services.vaultService.queryBy (contractStateType = ChainStateAllParticipants::class.java)
-      //  val chainStatesC1= nodeC.services.vaultService.queryBy (contractStateType = ChainState::class.java)
-
-        println("a1 = $a1")
-        println("b1 = $b1")
-       // println("c1 = $c1")
-
-        println("chainStatesA1 = $chainStatesA1")
-        println("chainStatesB1 = $chainStatesB1")
-       // println("chainStatesC1 = $chainStatesC1")
-
-        //val a2= nodeAVaultUpdate.get()
-        //val b2= nodeBVaultUpdate.get()
-        //val c2= nodeCVaultUpdate.get()
-
-        // Move Chain States
-        //val nodeAVaultUpdate2 = nodeA.services.vaultService.updates.toFuture()
-        //val nodeBVaultUpdate2 = nodeB.services.vaultService.updates.toFuture()
-        //val nodeCVaultUpdate2 = nodeC.services.vaultService.updates.toFuture()
-
         val txChainFlow2= moveChainFlowAllParticipants(nodeA, partyB, partyC, chainState1.linearId).getOrThrow()
+        newSize = printVaultResults (index = 1)
+        assertEquals(newSize-prevSize,3)
 
-        // default is VAULT.UNCONSUMED
-        val criteria = QueryCriteria.VaultQueryCriteria (status = Vault.StateStatus.ALL)
+        val txChainFlow3= moveChainFlowAllParticipants(nodeB, partyA, partyC, chainLinearID).getOrThrow()
+        prevSize = newSize
+        newSize = printVaultResults (index = 2)
+        assertEquals(newSize-prevSize,2)
 
-        //net.corda.chain.flows
-
-        val chainStatesA2= nodeA.services.vaultService.queryBy (criteria = criteria,
-                contractStateType = ChainStateAllParticipants::class.java)
-
-        val chainStatesB2= nodeB.services.vaultService.queryBy (criteria = criteria,
-                contractStateType = ChainStateAllParticipants::class.java)
-
-        val chainStatesC2= nodeC.services.vaultService.queryBy (criteria = criteria,
-                contractStateType = ChainStateAllParticipants::class.java)
-//
-
-
-//        println("a2 = ${nodeAVaultUpdate2.get()}")
-//        println("b2 = ${nodeBVaultUpdate2.get()}")
-//        println("c2 = ${nodeCVaultUpdate2.get()}")
-
-        println("chainStatesA2 = $chainStatesA2")
-        println("chainStatesB2 = $chainStatesB2")
-        println("chainStatesC2 = $chainStatesC2")
-
-        moveChainFlowAllParticipants(nodeA, partyB, partyC, chainState1.linearId).getOrThrow()
-        moveChainFlowAllParticipants(nodeA, partyB, partyC, chainState1.linearId).getOrThrow()
-        moveChainFlowAllParticipants(nodeA, partyB, partyC, chainState1.linearId).getOrThrow()
+        val txChainFlow4= moveChainFlowAllParticipants(nodeC, partyA, partyB, chainLinearID).getOrThrow()
+        prevSize = newSize
+        newSize = printVaultResults (index = 3)
+        assertEquals(newSize-prevSize,2)
 
         mockNetwork.stopNodes()
     }
+
+    private fun printVaultResults (index: Int) : Int {
+        val vaultCriteria = QueryCriteria.VaultQueryCriteria (status = Vault.StateStatus.ALL)
+        val sortAttribute = SortAttribute.Standard(Sort.VaultStateAttribute.RECORDED_TIME)
+        val sorter = Sort(setOf(Sort.SortColumn(sortAttribute, Sort.Direction.ASC)))
+
+        val queryResult = nodeA.services.vaultService
+                .queryBy (contractStateType = ChainStateAllParticipants::class.java,
+                    criteria = vaultCriteria,
+                    sorting = sorter
+                )
+
+        val states = queryResult.states
+        states.forEach { println("states [$index] = ${it.state.data}") }
+        queryResult.statesMetadata.forEach { println("states metadata [$index] = $it") }
+        return states.size
+    }
+
+
+//      set observable
+//      val nodeAVaultUpdate2 = nodeA.services.vaultService.updates.toFuture()
+//      val a1= nodeAVaultUpdate.get()
 
 }
 
