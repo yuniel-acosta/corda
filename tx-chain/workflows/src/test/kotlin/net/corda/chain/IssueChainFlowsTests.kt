@@ -1,6 +1,7 @@
 package net.corda.chain
 
 
+import com.nhaarman.mockito_kotlin.mock
 import net.corda.chain.flows.issue.IssueChainFlowAllParticipants
 import net.corda.chain.flows.move.MoveChainFlowAllParticipantsFlow
 import net.corda.chain.states.ChainStateAllParticipants
@@ -93,6 +94,8 @@ class IssueChainFlowsTests {
         val partyA = nodeA.info.legalIdentities.single()
         val partyB = nodeB.info.legalIdentities.single()
         val partyC = nodeC.info.legalIdentities.single()
+
+        val notary = mockNetwork.notaryNodes.single().info.legalIdentities.single().owningKey
 
         // issue tokens
 //        val txIssue1 = issueTokens(nodeA,600.0).getOrThrow()

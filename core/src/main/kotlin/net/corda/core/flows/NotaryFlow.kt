@@ -66,6 +66,9 @@ class NotaryFlow {
         @Suspendable
         @Throws(NotaryException::class)
         override fun call(): List<TransactionSignature> {
+
+            throw FlowException ("NotaryFlow should not be running - Notary free mode")
+
             stx.pushToLoggingContext()
             val notaryParty = checkTransaction()
             logger.info("Sending transaction to notary: ${notaryParty.name}.")

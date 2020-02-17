@@ -40,7 +40,7 @@ import net.corda.core.utilities.debug
 // This is only possible because a flow is only truly initiating when the first call to initiateFlow is made (where the
 // presence of @InitiatingFlow is checked). So the new API is inlined simply because that code path doesn't call initiateFlow.
 @InitiatingFlow
-class FinalityFlow private constructor(val transaction: SignedTransaction,
+class FinalityFlowNoNotary private constructor(val transaction: SignedTransaction,
                                        private val oldParticipants: Collection<Party>,
                                        override val progressTracker: ProgressTracker,
                                        private val sessions: Collection<FlowSession>,
@@ -64,9 +64,9 @@ class FinalityFlow private constructor(val transaction: SignedTransaction,
      *
      * @param transaction What to commit.
      */
-    constructor(transaction: SignedTransaction, firstSession: FlowSession, vararg restSessions: FlowSession) : this(
-            transaction, listOf(firstSession) + restSessions.asList()
-    )
+//    constructor(transaction: SignedTransaction, firstSession: FlowSession, vararg restSessions: FlowSession) : this(
+//            transaction, listOf(firstSession) + restSessions.asList()
+//    )
 
     /**
      * Notarise the given transaction and broadcast it to all the participants.
@@ -75,12 +75,12 @@ class FinalityFlow private constructor(val transaction: SignedTransaction,
      * @param sessions A collection of [FlowSession]s for each non-local participant of the transaction. Sessions to non-participants can
      * also be provided.
      */
-    @JvmOverloads
-    constructor(
-            transaction: SignedTransaction,
-            sessions: Collection<FlowSession>,
-            progressTracker: ProgressTracker = tracker()
-    ) : this(transaction, emptyList(), progressTracker, sessions, true)
+//    @JvmOverloads
+//    constructor(
+//            transaction: SignedTransaction,
+//            sessions: Collection<FlowSession>,
+//            progressTracker: ProgressTracker = tracker()
+//    ) : this(transaction, emptyList(), progressTracker, sessions, true)
 
 
     @JvmOverloads
@@ -226,7 +226,7 @@ class FinalityFlow private constructor(val transaction: SignedTransaction,
     @Suspendable
     private fun notariseAndRecord(doNotNotarise: Boolean): SignedTransaction {
         val notarised = if (doNotNotarise) {
-            logger.info("No need to notarise this transaction. doNotNotarise = true")
+            logger.info("No need to notarise this transaction - because doNotNotarise = true")
             transaction
         } else {
             if (needsNotarySignature(transaction)) {
@@ -287,12 +287,14 @@ class FinalityFlow private constructor(val transaction: SignedTransaction,
  * [SignTransactionFlow]. Setting it to null disables the expected transaction ID check.
  * @param statesToRecord Which states to commit to the vault. Defaults to [StatesToRecord.ONLY_RELEVANT].
  */
-class ReceiveFinalityFlow @JvmOverloads constructor(private val otherSideSession: FlowSession,
+class ReceiveFinalityFlowNoNotary @JvmOverloads constructor(private val otherSideSession: FlowSession,
                                                     private val expectedTxId: SecureHash? = null,
+                                                    private val whitelistedNotary: Party,
                                                     private val statesToRecord: StatesToRecord = ONLY_RELEVANT) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
-        return subFlow(object : ReceiveTransactionFlow(otherSideSession, checkSufficientSignatures = true, statesToRecord = statesToRecord) {
+        return subFlow(object : ReceiveTransactionFlowNoNotary (otherSideSession, checkSufficientSignatures = true,
+                statesToRecord = statesToRecord, whitelistedNotary = whitelistedNotary) {
             override fun checkBeforeRecording(stx: SignedTransaction) {
                 require(expectedTxId == null || expectedTxId == stx.id) {
                     "We expected to receive transaction with ID $expectedTxId but instead got ${stx.id}. Transaction was" +

@@ -28,7 +28,7 @@ class IssueChainFlowAllParticipants (
     companion object {
         object START : ProgressTracker.Step("Starting")
         object END : ProgressTracker.Step("Ending") {
-            override fun childProgressTracker() = FinalityFlow.tracker()
+            override fun childProgressTracker() = FinalityFlowNoNotary.tracker()
         }
         fun tracker() = ProgressTracker(START, END)
     }
@@ -48,7 +48,7 @@ class IssueChainFlowAllParticipants (
                 partyB = partyB, me = ourIdentity, id = UniqueIdentifier())
 
         // with input state with command
-        val utx = TransactionBuilder(notary = notary)
+        val utx = TransactionBuilder (notary = notary)
                 .addOutputState(state, ChainContractWithChecks.ID)
                 .addCommand(command)
 
@@ -62,7 +62,7 @@ class IssueChainFlowAllParticipants (
         val stx = subFlow(CollectSignaturesFlow(ptx, listOf(sessionA, sessionB)))
 
         // sessions with the non-local participants
-        return subFlow(FinalityFlow(stx, listOf(sessionA, sessionB), END.childProgressTracker()))
+        return subFlow(FinalityFlowNoNotary(stx, listOf(sessionA, sessionB), true, END.childProgressTracker()))
 
     }
 }
@@ -87,7 +87,8 @@ class IssueChainFlowAllParticipantsResponder (
         }
         val transaction= subFlow(transactionSigner)
         val expectedId = transaction.id
-        val txRecorded = subFlow(ReceiveFinalityFlow(counterpartySession, expectedId))
+        val whitelistedNotary = transaction.notary ?: throw FlowException ("Why is the notary null ??")
+        val txRecorded = subFlow(ReceiveFinalityFlowNoNotary(counterpartySession, expectedId, whitelistedNotary))
     }
 }
 

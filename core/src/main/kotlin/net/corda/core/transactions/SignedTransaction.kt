@@ -146,6 +146,29 @@ data class SignedTransaction(val txBits: SerializedBytes<CoreTransaction>,
     @JvmOverloads
     @DeleteForDJVM
     @Throws(SignatureException::class, AttachmentResolutionException::class, TransactionResolutionException::class)
+    fun toLedgerTransaction(services: ServiceHub, checkSufficientSignatures: Boolean = true, whitelistedNotary: Party): LedgerTransaction {
+        // TODO: We could probably optimise the below by
+        // a) not throwing if threshold is eventually satisfied, but some of the rest of the signatures are failing.
+        // b) omit verifying signatures when threshold requirement is met.
+        // c) omit verifying signatures from keys not included in [requiredSigningKeys].
+        // For the above to work, [checkSignaturesAreValid] should take the [requiredSigningKeys] as input
+        // and probably combine logic from signature validation and key-fulfilment
+        // in [TransactionWithSignatures.verifySignaturesExcept].
+        if (checkSufficientSignatures) {
+            //verifyRequiredSignatures() // It internally invokes checkSignaturesAreValid().
+            verifySignaturesExcept(setOf(whitelistedNotary.owningKey))
+        } else {
+            checkSignaturesAreValid()
+        }
+
+        // We need parameters check here, because finality flow calls stx.toLedgerTransaction() and then verify.
+        resolveAndCheckNetworkParameters(services)
+        return tx.toLedgerTransaction(services)
+    }
+
+    @JvmOverloads
+    @DeleteForDJVM
+    @Throws(SignatureException::class, AttachmentResolutionException::class, TransactionResolutionException::class)
     fun toLedgerTransaction(services: ServiceHub, checkSufficientSignatures: Boolean = true): LedgerTransaction {
         // TODO: We could probably optimise the below by
         // a) not throwing if threshold is eventually satisfied, but some of the rest of the signatures are failing.
@@ -159,10 +182,12 @@ data class SignedTransaction(val txBits: SerializedBytes<CoreTransaction>,
         } else {
             checkSignaturesAreValid()
         }
+
         // We need parameters check here, because finality flow calls stx.toLedgerTransaction() and then verify.
         resolveAndCheckNetworkParameters(services)
         return tx.toLedgerTransaction(services)
     }
+
 
     /**
      * Checks the transaction's signatures are valid, optionally calls [verifyRequiredSignatures] to check
@@ -183,6 +208,18 @@ data class SignedTransaction(val txBits: SerializedBytes<CoreTransaction>,
             is NotaryChangeWireTransaction -> verifyNotaryChangeTransaction(services, checkSufficientSignatures)
             is ContractUpgradeWireTransaction -> verifyContractUpgradeTransaction(services, checkSufficientSignatures)
             else -> verifyRegularTransaction(services, checkSufficientSignatures)
+        }
+    }
+
+    @JvmOverloads
+    @DeleteForDJVM
+    @Throws(SignatureException::class, AttachmentResolutionException::class, TransactionResolutionException::class, TransactionVerificationException::class)
+    fun verify(services: ServiceHub, checkSufficientSignatures: Boolean = true, whitelistedNotary: Party) {
+        resolveAndCheckNetworkParameters(services)
+        when (coreTransaction) {
+            is NotaryChangeWireTransaction -> verifyNotaryChangeTransaction(services, checkSufficientSignatures)
+            is ContractUpgradeWireTransaction -> verifyContractUpgradeTransaction(services, checkSufficientSignatures)
+            else -> verifyRegularTransaction(services, checkSufficientSignatures, whitelistedNotary)
         }
     }
 
@@ -222,6 +259,26 @@ data class SignedTransaction(val txBits: SerializedBytes<CoreTransaction>,
     // from the attachment is trusted. This will require some partial serialisation work to not load the ContractState
     // objects from the TransactionState.
     @DeleteForDJVM
+    private fun verifyRegularTransaction(services: ServiceHub, checkSufficientSignatures: Boolean, whitelistedNotary: Party) {
+        val ltx = toLedgerTransaction(services, checkSufficientSignatures, whitelistedNotary)
+        try {
+            // TODO: allow non-blocking verification.
+            services.transactionVerifierService.verify(ltx).getOrThrow()
+        } catch (e: NoClassDefFoundError) {
+            checkReverifyAllowed(e)
+            val missingClass = e.message ?: throw e
+            log.warn("Transaction {} has missing class: {}", ltx.id, missingClass)
+            reverifyWithFixups(ltx, services, missingClass)
+        } catch (e: NotSerializableException) {
+            checkReverifyAllowed(e)
+            retryVerification(e, e, ltx, services)
+        } catch (e: TransactionDeserialisationException) {
+            checkReverifyAllowed(e)
+            retryVerification(e.cause, e, ltx, services)
+        }
+    }
+
+    @DeleteForDJVM
     private fun verifyRegularTransaction(services: ServiceHub, checkSufficientSignatures: Boolean) {
         val ltx = toLedgerTransaction(services, checkSufficientSignatures)
         try {
@@ -240,6 +297,7 @@ data class SignedTransaction(val txBits: SerializedBytes<CoreTransaction>,
             retryVerification(e.cause, e, ltx, services)
         }
     }
+
 
     private fun checkReverifyAllowed(ex: Throwable) {
         // If that transaction was created with and after Corda 4 then just fail.
