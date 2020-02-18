@@ -1,11 +1,10 @@
 package net.corda.chain.flows.issue
 
 import co.paralleluniverse.fibers.Suspendable
-import net.corda.chain.contracts.ChainContractWithChecks
-import net.corda.chain.flows.chainsnipping.ConsumeTxFlow
-import net.corda.chain.states.ChainStateAllParticipants
+import net.corda.chain.contracts.EmptyContract
+import net.corda.chain.states.AssetState
+import net.corda.chain.states.SnippingStatus
 import net.corda.core.contracts.Command
-import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.contracts.requireThat
 import net.corda.core.flows.*
@@ -18,9 +17,9 @@ import net.corda.core.utilities.ProgressTracker
 @StartableByService
 @InitiatingFlow
 @StartableByRPC
-class IssueChainFlowAllParticipants (
-        private val partyA: Party,
-        private val partyB: Party
+class IssueChainFlow (
+        private val str: String,
+        private val parties: List<Party>
 ) : FlowLogic<SignedTransaction>()  {
 
     override val progressTracker: ProgressTracker = tracker()
@@ -36,40 +35,30 @@ class IssueChainFlowAllParticipants (
     @Suspendable
     override fun call(): SignedTransaction {
 
-        // Create Transaction
         val notary = serviceHub.networkMapCache.notaryIdentities.single()
 
-        // list of signers
         val command =
-                Command(ChainContractWithChecks.Commands.Issue(),
-                        listOf(partyA.owningKey, partyB.owningKey, ourIdentity.owningKey))
+                Command(EmptyContract.Commands.Issue(),
+                        parties.map { it.owningKey } + ourIdentity.owningKey)
 
-        val state = ChainStateAllParticipants(partyA = partyA,
-                partyB = partyB, me = ourIdentity, id = UniqueIdentifier())
+        val state = AssetState(str = str, parties = parties + ourIdentity, id = UniqueIdentifier(), status = SnippingStatus.ISSUE)
 
-        // with input state with command
         val utx = TransactionBuilder (notary = notary)
-                .addOutputState(state, ChainContractWithChecks.ID)
+                .addOutputState(state, EmptyContract.ID)
                 .addCommand(command)
 
         val ptx = serviceHub.signInitialTransaction(utx,
                 listOf(ourIdentity.owningKey)
         )
-
-        val sessionA = initiateFlow(partyA)
-        val sessionB = initiateFlow(partyB)
-
-        val stx = subFlow(CollectSignaturesFlow(ptx, listOf(sessionA, sessionB)))
-
-        // sessions with the non-local participants
-        return subFlow(FinalityFlowNoNotary(stx, listOf(sessionA, sessionB), true, END.childProgressTracker()))
-
+        val sessions = parties.map { initiateFlow(it) }
+        val stx = subFlow(CollectSignaturesFlow(ptx, sessions))
+        return subFlow(FinalityFlowNoNotary(stx, sessions, true, END.childProgressTracker()))
     }
 }
 
 
-@InitiatedBy(IssueChainFlowAllParticipants::class)
-class IssueChainFlowAllParticipantsResponder (
+@InitiatedBy(IssueChainFlow::class)
+class IssueChainResponder (
         private val counterpartySession: FlowSession
 ) : FlowLogic <Unit> () {
 
@@ -79,10 +68,7 @@ class IssueChainFlowAllParticipantsResponder (
         val transactionSigner: SignTransactionFlow
         transactionSigner = object : SignTransactionFlow(counterpartySession) {
             @Suspendable override fun checkTransaction(stx: SignedTransaction) = requireThat {
-//                Example:
-//                val tx = stx.tx
-//                val commands = tx.commands
-//                "There must be exactly one command" using (commands.size == 1)
+
             }
         }
         val transaction= subFlow(transactionSigner)

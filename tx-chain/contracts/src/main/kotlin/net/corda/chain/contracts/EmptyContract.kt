@@ -1,17 +1,15 @@
 package net.corda.chain.contracts
 
-import net.corda.chain.states.ChainStateAllParticipants
 import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
 
-// Contract and state.
-class ChainContractWithChecks: Contract {
+class EmptyContract: Contract {
     companion object {
         @JvmStatic
-        val ID = "net.corda.chain.contracts.ChainContractWithChecks"
+        val ID = "net.corda.chain.contracts.EmptyContract"
     }
 
-    // Command.
+
     interface Commands : CommandData {
         class ConsumeState : TypeOnlyCommandData(), Commands
         class ReIssueState : TypeOnlyCommandData(), Commands
