@@ -37,6 +37,11 @@ interface FlowLogicRefFactory {
      * validation to ensure it points to a legitimate flow class.
      */
     fun toFlowLogic(ref: FlowLogicRef): FlowLogic<*>
+
+    /**
+     * Substitutes the flow or returns the same if no substitute is configured.
+     */
+    fun <T> getSubstituteFlow(flowLogic: FlowLogic<T>): FlowLogic<T>
 }
 
 /**

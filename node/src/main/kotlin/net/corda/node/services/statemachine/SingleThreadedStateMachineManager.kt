@@ -11,6 +11,7 @@ import net.corda.core.context.InvocationContext
 import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowInfo
 import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.FlowLogicRefFactory
 import net.corda.core.flows.StateMachineRunId
 import net.corda.core.identity.Party
 import net.corda.core.internal.*
@@ -72,7 +73,8 @@ class SingleThreadedStateMachineManager(
         val database: CordaPersistence,
         private val secureRandom: SecureRandom,
         private val unfinishedFibers: ReusableLatch = ReusableLatch(),
-        private val classloader: ClassLoader = SingleThreadedStateMachineManager::class.java.classLoader
+        private val classloader: ClassLoader = SingleThreadedStateMachineManager::class.java.classLoader,
+        private val flowLogicFactory: FlowLogicRefFactory
 ) : StateMachineManager, StateMachineManagerInternal {
     companion object {
         private val logger = contextLogger()
@@ -575,7 +577,7 @@ class SingleThreadedStateMachineManager(
 
         // Before we construct the state machine state by freezing the FlowLogic we need to make sure that lazy properties
         // have access to the fiber (and thereby the service hub)
-        val flowStateMachineImpl = FlowStateMachineImpl(flowId, flowLogic, scheduler)
+        val flowStateMachineImpl = FlowStateMachineImpl(flowId, flowLogic, scheduler, flowLogicFactory = flowLogicFactory)
         val resultFuture = openFuture<Any?>()
         flowStateMachineImpl.transientValues = TransientReference(createTransientValues(flowId, resultFuture))
         flowLogic.stateMachine = flowStateMachineImpl
@@ -745,7 +747,8 @@ class SingleThreadedStateMachineManager(
                 serviceHub = serviceHub,
                 checkpointSerializationContext = checkpointSerializationContext!!,
                 unfinishedFibers = unfinishedFibers,
-                waitTimeUpdateHook = { flowId, timeout -> resetCustomTimeout(flowId, timeout) }
+                waitTimeUpdateHook = { flowId, timeout -> resetCustomTimeout(flowId, timeout) },
+                flowLogicFactory = flowLogicFactory
         )
     }
 
@@ -782,7 +785,7 @@ class SingleThreadedStateMachineManager(
                         flowLogic = logic,
                         senderUUID = null
                 )
-                val fiber = FlowStateMachineImpl(id, logic, scheduler)
+                val fiber = FlowStateMachineImpl(id, logic, scheduler, flowLogicFactory = flowLogicFactory)
                 fiber.transientValues = TransientReference(createTransientValues(id, resultFuture))
                 fiber.transientState = TransientReference(state)
                 fiber.logic.stateMachine = fiber

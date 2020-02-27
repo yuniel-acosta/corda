@@ -11,6 +11,7 @@ import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.lang.reflect.TypeVariable
 import java.util.*
+import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.jvm.javaConstructor
@@ -20,7 +21,7 @@ import kotlin.reflect.jvm.javaType
  * The internal concrete implementation of the FlowLogicRef marker interface.
  */
 @CordaSerializable
-data class FlowLogicRefImpl internal constructor(val flowLogicClassName: String, val args: Map<String, Any?>) : FlowLogicRef
+data class FlowLogicRefImpl internal constructor(val flowLogicClassName: String, val args: Map<String, Any?>, val substituteFlowLogicClassName: String?) : FlowLogicRef
 
 /**
  * A class for conversion to and from [FlowLogic] and [FlowLogicRef] instances.
@@ -36,7 +37,19 @@ data class FlowLogicRefImpl internal constructor(val flowLogicClassName: String,
  */
 // TODO: Replace with a per app classloader/cordapp provider/cordapp loader - this will do for now
 @Suppress("ReturnCount", "TooManyFunctions")
-open class FlowLogicRefFactoryImpl(private val classloader: ClassLoader) : SingletonSerializeAsToken(), FlowLogicRefFactory {
+open class FlowLogicRefFactoryImpl(private val classloader: ClassLoader, val substituteFlows: Map<out Class<out FlowLogic<*>>, Class<out FlowLogic<*>>> = emptyMap()) : SingletonSerializeAsToken(), FlowLogicRefFactory {
+
+    override fun <T> getSubstituteFlow(flowLogic: FlowLogic<T>): FlowLogic<T> {
+        val substituteFlowType = substituteFlows[flowLogic.javaClass]
+        return if (substituteFlowType != null) {
+            val flowLogicRef = createForRPC(substituteFlowType, flowLogic)
+            // Transferring through a [FlowLogicRef] loses all the type information, so have to resort to type casting.
+            toFlowLogic(flowLogicRef) as FlowLogic<T>
+        } else {
+            flowLogic
+        }
+    }
+
     companion object {
         private val log: Logger = contextLogger()
     }
@@ -185,8 +198,16 @@ open class FlowLogicRefFactoryImpl(private val classloader: ClassLoader) : Singl
     @VisibleForTesting
     internal fun createKotlin(type: Class<out FlowLogic<*>>, args: Map<String, Any?>): FlowLogicRef {
         // Check we can find a constructor and populate the args to it, but don't call it
-        createConstructor(type, args)
-        return FlowLogicRefImpl(type.name, args)
+        val originalFlowConstructor = createConstructor(type, args)
+        val originalFlow = originalFlowConstructor()
+        val substituteFlowType = if (substituteFlows.containsKey(type)) {
+            val substituteFlowConstructor = createConstructor(substituteFlows[type]!!, mapOf("originalFlow" to originalFlow))
+            substituteFlows[type]!!.name
+        } else {
+            null
+        }
+
+        return FlowLogicRefImpl(type.name, args, substituteFlowType)
     }
 
     override fun toFlowLogic(ref: FlowLogicRef): FlowLogic<*> {
@@ -194,7 +215,14 @@ open class FlowLogicRefFactoryImpl(private val classloader: ClassLoader) : Singl
         // We re-validate here because a FlowLogicRefImpl could have arrived via deserialization and therefore the
         // class name could point to anything at all.
         val klass = validatedFlowClassFromName(ref.flowLogicClassName)
-        return createConstructor(klass, ref.args)()
+        val originalFlow = createConstructor(klass, ref.args)()
+        return if (ref.substituteFlowLogicClassName != null) {
+            val substituteFlowClass = validatedFlowClassFromName(ref.substituteFlowLogicClassName)
+            val substitutedFlowConstructor = createConstructor(substituteFlowClass, mapOf("originalFlow" to originalFlow))
+            substitutedFlowConstructor()
+        } else {
+            originalFlow
+        }
     }
 
     private fun createConstructor(clazz: Class<out FlowLogic<*>>, args: Map<String, Any?>): () -> FlowLogic<*> {

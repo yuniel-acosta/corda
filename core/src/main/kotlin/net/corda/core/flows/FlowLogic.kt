@@ -380,10 +380,16 @@ abstract class FlowLogic<out T> {
     @Suspendable
     @Throws(FlowException::class)
     open fun <R> subFlow(subLogic: FlowLogic<R>): R {
-        subLogic.stateMachine = stateMachine
-        maybeWireUpProgressTracking(subLogic)
-        logger.debug { "Calling subflow: $subLogic" }
-        val result = stateMachine.subFlow(subLogic)
+        val flowLogicFactory = stateMachine.flowLogicFactory
+        val subFlowLogic = if (flowLogicFactory != null) {
+            flowLogicFactory.getSubstituteFlow(subLogic)
+        } else {
+            subLogic
+        }
+        subFlowLogic.stateMachine = stateMachine
+        maybeWireUpProgressTracking(subFlowLogic)
+        logger.debug { "Calling subflow: $subFlowLogic" }
+        val result = stateMachine.subFlow(subFlowLogic)
         logger.debug { "Subflow finished with result ${result.toString().abbreviate(300)}" }
         return result
     }

@@ -13,6 +13,7 @@ import net.corda.core.crypto.DigitalSignature
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.internal.AliasPrivateKey
 import net.corda.core.crypto.newSecureRandom
+import net.corda.core.flows.CollectSignaturesFlow
 import net.corda.core.flows.ContractUpgradeFlow
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
@@ -21,6 +22,7 @@ import net.corda.core.flows.InitiatedBy
 import net.corda.core.flows.NotaryChangeFlow
 import net.corda.core.flows.NotaryFlow
 import net.corda.core.flows.StateMachineRunId
+import net.corda.core.flows.SubstituteCollectSignaturesFlow
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -524,6 +526,7 @@ abstract class AbstractNode<S>(val configuration: NodeConfiguration,
             ScheduledActivityObserver.install(vaultService, schedulerService, flowLogicRefFactory)
 
             val frozenTokenizableServices = tokenizableServices!!
+            frozenTokenizableServices.add(flowLogicRefFactory as FlowLogicRefFactoryImpl)
             tokenizableServices = null
 
             verifyCheckpointsCompatible(frozenTokenizableServices)
@@ -696,12 +699,18 @@ abstract class AbstractNode<S>(val configuration: NodeConfiguration,
                 database,
                 newSecureRandom(),
                 busyNodeLatch,
-                cordappLoader.appClassLoader
+                cordappLoader.appClassLoader,
+                flowLogicRefFactory
         )
     }
 
     // Extracted into a function to allow overriding in subclasses.
-    protected open fun makeFlowLogicRefFactoryImpl() = FlowLogicRefFactoryImpl(cordappLoader.appClassLoader)
+    protected open fun makeFlowLogicRefFactoryImpl(): FlowLogicRefFactory {
+        val substituteFlows = mapOf(
+                CollectSignaturesFlow::class.java to SubstituteCollectSignaturesFlow::class.java
+        )
+        return FlowLogicRefFactoryImpl(cordappLoader.appClassLoader, substituteFlows)
+    }
 
     private fun makeCordappLoader(configuration: NodeConfiguration, versionInfo: VersionInfo): CordappLoader {
         val generatedCordapps = mutableListOf(VirtualCordapp.generateCore(versionInfo))
