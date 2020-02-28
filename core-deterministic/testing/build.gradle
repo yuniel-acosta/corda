@@ -5,10 +5,11 @@ dependencies {
     testCompile project(path: ':serialization-deterministic', configuration: 'deterministicArtifacts')
     testCompile project(path: ':core-deterministic:testing:verifier', configuration: 'deterministicArtifacts')
     testCompile project(path: ':core-deterministic:testing:data', configuration: 'testData')
-    testCompile(project(':finance:contracts')) {
+
+    testCompile(group: 'net.corda', name: 'corda-finance-workflows', version: '4.3'){
         transitive = false
     }
-    testCompile(project(':finance:workflows')) {
+    testCompile(group: 'net.corda', name: 'corda-finance-contracts', version: '4.3'){
         transitive = false
     }
 

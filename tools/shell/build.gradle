@@ -62,8 +62,8 @@ dependencies {
     // Unit testing helpers.
     testCompile "org.assertj:assertj-core:$assertj_version"
     testCompile project(':test-utils')
-    testCompile project(':finance:contracts')
-    testCompile project(':finance:workflows')
+    testCompile(group: 'net.corda', name: 'corda-finance-workflows', version: '4.3')
+    testCompile(group: 'net.corda', name: 'corda-finance-contracts', version: '4.3')
 
     // Jsh: Testing SSH server.
     integrationTestCompile "com.jcraft:jsch:$jsch_version"

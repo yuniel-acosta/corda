@@ -7,8 +7,8 @@ dependencies {
     cordaCompile project(':core')
 
     // The trader demo CorDapp depends upon Cash CorDapp features
-    cordapp project(':finance:contracts')
-    cordapp project(':finance:workflows')
+    cordapp(group: 'net.corda', name: 'corda-finance-workflows', version: '4.3')
+    cordapp(group: 'net.corda', name: 'corda-finance-contracts', version: '4.3')
 
     testCompile project(':node-driver')
     

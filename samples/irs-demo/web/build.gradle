@@ -73,7 +73,7 @@ dependencies {
     compile("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version")
     compile project(":client:rpc")
     compile project(":client:jackson")
-    compile project(":finance:workflows")
+    compile(group: 'net.corda', name: 'corda-finance-workflows', version: '4.3')
     // TODO In the future remove -irs bit from the directory name. Currently it clashes with :finance:workflows (same for contracts).
     compile project(":samples:irs-demo:cordapp:workflows-irs")
 

@@ -12,8 +12,8 @@ compileTestKotlin {
 
 dependencies {
     compile project(':core')
-    compile project(':finance:contracts')
-    compile project(':finance:workflows')
+    compile(group: 'net.corda', name: 'corda-finance-workflows', version: '4.3')
+    compile(group: 'net.corda', name: 'corda-finance-contracts', version: '4.3')
 
     // ObjectWeb Asm: a library for synthesising and working with JVM bytecode.
     compile "org.ow2.asm:asm:$asm_version"

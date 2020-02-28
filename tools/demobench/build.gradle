@@ -50,8 +50,8 @@ configurations {
 
 dependencies {
     compile project(':client:rpc')
-    compile project(':finance:contracts')
-    compile project(':finance:workflows')
+    compile(group: 'net.corda', name: 'corda-finance-workflows', version: '4.3')
+    compile(group: 'net.corda', name: 'corda-finance-contracts', version: '4.3')
     compile project(':tools:worldmap')
 
     // TornadoFX: A lightweight Kotlin framework for working with JavaFX UI's.
@@ -127,12 +127,12 @@ distributions {
                 into 'corda'
                 fileMode = 0444
             }
-            from(project(':finance:contracts').tasks.jar) {
+            from(project.configurations.compile.find {it.name.contains("finance-contracts")}) {
                 rename 'corda-finance-contracts(.*)', 'corda-finance-contracts.jar'
                 into 'cordapps'
                 fileMode = 0444
             }
-            from(project(':finance:workflows').tasks.jar) {
+            from(project.configurations.compile.find {it.name.contains("finance-workflows")}) {
                 rename 'corda-finance-workflows(.*)', 'corda-finance-workflows.jar'
                 into 'cordapps'
                 fileMode = 0444

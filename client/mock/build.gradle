@@ -10,8 +10,8 @@ description 'Corda client mock modules'
 
 dependencies {
     compile project(":core")
-    compile project(':finance:workflows')
-    compile project(':finance:contracts')
+    compile(group: 'net.corda', name: 'corda-finance-workflows', version: '4.3')
+    compile(group: 'net.corda', name: 'corda-finance-contracts', version: '4.3')
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junit_jupiter_version}"
     testImplementation "junit:junit:$junit_version"

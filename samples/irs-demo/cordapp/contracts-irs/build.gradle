@@ -6,7 +6,7 @@ dependencies {
     // The irs demo CorDapp depends upon Cash CorDapp features
     cordaCompile project(':core')
     cordaRuntime project(':node-api')
-    cordapp project(':finance:contracts')
+    cordapp(group: 'net.corda', name: 'corda-finance-contracts', version: '4.3')
 
     // Apache JEXL: An embeddable expression evaluation library.
     compile "org.apache.commons:commons-jexl3:3.1"

@@ -43,8 +43,8 @@ dependencies {
     compileOnly project(':test-utils')
 
     // The trader demo CorDapp depends upon Cash CorDapp features
-    cordapp project(':finance:contracts')
-    cordapp project(':finance:workflows')
+    cordapp(group: 'net.corda', name: 'corda-finance-contracts', version: '4.3')
+    cordapp(group: 'net.corda', name: 'corda-finance-workflows', version: '4.3')
     cordapp project(':samples:trader-demo:workflows-trader')
 
     // Corda integration dependencies
@@ -78,8 +78,8 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar', nodeTask])
         projectCordapp {
             deploy = false // TODO This is a bug, project cordapp should be disabled if no cordapp plugin is applied.
         }
-        cordapp project(':finance:workflows')
-        cordapp project(':finance:contracts')
+        cordapp "net.corda:corda-finance-contracts:4.3"
+        cordapp "net.corda:corda-finance-workflows:4.3"
         cordapp project(':samples:trader-demo:workflows-trader')
     }
     node {

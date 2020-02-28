@@ -37,8 +37,8 @@ dependencies {
     // Corda Core: Data structures and basic types needed to work with Corda.
     compile project(':core')
     compile project(':client:jfx')
-    compile project(':finance:contracts')
-    compile project(':finance:workflows')
+    compile(group: 'net.corda', name: 'corda-finance-workflows', version: '4.3')
+    compile(group: 'net.corda', name: 'corda-finance-contracts', version: '4.3')
     compile project(':tools:worldmap')
     compile project(':common-logging')
 

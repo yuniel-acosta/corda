@@ -48,7 +48,7 @@ dependencies {
     cordaCompile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     // The SIMM demo CorDapp depends upon Cash CorDapp features
-    cordapp project(':finance:contracts')
+    compile(group: 'net.corda', name: 'corda-finance-contracts', version: '4.3')
 
     // Corda integration dependencies
     cordaCompile project(':core')
@@ -62,7 +62,6 @@ dependencies {
 
 def cordappDependencies = file("${sourceSets['main'].output.resourcesDir}/META-INF/Cordapp-Dependencies")
 task generateDependencies {
-    dependsOn project(':finance:contracts').tasks.jar
     inputs.files(configurations.cordapp)
     outputs.files(cordappDependencies)
     doLast {

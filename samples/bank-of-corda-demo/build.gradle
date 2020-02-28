@@ -9,8 +9,8 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     // The bank of corda CorDapp depends upon Cash CorDapp features
-    cordapp project(':finance:contracts')
-    cordapp project(':finance:workflows')
+    cordapp(group: 'net.corda', name: 'corda-finance-workflows', version: '4.3')
+    cordapp(group: 'net.corda', name: 'corda-finance-contracts', version: '4.3')
 
     // Cordformation needs a SLF4J implementation when executing the Network
     // Bootstrapper, but Log4J doesn't shutdown completely from within Gradle.
@@ -46,8 +46,8 @@ def nodeTask = tasks.getByPath(':node:capsule:assemble')
 def webTask = tasks.getByPath(':testing:testserver:testcapsule::assemble')
 task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar', nodeTask, webTask]) {
     nodeDefaults {
-        cordapp project(':finance:workflows')
-        cordapp project(':finance:contracts')
+        cordapp 'net.corda:corda-finance-workflows:4.3'
+        cordapp 'net.corda:corda-finance-contracts:4.3'
     }
     node {
         name "O=Notary Service,L=Zurich,C=CH"
@@ -71,7 +71,7 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar', nodeTask, 
         extraConfig = [
                 h2Settings: [address: "localhost:10017"]
         ]
-        cordapp(project(':finance:workflows')) {
+        cordapp ('net.corda:corda-finance-workflows:4.3') {
             config "issuableCurrencies = [ USD ]"
         }
     }

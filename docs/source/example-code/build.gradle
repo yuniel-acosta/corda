@@ -54,8 +54,8 @@ dependencies {
     cordaRuntime project(path: ":testing:testserver:testcapsule:", configuration: 'runtimeArtifacts')
 
     // CorDapps: dependent flows and services
-    compile project(':finance:contracts')
-    compile project(':finance:workflows')
+    compile(group: 'net.corda', name: 'corda-finance-workflows', version: '4.3')
+    compile(group: 'net.corda', name: 'corda-finance-contracts', version: '4.3')
 }
 
 mainClassName = "net.corda.docs.ClientRpcTutorialKt"
@@ -79,7 +79,8 @@ task integrationTest(type: Test) {
     classpath = sourceSets.integrationTest.runtimeClasspath
 }
 
-task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
+task deployNodes(type: net.corda.plugins.Cordform,
+        dependsOn: ['jar', tasks.getByPath(':node:capsule:buildCordaJAR'), tasks.getByPath(':testing:testserver:testcapsule:buildWebserverJar')]) {
     directory "./build/nodes"
     node {
         name "O=Notary Service,OU=corda,L=London,C=GB"
