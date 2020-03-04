@@ -39,7 +39,7 @@ import javax.security.auth.x500.X500Principal
 object X509Utilities {
     // Note that this default value only applies to BCCryptoService. Other implementations of CryptoService may have to use different
     // schemes (for instance `UtimacoCryptoService.DEFAULT_IDENTITY_SIGNATURE_SCHEME`).
-    val DEFAULT_IDENTITY_SIGNATURE_SCHEME = Crypto.EDDSA_ED25519_SHA512
+    val DEFAULT_IDENTITY_SIGNATURE_SCHEME = Crypto.ECDSA_SECP256R1_SHA256 // Crypto.EDDSA_ED25519_SHA512 | Jarsigner only supports ECDSA
     val DEFAULT_TLS_SIGNATURE_SCHEME = Crypto.ECDSA_SECP256R1_SHA256
 
     // TODO This class is more of a general purpose utility class and as such these constants belong elsewhere.
