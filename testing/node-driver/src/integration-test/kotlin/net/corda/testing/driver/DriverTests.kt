@@ -10,13 +10,19 @@ import net.corda.core.internal.div
 import net.corda.core.internal.isRegularFile
 import net.corda.core.internal.list
 import net.corda.core.internal.readLines
+import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.getOrThrow
 import net.corda.node.internal.NodeStartup
 import net.corda.testing.common.internal.ProjectStructure.projectRootDir
+import net.corda.testing.common.internal.testNetworkParameters
+import net.corda.testing.core.ALICE_NAME
 import net.corda.testing.core.BOB_NAME
 import net.corda.testing.core.DUMMY_BANK_A_NAME
 import net.corda.testing.core.DUMMY_BANK_B_NAME
+import net.corda.testing.core.TestIdentity
 import net.corda.testing.http.HttpApi
+import net.corda.testing.node.NotarySpec
+import net.corda.testing.node.TestCordapp
 import net.corda.testing.node.internal.addressMustBeBound
 import net.corda.testing.node.internal.addressMustNotBeBound
 import org.assertj.core.api.Assertions.assertThat
@@ -34,6 +40,7 @@ import kotlin.test.assertEquals
 
 class DriverTests {
     private companion object {
+        private val log = contextLogger()
         val DUMMY_REGULATOR_NAME = CordaX500Name("Regulator A", "Paris", "FR")
         val executorService: ScheduledExecutorService = Executors.newScheduledThreadPool(2)
 
@@ -47,6 +54,49 @@ class DriverTests {
             val hostAndPort = handle.nodeInfo.addresses.single()
             // Check that the port is bound
             addressMustNotBeBound(executorService, hostAndPort)
+        }
+    }
+
+    private val partyA = NodeParameters(
+            providedName = CordaX500Name("PartyA", "London", "GB"),
+            additionalCordapps = listOf()
+    )
+    private val issuer = NodeParameters(
+            providedName = CordaX500Name("Issuer", "London", "GB"),
+            additionalCordapps = listOf()
+    )
+    private val notaryA = NotarySpec(TestIdentity(ALICE_NAME).party.name, true)
+    private val notaryB = NotarySpec(TestIdentity(BOB_NAME).party.name, true)
+
+    private val nodeParams = listOf(partyA, issuer)
+
+    private val defaultCorDapps = listOf(
+            TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+            TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+            TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+            TestCordapp.findCordapp("com.r3.corda.lib.accounts.contracts"),
+            TestCordapp.findCordapp("com.r3.corda.lib.accounts.workflows"),
+            TestCordapp.findCordapp("com.r3.corda.lib.ci")
+    )
+    private val inProcessParameters = DriverParameters(
+            notarySpecs = listOf(notaryA, notaryB),
+            startNodesInProcess = true,
+            cordappsForAllNodes = emptyList(),
+            networkParameters = testNetworkParameters(notaries = emptyList(), minimumPlatformVersion = 4)
+    )
+
+    private val outOfProcessParameters = DriverParameters(
+            notarySpecs = listOf(notaryA, notaryB),
+            startNodesInProcess = false,
+            cordappsForAllNodes = emptyList(),
+            networkParameters = testNetworkParameters(notaries = emptyList(), minimumPlatformVersion = 4)
+    )
+
+    @Test
+    fun `hestrins hackz`() {
+        driver(inProcessParameters) {
+            val (nodeA, nodeI) = nodeParams.map { params -> startNode(params) }.transpose().getOrThrow()
+            log.info("All nodes started up.")
         }
     }
 
@@ -185,3 +235,4 @@ class DriverTests {
 
     private fun DriverDSL.newNode(name: CordaX500Name) = { startNode(NodeParameters(providedName = name)) }
 }
+

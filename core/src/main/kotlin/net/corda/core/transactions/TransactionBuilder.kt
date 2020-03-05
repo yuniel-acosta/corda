@@ -8,6 +8,7 @@ import net.corda.core.contracts.*
 import net.corda.core.crypto.CompositeKey
 import net.corda.core.crypto.SignableData
 import net.corda.core.crypto.SignatureMetadata
+import net.corda.core.flows.FlowException
 import net.corda.core.identity.Party
 import net.corda.core.internal.*
 import net.corda.core.node.NetworkParameters
@@ -79,13 +80,13 @@ open class TransactionBuilder(
             return (size == other.size) && containsAll(other) && other.containsAll(this)
         }
         private fun Collection<AttachmentId>.toPrettyString(): String = sorted().joinToString(
-            separator = System.lineSeparator(),
-            prefix = System.lineSeparator()
+                separator = System.lineSeparator(),
+                prefix = System.lineSeparator()
         )
     }
 
     private val inputsWithTransactionState = arrayListOf<StateAndRef<ContractState>>()
-    private val referencesWithTransactionState = arrayListOf<TransactionState<ContractState>>()
+    private val referencesWithTransactionState = arrayListOf<StateAndRef<ContractState>>()
     private val excludedAttachments = arrayListOf<AttachmentId>()
 
     /**
@@ -141,18 +142,24 @@ open class TransactionBuilder(
 
     @CordaInternal
     internal fun toWireTransactionWithContext(
-        services: ServicesForResolution,
-        serializationContext: SerializationContext?
+            services: ServicesForResolution,
+            serializationContext: SerializationContext?
     ) : WireTransaction = toWireTransactionWithContext(services, serializationContext, 0)
 
     private tailrec fun toWireTransactionWithContext(
-        services: ServicesForResolution,
-        serializationContext: SerializationContext?,
-        tryCount: Int
+            services: ServicesForResolution,
+            serializationContext: SerializationContext?,
+            tryCount: Int
     ): WireTransaction {
         val referenceStates = referenceStates()
         if (referenceStates.isNotEmpty()) {
             services.ensureMinimumPlatformVersion(4, "Reference states")
+        }
+
+        if (referenceStates.isNotEmpty()) {
+            checkRefStatesNotary(referencesWithTransactionState, inputsWithTransactionState)
+        } else {
+            checkInputStatesNotary(inputsWithTransactionState)
         }
 
         val (allContractAttachments: Collection<AttachmentId>, resolvedOutputs: List<TransactionState<ContractState>>)
@@ -214,11 +221,11 @@ open class TransactionBuilder(
                 // Note: this is a best effort to preserve backwards compatibility.
                 rootError is ClassNotFoundException -> {
                     ((tryCount == 0) && fixupAttachments(wireTx.attachments, services, e))
-                        || addMissingAttachment((rootError.message ?: throw e).replace('.', '/'), services, e)
+                            || addMissingAttachment((rootError.message ?: throw e).replace('.', '/'), services, e)
                 }
                 rootError is NoClassDefFoundError -> {
                     ((tryCount == 0) && fixupAttachments(wireTx.attachments, services, e))
-                        || addMissingAttachment(rootError.message ?: throw e, services, e)
+                            || addMissingAttachment(rootError.message ?: throw e, services, e)
                 }
 
                 // Ignore these exceptions as they will break unit tests.
@@ -241,9 +248,9 @@ open class TransactionBuilder(
     }
 
     private fun fixupAttachments(
-        txAttachments: List<AttachmentId>,
-        services: ServicesForResolution,
-        originalException: Throwable
+            txAttachments: List<AttachmentId>,
+            services: ServicesForResolution,
+            originalException: Throwable
     ): Boolean {
         val replacementAttachments = services.cordappProvider.internalFixupAttachmentIds(txAttachments)
         if (replacementAttachments.deepEquals(txAttachments)) {
@@ -268,9 +275,9 @@ open class TransactionBuilder(
         }
 
         log.warn("Attempting to rebuild transaction with these extra attachments:{}{}and these attachments removed:{}",
-            extraAttachments.toPrettyString(),
-            System.lineSeparator(),
-            excludedAttachments.toPrettyString()
+                extraAttachments.toPrettyString(),
+                System.lineSeparator(),
+                excludedAttachments.toPrettyString()
         )
         return true
     }
@@ -327,28 +334,27 @@ open class TransactionBuilder(
 
         // And fail early if there's more than 1 for a contract.
         require(explicitAttachmentContracts.isEmpty()
-                  || explicitAttachmentContracts.groupBy { (ctr, _) -> ctr }.all { (_, groups) -> groups.size == 1 }) {
+                || explicitAttachmentContracts.groupBy { (ctr, _) -> ctr }.all { (_, groups) -> groups.size == 1 }) {
             "Multiple attachments set for the same contract."
         }
 
         val explicitAttachmentContractsMap: Map<ContractClassName, AttachmentId> = explicitAttachmentContracts.toMap()
 
-        val inputContractGroups: Map<ContractClassName, List<TransactionState<ContractState>>> = inputsWithTransactionState.map { it.state }
-                .groupBy { it.contract }
+        val inputContractGroups: Map<ContractClassName, List<StateAndRef<ContractState>>> = inputsWithTransactionState.groupBy { it.state.contract }
         val outputContractGroups: Map<ContractClassName, List<TransactionState<ContractState>>> = outputs.groupBy { it.contract }
 
         val allContracts: Set<ContractClassName> = inputContractGroups.keys + outputContractGroups.keys
 
         // Handle reference states.
         // Filter out all contracts that might have been already used by 'normal' input or output states.
-        val referenceStateGroups: Map<ContractClassName, List<TransactionState<ContractState>>>
-                = referencesWithTransactionState.groupBy { it.contract }
+        val referenceStateGroups: Map<ContractClassName, List<StateAndRef<ContractState>>>
+                = referencesWithTransactionState.groupBy { it.state.contract }
         val refStateContractAttachments: List<AttachmentId> = referenceStateGroups
                 .filterNot { it.key in allContracts }
                 .map { refStateEntry ->
                     getInstalledContractAttachmentId(
                             refStateEntry.key,
-                            refStateEntry.value,
+                            refStateEntry.value.map { it.state },
                             services
                     )
                 }
@@ -363,7 +369,8 @@ open class TransactionBuilder(
                 .flatten()
 
         // The output states need to preserve the order in which they were added.
-        val resolvedOutputStatesInTheOriginalOrder: List<TransactionState<ContractState>> = outputStates().map { os -> resolvedStates.find { rs -> rs.data == os.data && rs.encumbrance == os.encumbrance }!! }
+        val resolvedOutputStatesInTheOriginalOrder: List<TransactionState<ContractState>> = outputStates().map {
+            os -> resolvedStates.find { rs -> rs.data == os.data && rs.encumbrance == os.encumbrance }!! }
 
         val attachments: Collection<AttachmentId> = contractAttachmentsAndResolvedOutputStates.map { it.first } + refStateContractAttachments
 
@@ -392,12 +399,13 @@ open class TransactionBuilder(
      */
     private fun handleContract(
             contractClassName: ContractClassName,
-            inputStates: List<TransactionState<ContractState>>?,
+            inputStates: List<StateAndRef<ContractState>>?,
             outputStates: List<TransactionState<ContractState>>?,
             explicitContractAttachment: AttachmentId?,
             services: ServicesForResolution
     ): Pair<AttachmentId, List<TransactionState<ContractState>>?> {
-        val inputsAndOutputs = (inputStates ?: emptyList()) + (outputStates ?: emptyList())
+        val inputTxStates = inputStates?.map{ it.state }
+        val inputsAndOutputs = (inputTxStates ?: emptyList()) + (outputStates ?: emptyList())
 
         fun selectAttachment() = getInstalledContractAttachmentId(
                 contractClassName,
@@ -494,7 +502,7 @@ open class TransactionBuilder(
             } else {
                 // If the constraint on the output state is already set, and is not a valid transition or can't be transitioned, then fail early.
                 inputStates?.forEach { input ->
-                    require(outputConstraint.canBeTransitionedFrom(input.constraint, attachmentToUse)) { "Output state constraint $outputConstraint cannot be transitioned from ${input.constraint}" }
+                    require(outputConstraint.canBeTransitionedFrom(input.state.constraint, attachmentToUse)) { "Output state constraint $outputConstraint cannot be transitioned from ${input.state.constraint}" }
                 }
                 require(outputConstraint.isSatisfiedBy(constraintAttachment)) { "Output state constraint check fails. $outputConstraint" }
                 it
@@ -511,7 +519,7 @@ open class TransactionBuilder(
      * any possibility of transition off of existing [HashAttachmentConstraint]s.
      */
     private fun canMigrateFromHashToSignatureConstraint(
-            inputStates: List<TransactionState<ContractState>>?,
+            inputStates: List<StateAndRef<ContractState>>?,
             outputStates: List<TransactionState<ContractState>>?,
             services: ServicesForResolution
     ): Boolean {
@@ -519,7 +527,7 @@ open class TransactionBuilder(
                 && services.networkParameters.minimumPlatformVersion >= 4
                 // `disableHashConstraints == true` therefore it does not matter if there are
                 // multiple input states with different hash constraints
-                && inputStates?.any { it.constraint is HashAttachmentConstraint } == true
+                && inputStates?.any { it.state.constraint is HashAttachmentConstraint } == true
                 && outputStates?.none { it.constraint is HashAttachmentConstraint } == true
     }
 
@@ -530,10 +538,10 @@ open class TransactionBuilder(
      */
     private fun selectAttachmentConstraint(
             contractClassName: ContractClassName,
-            inputStates: List<TransactionState<ContractState>>?,
+            inputStates: List<StateAndRef<ContractState>>?,
             attachmentToUse: ContractAttachment,
             services: ServicesForResolution): AttachmentConstraint = when {
-        inputStates != null -> attachmentConstraintsTransition(inputStates.groupBy { it.constraint }.keys, attachmentToUse, services)
+        inputStates != null -> attachmentConstraintsTransition(inputStates.groupBy { it.state.constraint }.keys, attachmentToUse, services)
         attachmentToUse.signerKeys.isNotEmpty() && services.networkParameters.minimumPlatformVersion < 4 -> {
             log.warnOnce("Signature constraints not available on network requiring a minimum platform version of 4. Current is: ${services.networkParameters.minimumPlatformVersion}.")
             if (useWhitelistedByZoneAttachmentConstraint(contractClassName, services.networkParameters)) {
@@ -630,10 +638,27 @@ open class TransactionBuilder(
         toLedgerTransaction(services).verify()
     }
 
-    private fun checkNotary(stateAndRef: StateAndRef<*>) {
-        val notary = stateAndRef.state.notary
-        require(notary == this.notary) {
-            "Input state requires notary \"$notary\" which does not match the transaction notary \"${this.notary}\"."
+    private fun checkRefStatesNotary(references: List<StateAndRef<*>>, inputs: List<StateAndRef<*>>) {
+        val txBuilderNotary = this.notary ?: throw IllegalArgumentException("")
+        val refNotary = references.map { it.state.notary }.toSet().single()
+
+        // Simplify this bitch
+        val notaryToUse = if (txBuilderNotary != refNotary) refNotary else txBuilderNotary
+        if (txBuilderNotary != notaryToUse) {
+            this.notary = notaryToUse
+        }
+        checkNotary((inputs + references), notaryToUse)
+    }
+
+    private fun checkInputStatesNotary(inputs: List<StateAndRef<*>>) {
+        val txBuilderNotary = this.notary ?: throw IllegalArgumentException("")
+        checkNotary(inputs, txBuilderNotary)
+    }
+
+    private fun checkNotary(states: List<StateAndRef<*>>, newNotary: Party) {
+        val statesToChange = states.filter { it.state.notary != newNotary}
+        if (statesToChange.isNotEmpty()) {
+            throw NotaryStatesMismatchException(statesToChange, newNotary)
         }
     }
 
@@ -645,7 +670,7 @@ open class TransactionBuilder(
         }
     }
 
-    private fun checkReferencesUseSameNotary() = referencesWithTransactionState.map { it.notary }.toSet().size == 1
+    private fun checkReferencesUseSameNotary() = referencesWithTransactionState.map { it.state.notary }.toSet().size == 1
 
     /**
      * If any inputs or outputs added to the [TransactionBuilder] contain [StatePointer]s, then this method is used
@@ -692,7 +717,7 @@ open class TransactionBuilder(
      */
     open fun addReferenceState(referencedStateAndRef: ReferencedStateAndRef<*>) = apply {
         val stateAndRef = referencedStateAndRef.stateAndRef
-        referencesWithTransactionState.add(stateAndRef.state)
+        referencesWithTransactionState.add(stateAndRef)
 
         // It is likely the case that users of reference states do not have permission to change the notary assigned
         // to a reference state. Even if users _did_ have this permission the result would likely be a bunch of
@@ -713,15 +738,12 @@ open class TransactionBuilder(
         // State Pointers are recursively resolved. NOTE: That this might be expensive.
         // TODO: Add support for making recursive resolution optional if it becomes an issue.
         resolveStatePointers(stateAndRef.state)
-
-        checkNotary(stateAndRef)
         references.add(stateAndRef.ref)
         checkForInputsAndReferencesOverlap()
     }
 
     /** Adds an input [StateRef] to the transaction. */
     open fun addInputState(stateAndRef: StateAndRef<*>) = apply {
-        checkNotary(stateAndRef)
         inputs.add(stateAndRef.ref)
         inputsWithTransactionState.add(stateAndRef)
         resolveStatePointers(stateAndRef.state)
@@ -743,10 +765,10 @@ open class TransactionBuilder(
     /** Adds an output state, with associated contract code (and constraints), and notary, to the transaction. */
     @JvmOverloads
     fun addOutputState(
-        state: ContractState,
-        contract: ContractClassName = requireNotNullContractClassName(state),
-        notary: Party, encumbrance: Int? = null,
-        constraint: AttachmentConstraint = AutomaticPlaceholderConstraint
+            state: ContractState,
+            contract: ContractClassName = requireNotNullContractClassName(state),
+            notary: Party, encumbrance: Int? = null,
+            constraint: AttachmentConstraint = AutomaticPlaceholderConstraint
     ): TransactionBuilder {
         return addOutputState(TransactionState(state, contract, notary, encumbrance, constraint))
     }
@@ -754,9 +776,9 @@ open class TransactionBuilder(
     /** Adds an output state. A default notary must be specified during builder construction to use this method */
     @JvmOverloads
     fun addOutputState(
-        state: ContractState,
-        contract: ContractClassName = requireNotNullContractClassName(state),
-        constraint: AttachmentConstraint = AutomaticPlaceholderConstraint
+            state: ContractState,
+            contract: ContractClassName = requireNotNullContractClassName(state),
+            constraint: AttachmentConstraint = AutomaticPlaceholderConstraint
     ): TransactionBuilder {
         checkNotNull(notary) { "Need to specify a notary for the state, or set a default one on TransactionBuilder initialisation" }
         addOutputState(state, contract, notary!!, constraint = constraint)
@@ -816,6 +838,8 @@ open class TransactionBuilder(
     /** Returns an immutable list of input [StateRef]s. */
     fun inputStates(): List<StateRef> = ArrayList(inputs)
 
+    fun inputStateAndRefs(): List<StateAndRef<*>> = inputsWithTransactionState
+
     /** Returns an immutable list of reference input [StateRef]s. */
     fun referenceStates(): List<StateRef> = ArrayList(references)
 
@@ -842,3 +866,5 @@ open class TransactionBuilder(
         return SignedTransaction(wtx, listOf(sig))
     }
 }
+
+data class NotaryStatesMismatchException(val inputStates: List<StateAndRef<*>>, val transactionNotary: Party): FlowException()
