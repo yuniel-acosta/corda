@@ -35,6 +35,7 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.ProgressTracker.Change
+import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.seconds
 import net.corda.core.utilities.unwrap
@@ -368,6 +369,25 @@ class FlowFrameworkTests {
             val checkpoints = bobNode.internals.checkpointStorage.checkpoints().single()
             assertEquals(InitiatedReceiveFlow.START_STEP.label, checkpoints.progressStep)
         }
+    }
+
+    @Test(timeout=300_000)
+    fun `Flow status is set to killed in database when the flow is killed`() {
+        val terminationSignal = Semaphore(0)
+        val flow = aliceNode.services.startFlow(NoOpFlow( terminateUponSignal = terminationSignal))
+        mockNet.runNetwork()
+        aliceNode.database.transaction {
+            val checkpoint = aliceNode.internals.checkpointStorage.getCheckpoint(flow.id)
+            assertEquals(Checkpoint.FlowStatus.RUNNABLE, checkpoint!!.status)
+        }
+        aliceNode.contextLogger().warn("Before Killing Flow")
+        aliceNode.smm.killFlow(flow.id)
+        aliceNode.contextLogger().warn("Killing Flow")
+        aliceNode.database.transaction {
+            val checkpoint = aliceNode.internals.checkpointStorage.getCheckpoint(flow.id)
+            assertEquals(Checkpoint.FlowStatus.KILLED, checkpoint!!.status)
+        }
+        aliceNode.contextLogger().warn("I am done now.")
     }
 
     private class ConditionalExceptionFlow(val otherPartySession: FlowSession, val sendPayload: Any) : FlowLogic<Unit>() {

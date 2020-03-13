@@ -46,8 +46,10 @@ import net.corda.nodeapi.internal.persistence.wrapWithDatabaseTransaction
 import net.corda.serialization.internal.CheckpointSerializeAsTokenContextImpl
 import net.corda.serialization.internal.withTokenContext
 import org.apache.activemq.artemis.utils.ReusableLatch
+import org.jgroups.util.Util.assertNotNull
 import rx.Observable
 import rx.subjects.PublishSubject
+import sandbox.java.lang.checkCatch
 import java.lang.Integer.min
 import java.security.SecureRandom
 import java.util.*
@@ -243,8 +245,8 @@ class SingleThreadedStateMachineManager(
                     flow.fiber.interrupt()
                     true
                 } finally {
+                    tryUpdateStatusToKilled(id)
                     database.transaction {
-                        checkpointStorage.removeCheckpoint(id)
                         serviceHub.vaultService.softLockRelease(id.uuid)
                     }
                     transitionExecutor.forceRemoveFlow(id)
@@ -261,6 +263,20 @@ class SingleThreadedStateMachineManager(
             true
         } else {
             flowHospital.dropSessionInit(id)
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private fun tryUpdateStatusToKilled(id: StateMachineRunId) {
+        try {
+            database.transaction {
+                val checkpoint = checkpointStorage.getCheckpoint(id)
+                val deserialisedCheckpoint = checkpoint?.deserialize(checkpointSerializationContext!!)
+                val updatedCheckpoint = deserialisedCheckpoint?.copy(status = Checkpoint.FlowStatus.KILLED)
+                checkpointStorage.updateCheckpoint(id, updatedCheckpoint!!, checkpoint.serializedFlowState)
+            }
+        } catch (except: Exception) {
+            logger.error("Exception when trying update status in database to killed for flow: $id.\nException: ${except.message}")
         }
     }
 

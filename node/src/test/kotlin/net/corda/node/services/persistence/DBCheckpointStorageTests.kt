@@ -122,6 +122,7 @@ class DBCheckpointStorageTests {
                 logic.checkpointSerialize(context = CheckpointSerializationDefaults.CHECKPOINT_CONTEXT)
             ),
             progressStep = "I have made progress",
+            status = Checkpoint.FlowStatus.RUNNABLE,
             flowIoRequest = FlowIORequest.SendAndReceive::class.java.simpleName
         )
         val updatedSerializedFlowState = updatedCheckpoint.serializeFlowState()
