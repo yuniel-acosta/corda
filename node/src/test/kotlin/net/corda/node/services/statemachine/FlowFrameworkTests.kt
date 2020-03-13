@@ -380,14 +380,11 @@ class FlowFrameworkTests {
             val checkpoint = aliceNode.internals.checkpointStorage.getCheckpoint(flow.id)
             assertEquals(Checkpoint.FlowStatus.RUNNABLE, checkpoint!!.status)
         }
-        aliceNode.contextLogger().warn("Before Killing Flow")
         aliceNode.smm.killFlow(flow.id)
-        aliceNode.contextLogger().warn("Killing Flow")
         aliceNode.database.transaction {
             val checkpoint = aliceNode.internals.checkpointStorage.getCheckpoint(flow.id)
             assertEquals(Checkpoint.FlowStatus.KILLED, checkpoint!!.status)
         }
-        aliceNode.contextLogger().warn("I am done now.")
     }
 
     private class ConditionalExceptionFlow(val otherPartySession: FlowSession, val sendPayload: Any) : FlowLogic<Unit>() {
