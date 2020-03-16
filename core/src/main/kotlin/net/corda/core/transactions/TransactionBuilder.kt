@@ -642,7 +642,7 @@ open class TransactionBuilder(
         val txBuilderNotary = this.notary ?: throw IllegalArgumentException("")
         val refNotary = references.map { it.state.notary }.toSet().single()
 
-        // Simplify this bitch
+        // Good lord how did we end up here
         val notaryToUse = if (txBuilderNotary != refNotary) refNotary else txBuilderNotary
         if (txBuilderNotary != notaryToUse) {
             this.notary = notaryToUse
@@ -838,7 +838,7 @@ open class TransactionBuilder(
     /** Returns an immutable list of input [StateRef]s. */
     fun inputStates(): List<StateRef> = ArrayList(inputs)
 
-    fun inputStateAndRefs(): List<StateAndRef<*>> = inputsWithTransactionState
+    fun inputStateAndRefs(): List<StateAndRef<*>> = ArrayList(inputsWithTransactionState)
 
     /** Returns an immutable list of reference input [StateRef]s. */
     fun referenceStates(): List<StateRef> = ArrayList(references)
