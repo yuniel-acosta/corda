@@ -89,13 +89,26 @@ public class Base58 {
         if (input.isEmpty()) {
             return new byte[0];
         }
+        return decode(input, 0, input.length());
+    }
+
+    /**
+     * Decodes the given base58 string into the original data bytes.
+     *
+     * @param input a sequence of chars containing the sequence to be decoded
+     * @param offset the start position of the sequence to be decoded as number of characters from the beginning of {@code input}
+     * @param len the length of the sequence to be decoded
+     * @return the decoded data bytes
+     * @throws AddressFormatException if the given string is not a valid base58 string
+     */
+    public static byte[] decode(CharSequence input, int offset, int len) throws AddressFormatException {
         // Convert the base58-encoded ASCII chars to a base58 byte sequence (base58 digits).
-        byte[] input58 = new byte[input.length()];
-        for (int i = 0; i < input.length(); ++i) {
-            char c = input.charAt(i);
+        byte[] input58 = new byte[len];
+        for (int i = 0; i < len; ++i) {
+            char c = input.charAt(offset + i);
             int digit = c < 128 ? INDEXES[c] : -1;
             if (digit < 0) {
-                throw new AddressFormatException("Illegal character " + c + " at position " + i);
+                throw new AddressFormatException("Illegal character " + c + " at position " + (offset + i));
             }
             input58[i] = (byte) digit;
         }
@@ -105,7 +118,7 @@ public class Base58 {
             ++zeros;
         }
         // Convert base-58 digits to base-256 digits.
-        byte[] decoded = new byte[input.length()];
+        byte[] decoded = new byte[len];
         int outputStart = decoded.length;
         for (int inputStart = zeros; inputStart < input58.length; ) {
             decoded[--outputStart] = divmod(input58, inputStart, 58, 256);
