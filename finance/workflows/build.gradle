@@ -32,7 +32,6 @@ dependencies {
     // Note: 3rd party CorDapps should remember to include the relevant Finance CorDapp dependencies using `cordapp`
     // cordapp project(':finance:workflows')
     cordaCompile project(':core')
-    cordaCompile project(':confidential-identities')
 
     testCompile project(':test-utils')
     testCompile project(path: ':core', configuration: 'testArtifacts')

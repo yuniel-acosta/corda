@@ -25,7 +25,6 @@ dependencies {
 
     // OkHTTP: Simple HTTP library.
     compile "com.squareup.okhttp3:okhttp:$okhttp_version"
-    compile project(':confidential-identities')
 
     // JimFS: in memory java.nio filesystem. Used for test and simulation utilities.
     compile "com.google.jimfs:jimfs:1.1"

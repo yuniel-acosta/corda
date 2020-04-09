@@ -5,7 +5,6 @@ import com.google.common.collect.MutableClassToInstanceMap
 import com.google.common.util.concurrent.MoreExecutors
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.zaxxer.hikari.pool.HikariPool
-import net.corda.confidential.SwapIdentitiesFlow
 import net.corda.core.CordaException
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.context.InvocationContext
@@ -840,7 +839,6 @@ abstract class AbstractNode<S>(val configuration: NodeConfiguration,
         installFinalityHandler()
         flowManager.registerInitiatedCoreFlowFactory(NotaryChangeFlow::class, NotaryChangeHandler::class, ::NotaryChangeHandler)
         flowManager.registerInitiatedCoreFlowFactory(ContractUpgradeFlow.Initiate::class, NotaryChangeHandler::class, ::ContractUpgradeHandler)
-        flowManager.registerInitiatedCoreFlowFactory(SwapIdentitiesFlow::class, SwapIdentitiesHandler::class, ::SwapIdentitiesHandler)
     }
 
     // Ideally we should be disabling the FinalityHandler if it's not needed, to prevent any party from submitting transactions to us without
