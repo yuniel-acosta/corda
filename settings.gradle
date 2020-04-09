@@ -46,8 +46,6 @@ include 'node-driver'
 ['test-common', 'test-utils', 'test-cli', 'test-db', 'smoke-test-utils', 'node-driver'].each {
     project(":$it").projectDir = new File("$settingsDir/testing/$it")
 }
-include 'tools:explorer'
-include 'tools:explorer:capsule'
 include 'tools:loadtest'
 include 'tools:graphs'
 include 'tools:bootstrapper'

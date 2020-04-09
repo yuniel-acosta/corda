@@ -92,9 +92,6 @@ virtualenv/
 # bft-smart
 **/config/currentView
 
-# Node Explorer
-/tools/explorer/conf/CordaExplorer.properties
-
 # vim
 *.swp
 *.swn
