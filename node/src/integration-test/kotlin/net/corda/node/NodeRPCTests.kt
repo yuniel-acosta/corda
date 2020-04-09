@@ -15,7 +15,6 @@ class NodeRPCTests {
     private val CORDA_VENDOR = "Corda Open Source"
     private val CORDAPPS = listOf(FINANCE_CONTRACTS_CORDAPP, FINANCE_WORKFLOWS_CORDAPP)
     private val CORDAPP_TYPES = setOf("Contract CorDapp", "Workflow CorDapp")
-    private val CORDAPP_CONTRACTS_NAME_REGEX = "corda-finance-contracts-$CORDA_VERSION_REGEX".toRegex()
     private val CORDAPP_WORKFLOWS_NAME_REGEX = "corda-finance-workflows-$CORDA_VERSION_REGEX".toRegex()
     private val CORDAPP_SHORT_NAME = "Corda Finance Demo"
     private val CORDAPP_VENDOR = "R3"
@@ -32,7 +31,6 @@ class NodeRPCTests {
             nodeDiagnosticInfo.cordapps.forEach { println("${it.shortName} ${it.type}") }
             assertEquals(CORDAPPS.size, nodeDiagnosticInfo.cordapps.size)
             assertEquals(CORDAPP_TYPES, nodeDiagnosticInfo.cordapps.map { it.type }.toSet())
-            assertTrue(nodeDiagnosticInfo.cordapps.any { it.name.matches(CORDAPP_CONTRACTS_NAME_REGEX) })
             assertTrue(nodeDiagnosticInfo.cordapps.any { it.name.matches(CORDAPP_WORKFLOWS_NAME_REGEX) })
             val cordappInfo = nodeDiagnosticInfo.cordapps.first()
             assertEquals(CORDAPP_SHORT_NAME, cordappInfo.shortName)

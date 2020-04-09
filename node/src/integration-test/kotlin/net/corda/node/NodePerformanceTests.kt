@@ -11,8 +11,6 @@ import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.minutes
 import net.corda.finance.DOLLARS
-import net.corda.finance.flows.CashIssueFlow
-import net.corda.finance.flows.CashPaymentFlow
 import net.corda.node.services.Permissions.Companion.startFlow
 import net.corda.testing.core.DUMMY_NOTARY_NAME
 import net.corda.testing.driver.DriverParameters
@@ -91,27 +89,4 @@ class NodePerformanceTests {
         }
     }
 
-    @Test(timeout=300_000)
-	fun `self pay rate`() {
-        val user = User("A", "A", setOf(startFlow<CashIssueFlow>(), startFlow<CashPaymentFlow>()))
-        internalDriver(
-                notarySpecs = listOf(NotarySpec(DUMMY_NOTARY_NAME, rpcUsers = listOf(user))),
-                startNodesInProcess = true,
-                cordappsForAllNodes = FINANCE_CORDAPPS
-        ) {
-            val notary = defaultNotaryNode.getOrThrow() as InProcess
-            val metricRegistry = startReporter(this.shutdownManager, notary.internalServices.monitoringService.metrics)
-            CordaRPCClient(notary.rpcAddress).use("A", "A") { connection ->
-                println("ISSUING")
-                val doneFutures = (1..100).toList().parallelStream().map {
-                    connection.proxy.startFlow(::CashIssueFlow, 1.DOLLARS, OpaqueBytes.of(0), defaultNotaryIdentity).returnValue
-                }.toList()
-                doneFutures.transpose().get()
-                println("STARTING PAYMENT")
-                startPublishingFixedRateInjector(metricRegistry, 8, 5.minutes, 100L / TimeUnit.SECONDS) {
-                    connection.proxy.startFlow(::CashPaymentFlow, 1.DOLLARS, defaultNotaryIdentity).returnValue.get()
-                }
-            }
-        }
-    }
 }

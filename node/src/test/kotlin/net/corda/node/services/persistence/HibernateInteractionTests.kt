@@ -17,7 +17,6 @@ import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.finance.DOLLARS
 import net.corda.finance.`issued by`
-import net.corda.finance.contracts.asset.Cash
 import net.corda.finance.issuedBy
 import net.corda.nodeapi.internal.persistence.CordaPersistence
 import net.corda.testing.common.internal.testNetworkParameters
@@ -70,24 +69,6 @@ class HibernateInteractionTests {
         )
         services = mockServices
         database = db
-    }
-
-    // AbstractPartyToX500NameAsStringConverter could cause circular flush of Hibernate session because it is invoked during flush, and a
-    // cache miss was doing a flush.  This also checks that loading during flush does actually work.
-    @Test(timeout=300_000)
-	fun `issue some cash on a notary that exists only in the database to check cache loading works in our identity column converters during flush of vault update`() {
-        val expected = 500.DOLLARS
-        val ref = OpaqueBytes.of(0x01)
-
-        val ourIdentity = services.myInfo.legalIdentities.first()
-        val builder = TransactionBuilder(notary.party)
-        val issuer = services.myInfo.legalIdentities.first().ref(ref)
-        val signers = Cash().generateIssue(builder, expected.issuedBy(issuer), ourIdentity, notary.party)
-        val tx: SignedTransaction = services.signInitialTransaction(builder, signers)
-        services.recordTransactions(tx)
-
-        val output = tx.tx.outputsOfType<Cash.State>().single()
-        assertEquals(expected.`issued by`(ourIdentity.ref(ref)), output.amount)
     }
 
     @Test(timeout=300_000)

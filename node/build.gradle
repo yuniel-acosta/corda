@@ -166,11 +166,7 @@ dependencies {
     testCompile project(':node-driver')
     testCompile project(':test-utils')
     testCompile project(':client:jfx')
-    testCompile project(':finance:contracts')
     testCompile project(':finance:workflows')
-
-    // sample test schemas
-    testCompile project(path: ':finance:contracts', configuration: 'testArtifacts')
 
     // For H2 database support in persistence
     compile "com.h2database:h2:$h2_version"

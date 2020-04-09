@@ -8,7 +8,6 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.messaging.startFlow
-import net.corda.finance.flows.CashIssueFlow
 import net.corda.node.internal.DataSourceFactory
 import net.corda.node.internal.NodeWithInfo
 import net.corda.node.services.Permissions
@@ -114,26 +113,6 @@ class AuthDBTests : NodeBasedTest() {
                 ActiveMQSecurityException::class,
                 "Login with unknown username should fail") {
             client.start("X", "foo").close()
-        }
-    }
-
-    @Test(timeout=300_000)
-	fun `check flow permissions are respected`() {
-        client.start("user", "foo").use {
-            val proxy = it.proxy
-            proxy.startFlowDynamic(DummyFlow::class.java)
-            proxy.startTrackedFlowDynamic(DummyFlow::class.java)
-            proxy.startFlow(AuthDBTests::DummyFlow)
-            assertFailsWith(
-                    PermissionException::class,
-                    "This user should not be authorized to start flow `CashIssueFlow`") {
-                proxy.startFlowDynamic(CashIssueFlow::class.java)
-            }
-            assertFailsWith(
-                    PermissionException::class,
-                    "This user should not be authorized to start flow `CashIssueFlow`") {
-                proxy.startTrackedFlowDynamic(CashIssueFlow::class.java)
-            }
         }
     }
 

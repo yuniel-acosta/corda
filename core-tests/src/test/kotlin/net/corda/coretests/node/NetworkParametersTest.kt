@@ -11,7 +11,6 @@ import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.days
 import net.corda.core.utilities.getOrThrow
 import net.corda.finance.DOLLARS
-import net.corda.finance.flows.CashIssueFlow
 import net.corda.node.services.config.NotaryConfig
 import net.corda.nodeapi.internal.network.NetworkParametersCopier
 import net.corda.testing.common.internal.testNetworkParameters
@@ -91,25 +90,6 @@ class NetworkParametersTest {
         assertEquals(nm1.epoch, nm2.epoch)
         assertEquals(nm1.whitelistedContractImplementations, nm2.whitelistedContractImplementations)
         assertEquals(twoDays, nm2.eventHorizon)
-    }
-
-    // Notaries tests
-    @Test(timeout=300_000)
-	fun `choosing notary not specified in network parameters will fail`() {
-        val fakeNotary = mockNet.createNode(
-                InternalMockNodeParameters(
-                        legalName = BOB_NAME,
-                        configOverrides = {
-                            doReturn(NotaryConfig(validating = false)).whenever(it).notary
-                        }
-                )
-        )
-        val fakeNotaryId = fakeNotary.info.singleIdentity()
-        val alice = mockNet.createPartyNode(ALICE_NAME)
-        assertThat(alice.services.networkMapCache.notaryIdentities).doesNotContain(fakeNotaryId)
-        assertFails {
-            alice.services.startFlow(CashIssueFlow(500.DOLLARS, OpaqueBytes.of(0x01), fakeNotaryId)).resultFuture.getOrThrow()
-        }
     }
 
     @Test(timeout=300_000)

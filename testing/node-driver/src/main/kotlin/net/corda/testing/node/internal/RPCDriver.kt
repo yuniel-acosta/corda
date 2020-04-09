@@ -1,6 +1,5 @@
 package net.corda.testing.node.internal
 
-import net.corda.client.mock.Generator
 import net.corda.client.rpc.CordaRPCClientConfiguration
 import net.corda.client.rpc.internal.RPCClient
 import net.corda.client.rpc.internal.serialization.amqp.AMQPClientSerializationScheme
@@ -64,12 +63,6 @@ inline fun <reified I : RPCOps> RPCDriverDSL.startInVmRpcClient(
         password: String = rpcTestUser.password,
         configuration: CordaRPCClientConfiguration = CordaRPCClientConfiguration.DEFAULT
 ) = startInVmRpcClient(I::class.java, username, password, configuration)
-
-inline fun <reified I : RPCOps> RPCDriverDSL.startRandomRpcClient(
-        hostAndPort: NetworkHostAndPort,
-        username: String = rpcTestUser.username,
-        password: String = rpcTestUser.password
-) = startRandomRpcClient(I::class.java, hostAndPort, username, password)
 
 inline fun <reified I : RPCOps> RPCDriverDSL.startRpcClient(
         rpcAddress: NetworkHostAndPort,
@@ -398,25 +391,6 @@ data class RPCDriverDSL(
     }
 
     /**
-     * Starts a Netty RPC client in a new JVM process that calls random RPCs with random arguments.
-     *
-     * @param rpcOpsClass The [Class] of the RPC interface.
-     * @param rpcAddress The address of the RPC server to connect to.
-     * @param username The username to authenticate with.
-     * @param password The password to authenticate with.
-     */
-    fun <I : RPCOps> startRandomRpcClient(
-            rpcOpsClass: Class<I>,
-            rpcAddress: NetworkHostAndPort,
-            username: String = rpcTestUser.username,
-            password: String = rpcTestUser.password
-    ): CordaFuture<Process> {
-        val process = ProcessUtilities.startJavaProcess<RandomRpcUser>(listOf(rpcOpsClass.name, rpcAddress.toString(), username, password))
-        driverDSL.shutdownManager.registerProcessShutdown(process)
-        return doneFuture(process)
-    }
-
-    /**
      * Starts a Netty Artemis session connecting to an RPC server.
      *
      * @param rpcAddress The address of the RPC server.
@@ -527,47 +501,5 @@ data class RPCDriverDSL(
         }
         rpcServer.start(brokerHandle.serverControl)
         return RpcServerHandle(brokerHandle, rpcServer)
-    }
-}
-
-/**
- * An out-of-process RPC user that connects to an RPC server and issues random RPCs with random arguments.
- */
-class RandomRpcUser {
-
-    companion object {
-        private inline fun <reified T> HashMap<Class<*>, Generator<*>>.add(generator: Generator<T>) = this.putIfAbsent(T::class.java, generator)
-        private val generatorStore = HashMap<Class<*>, Generator<*>>().apply {
-            add(Generator.string())
-            add(Generator.int())
-        }
-
-        data class Call(val method: Method, val call: () -> Any?)
-
-        @JvmStatic
-        fun main(args: Array<String>) {
-            require(args.size == 4)
-            val rpcClass: Class<RPCOps> = uncheckedCast(Class.forName(args[0]))
-            val hostAndPort = NetworkHostAndPort.parse(args[1])
-            val username = args[2]
-            val password = args[3]
-            AMQPClientSerializationScheme.initialiseSerialization()
-            val handle = RPCClient<RPCOps>(hostAndPort, null, serializationContext = AMQP_RPC_CLIENT_CONTEXT).start(rpcClass, username, password)
-            val callGenerators = rpcClass.declaredMethods.map { method ->
-                Generator.sequence(method.parameters.map {
-                    generatorStore[it.type] ?: throw Exception("No generator for ${it.type}")
-                }).map { arguments ->
-                    Call(method) { method.invoke(handle.proxy, *arguments.toTypedArray()) }
-                }
-            }
-            val callGenerator = Generator.choice(callGenerators)
-            val random = SplittableRandom()
-
-            while (true) {
-                val call = callGenerator.generateOrFail(random)
-                call.call()
-                Thread.sleep(100)
-            }
-        }
     }
 }

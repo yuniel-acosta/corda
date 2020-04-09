@@ -21,14 +21,6 @@ import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.getOrThrow
-import net.corda.finance.DOLLARS
-import net.corda.finance.POUNDS
-import net.corda.finance.USD
-import net.corda.finance.contracts.asset.Cash
-import net.corda.finance.flows.CashIssueFlow
-import net.corda.finance.flows.CashPaymentFlow
-import net.corda.finance.workflows.getCashBalance
-import net.corda.finance.workflows.getCashBalances
 import net.corda.node.internal.NodeWithInfo
 import net.corda.node.services.Permissions.Companion.all
 import net.corda.nodeapi.exceptions.DuplicateAttachmentException
@@ -167,101 +159,6 @@ class CordaRPCClientTest : NodeBasedTest(listOf("net.corda.finance"), notaries =
         override fun close() {
             delegate.shutdown()
         }
-    }
-
-    @Test(timeout=300_000)
-	fun `close-send deadlock and premature shutdown on empty observable`() {
-        println("Starting client")
-        login(rpcUser.username, rpcUser.password)
-        println("Creating proxy")
-        println("Starting flow")
-        val flowHandle = connection!!.proxy.startTrackedFlow(::CashIssueFlow,
-                20.DOLLARS, OpaqueBytes.of(0), identity
-        )
-        println("Started flow, waiting on result")
-        flowHandle.progress.subscribe {
-            println("PROGRESS $it")
-        }
-        println("Result: ${flowHandle.returnValue.getOrThrow()}")
-    }
-
-    @Test(timeout=300_000)
-	fun `check basic flow has no progress`() {
-        login(rpcUser.username, rpcUser.password)
-        connection!!.proxy.startFlow(::CashPaymentFlow, 100.DOLLARS, identity).use {
-            assertFalse(it is FlowProgressHandle<*>)
-        }
-    }
-
-    @Test(timeout=300_000)
-	fun `get cash balances`() {
-        login(rpcUser.username, rpcUser.password)
-        val proxy = connection!!.proxy
-        val startCash = proxy.getCashBalances()
-        assertTrue(startCash.isEmpty(), "Should not start with any cash")
-
-        val flowHandle = proxy.startFlow(::CashIssueFlow,
-                123.DOLLARS, OpaqueBytes.of(0), identity
-        )
-        println("Started issuing cash, waiting on result")
-        flowHandle.returnValue.get()
-
-        val cashDollars = proxy.getCashBalance(USD)
-        println("Balance: $cashDollars")
-        assertEquals(123.DOLLARS, cashDollars)
-    }
-
-    @Test(timeout=300_000)
-	fun `flow initiator via RPC`() {
-        val externalTrace = Trace.newInstance()
-        val impersonatedActor = Actor(Actor.Id("Mark Dadada"), AuthServiceId("Test"), owningLegalIdentity = BOB_NAME)
-        login(rpcUser.username, rpcUser.password, externalTrace, impersonatedActor)
-        val proxy = connection!!.proxy
-
-        val updates = proxy.stateMachinesFeed().updates
-
-        node.services.startFlow(CashIssueFlow(2000.DOLLARS, OpaqueBytes.of(0), identity), InvocationContext.shell()).flatMap { it.resultFuture }.getOrThrow()
-        proxy.startFlow(::CashIssueFlow, 123.DOLLARS, OpaqueBytes.of(0), identity).returnValue.getOrThrow()
-        proxy.startFlowDynamic(CashIssueFlow::class.java, 1000.DOLLARS, OpaqueBytes.of(0), identity).returnValue.getOrThrow()
-
-        val historicalIds = mutableSetOf<Trace.InvocationId>()
-        var sessionId: Trace.SessionId? = null
-        updates.expectEvents(isStrict = false) {
-            sequence(
-                    expect { update: StateMachineUpdate.Added ->
-                        checkShellNotification(update.stateMachineInfo)
-                    },
-                    expect { update: StateMachineUpdate.Added ->
-                        checkRpcNotification(update.stateMachineInfo, rpcUser.username, historicalIds, externalTrace, impersonatedActor)
-                        sessionId = update.stateMachineInfo.invocationContext.trace.sessionId
-                    },
-                    expect { update: StateMachineUpdate.Added ->
-                        checkRpcNotification(update.stateMachineInfo, rpcUser.username, historicalIds, externalTrace, impersonatedActor)
-                        assertThat(update.stateMachineInfo.invocationContext.trace.sessionId).isEqualTo(sessionId)
-                    }
-            )
-        }
-    }
-
-    // WireTransaction stores its components as blobs which are deserialised in its constructor. This test makes sure
-    // the extra class loader given to the CordaRPCClient is used in this deserialisation, as otherwise any WireTransaction
-    // containing Cash.State objects are not receivable by the client.
-    //
-    // We run the client in a separate process, without the finance module on its system classpath to ensure that the
-    // additional class loader that we give it is used. Cash.State objects are used as they can't be synthesised fully
-    // by the carpenter, and thus avoiding any false-positive results.
-    @Test(timeout=300_000)
-	fun `additional class loader used by WireTransaction when it deserialises its components`() {
-        val financeLocation = Cash::class.java.location.toPath().toString()
-        val classPathWithoutFinance = ProcessUtilities.defaultClassPath.filter { financeLocation !in it }
-
-        // Create a Cash.State object for the StandaloneCashRpcClient to get
-        node.services.startFlow(CashIssueFlow(100.POUNDS, OpaqueBytes.of(1), identity), InvocationContext.shell()).flatMap { it.resultFuture }.getOrThrow()
-        val outOfProcessRpc = ProcessUtilities.startJavaProcess<StandaloneCashRpcClient>(
-                classPath = classPathWithoutFinance,
-                arguments = listOf(node.node.configuration.rpcOptions.address.toString(), financeLocation)
-        )
-        assertThat(outOfProcessRpc.waitFor()).isZero()  // i.e. no exceptions were thrown
     }
 
     @Test(timeout=300_000)

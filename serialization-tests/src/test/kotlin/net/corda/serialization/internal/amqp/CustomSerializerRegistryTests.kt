@@ -3,7 +3,6 @@ package net.corda.serialization.internal.amqp
 import net.corda.core.CordaException
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.serialization.SerializationContext
-import net.corda.finance.contracts.asset.Cash
 import org.apache.qpid.proton.amqp.Symbol
 import org.apache.qpid.proton.codec.Data
 import org.junit.Test
@@ -66,21 +65,6 @@ class CustomSerializerRegistryTests {
         assertSame(
                 customExceptionSerializer,
                 unit.find(MyCustomException::class.java))
-    }
-
-    @Test(timeout=300_000)
-	fun `two custom serializers cannot register to serialize the same type`() {
-        val weSerializeCash = TestCustomSerializer("a") { type -> type == Cash::class.java }
-        val weMaliciouslySerializeCash = TestCustomSerializer("b") { type -> type == Cash::class.java }
-
-        unit.run {
-            register(weSerializeCash)
-            register(weMaliciouslySerializeCash)
-        }
-
-        assertFailsWith<DuplicateCustomSerializerException> {
-            unit.find(Cash::class.java)
-        }
     }
 
     @Test(timeout=300_000)

@@ -11,9 +11,6 @@ import net.corda.core.messaging.startTrackedFlow
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.getOrThrow
-import net.corda.finance.DOLLARS
-import net.corda.finance.contracts.asset.Cash
-import net.corda.finance.flows.CashIssueFlow
 import net.corda.node.services.Permissions
 import net.corda.testing.core.CHARLIE_NAME
 import net.corda.testing.driver.DriverParameters
@@ -46,121 +43,6 @@ class CordaRPCClientReconnectionTest {
 
     companion object {
         val rpcUser = User("user1", "test", permissions = setOf(Permissions.all()))
-    }
-
-    @Test(timeout=300_000)
-    fun `rpc client calls and returned observables continue working when the server crashes and restarts`() {
-        driver(DriverParameters(cordappsForAllNodes = FINANCE_CORDAPPS)) {
-            val latch = CountDownLatch(2)
-            val address = NetworkHostAndPort("localhost", portAllocator.nextPort())
-
-            fun startNode(): NodeHandle {
-                return startNode(
-                        providedName = CHARLIE_NAME,
-                        rpcUsers = listOf(CordaRPCClientTest.rpcUser),
-                        customOverrides = mapOf("rpcSettings.address" to address.toString())
-                ).getOrThrow()
-            }
-
-            val node = startNode()
-            val client = CordaRPCClient(node.rpcAddress, config)
-
-            (client.start(rpcUser.username, rpcUser.password, gracefulReconnect = gracefulReconnect)).use {
-                val rpcOps = it.proxy as ReconnectingCordaRPCOps
-                val networkParameters = rpcOps.networkParameters
-                val cashStatesFeed = rpcOps.vaultTrack(Cash.State::class.java)
-                cashStatesFeed.updates.subscribe { latch.countDown() }
-                rpcOps.startTrackedFlow(::CashIssueFlow, 10.DOLLARS, OpaqueBytes.of(0), defaultNotaryIdentity).returnValue.get()
-
-                node.stop()
-                startNode()
-
-                rpcOps.startTrackedFlow(::CashIssueFlow, 10.DOLLARS, OpaqueBytes.of(0), defaultNotaryIdentity).returnValue.get()
-
-                val networkParametersAfterCrash = rpcOps.networkParameters
-                assertThat(networkParameters).isEqualTo(networkParametersAfterCrash)
-                assertTrue {
-                    latch.await(20, TimeUnit.SECONDS)
-                }
-            }
-        }
-    }
-
-    @Test(timeout=300_000)
-    fun `a client can successfully unsubscribe a reconnecting observable`() {
-        driver(DriverParameters(cordappsForAllNodes = FINANCE_CORDAPPS)) {
-            val latch = CountDownLatch(2)
-            val address = NetworkHostAndPort("localhost", portAllocator.nextPort())
-
-            fun startNode(): NodeHandle {
-                return startNode(
-                        providedName = CHARLIE_NAME,
-                        rpcUsers = listOf(CordaRPCClientTest.rpcUser),
-                        customOverrides = mapOf("rpcSettings.address" to address.toString())
-                ).getOrThrow()
-            }
-
-            val node = startNode()
-            val client = CordaRPCClient(node.rpcAddress, config)
-
-            (client.start(rpcUser.username, rpcUser.password, gracefulReconnect = gracefulReconnect)).use {
-                val rpcOps = it.proxy as ReconnectingCordaRPCOps
-                val cashStatesFeed = rpcOps.vaultTrack(Cash.State::class.java)
-                val subscription = cashStatesFeed.updates.subscribe { latch.countDown() }
-                rpcOps.startTrackedFlow(::CashIssueFlow, 10.DOLLARS, OpaqueBytes.of(0), defaultNotaryIdentity).returnValue.get()
-
-                node.stop()
-                startNode()
-
-                subscription.unsubscribe()
-
-                rpcOps.startTrackedFlow(::CashIssueFlow, 10.DOLLARS, OpaqueBytes.of(0), defaultNotaryIdentity).returnValue.get()
-
-                assertFalse {
-                    latch.await(4, TimeUnit.SECONDS)
-                }
-            }
-
-        }
-    }
-
-    @Test(timeout=300_000)
-    fun `rpc client calls and returned observables continue working when there is failover between servers`() {
-        driver(DriverParameters(cordappsForAllNodes = FINANCE_CORDAPPS)) {
-            val latch = CountDownLatch(2)
-
-            fun startNode(address: NetworkHostAndPort): NodeHandle {
-                return startNode(
-                        providedName = CHARLIE_NAME,
-                        rpcUsers = listOf(CordaRPCClientTest.rpcUser),
-                        customOverrides = mapOf("rpcSettings.address" to address.toString())
-                ).getOrThrow()
-            }
-
-            val addresses = listOf(NetworkHostAndPort("localhost", portAllocator.nextPort()), NetworkHostAndPort("localhost", portAllocator.nextPort()))
-
-            val node = startNode(addresses[0])
-            val client = CordaRPCClient(addresses, config)
-
-            (client.start(rpcUser.username, rpcUser.password, gracefulReconnect = gracefulReconnect)).use {
-                val rpcOps = it.proxy as ReconnectingCordaRPCOps
-                val networkParameters = rpcOps.networkParameters
-                val cashStatesFeed = rpcOps.vaultTrack(Cash.State::class.java)
-                cashStatesFeed.updates.subscribe { latch.countDown() }
-                rpcOps.startTrackedFlow(::CashIssueFlow, 10.DOLLARS, OpaqueBytes.of(0), defaultNotaryIdentity).returnValue.get()
-
-                node.stop()
-                startNode(addresses[1])
-
-                rpcOps.startTrackedFlow(::CashIssueFlow, 10.DOLLARS, OpaqueBytes.of(0), defaultNotaryIdentity).returnValue.get()
-
-                val networkParametersAfterCrash = rpcOps.networkParameters
-                assertThat(networkParameters).isEqualTo(networkParametersAfterCrash)
-                assertTrue {
-                    latch.await(2, TimeUnit.SECONDS)
-                }
-            }
-        }
     }
 
     @Test(timeout=300_000)
@@ -199,36 +81,6 @@ class CordaRPCClientReconnectionTest {
                         .start(rpcUser.username, rpcUser.password, GracefulReconnect())
             }.isInstanceOf(RPCException::class.java)
                     .hasMessage("Cannot connect to server(s). Tried with all available servers.")
-        }
-    }
-
-    @Test(timeout=300_000)
-    fun `RPC connection can be shut down after being disconnected from the node`() {
-        driver(DriverParameters(cordappsForAllNodes = emptyList())) {
-            val address = NetworkHostAndPort("localhost", portAllocator.nextPort())
-            fun startNode(): NodeHandle {
-                return startNode(
-                        providedName = CHARLIE_NAME,
-                        rpcUsers = listOf(CordaRPCClientTest.rpcUser),
-                        customOverrides = mapOf("rpcSettings.address" to address.toString())
-                ).getOrThrow()
-            }
-
-            val node = startNode()
-            CordaRPCClient(node.rpcAddress, config).start(rpcUser.username, rpcUser.password, gracefulReconnect).use {
-                node.stop()
-                thread() {
-                    it.proxy.startTrackedFlow(
-                            ::CashIssueFlow,
-                            10.DOLLARS,
-                            OpaqueBytes.of(0),
-                            defaultNotaryIdentity
-                    )
-                }
-                // This just gives the flow time to get started so the RPC detects a problem
-                sleep(1000)
-                it.close()
-            }
         }
     }
 

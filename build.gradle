@@ -433,7 +433,6 @@ dependencies {
     runtime project(':core')
     runtime project(':confidential-identities')
     runtime project(':finance:workflows')
-    runtime project(':finance:contracts')
     runtime project(':testing:testserver')
     testCompile project(':test-utils')
     detekt 'io.gitlab.arturbosch.detekt:detekt-cli:1.0.1'
@@ -518,7 +517,6 @@ bintrayConfig {
             'corda-deserializers-djvm',
             'corda',
             'corda-finance-workflows',
-            'corda-finance-contracts',
             'corda-node',
             'corda-node-api',
             'corda-node-djvm',

@@ -27,7 +27,6 @@ import net.corda.testing.node.internal.RpcServerHandle
 import net.corda.testing.node.internal.poll
 import net.corda.testing.node.internal.rpcDriver
 import net.corda.testing.node.internal.rpcTestUser
-import net.corda.testing.node.internal.startRandomRpcClient
 import net.corda.testing.node.internal.startRpcClient
 import org.apache.activemq.artemis.api.config.ActiveMQDefaultConfiguration
 import org.apache.activemq.artemis.api.core.SimpleString
@@ -478,51 +477,6 @@ class RPCStabilityTests {
 
     interface TrackSubscriberOps : RPCOps {
         fun subscribe(): Observable<Unit>
-    }
-
-    /**
-     * In this test we create a number of out of process RPC clients that call [TrackSubscriberOps.subscribe] in a loop.
-     */
-    @Test(timeout=300_000)
-	fun `server cleans up queues after disconnected clients`() {
-        rpcDriver {
-            val trackSubscriberOpsImpl = object : TrackSubscriberOps {
-                override val protocolVersion = 1000
-                val subscriberCount = AtomicInteger(0)
-                val trackSubscriberCountObservable = UnicastSubject.create<Unit>().share().
-                        doOnSubscribe { subscriberCount.incrementAndGet() }.
-                        doOnUnsubscribe { subscriberCount.decrementAndGet() }
-
-                override fun subscribe(): Observable<Unit> {
-                    return trackSubscriberCountObservable
-                }
-            }
-            val server = startRpcServer<TrackSubscriberOps>(
-                    configuration = RPCServerConfiguration.DEFAULT.copy(
-                            reapInterval = 100.millis
-                    ),
-                    ops = trackSubscriberOpsImpl
-            ).get()
-
-            val numberOfClients = 4
-            val clients = (1..numberOfClients).map {
-                startRandomRpcClient<TrackSubscriberOps>(server.broker.hostAndPort!!)
-            }.transpose().get()
-
-            // Poll until all clients connect
-            pollUntilClientNumber(server, numberOfClients)
-            pollUntilTrue("number of times subscribe() has been called") { trackSubscriberOpsImpl.subscriberCount.get() >= 100 }.get()
-            // Kill one client
-            clients[0].destroyForcibly()
-            pollUntilClientNumber(server, numberOfClients - 1)
-            // Kill the rest
-            (1 until numberOfClients).forEach {
-                clients[it].destroyForcibly()
-            }
-            pollUntilClientNumber(server, 0)
-            // Now poll until the server detects the disconnects and un-subscribes from all observables.
-            pollUntilTrue("number of times subscribe() has been called") { trackSubscriberOpsImpl.subscriberCount.get() == 0 }.get()
-        }
     }
 
     interface SlowConsumerRPCOps : RPCOps {

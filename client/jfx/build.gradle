@@ -40,7 +40,6 @@ sourceSets {
 
 dependencies {
     compile project(':core')
-    compile project(':finance:contracts')
     compile project(':finance:workflows')
     compile project(':client:rpc')
 

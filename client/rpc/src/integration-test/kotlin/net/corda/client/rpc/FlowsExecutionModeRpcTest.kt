@@ -4,7 +4,6 @@ import net.corda.core.context.Actor
 import net.corda.core.context.Trace
 import net.corda.core.internal.packageName
 import net.corda.core.messaging.CordaRPCOps
-import net.corda.finance.schemas.CashSchemaV1
 import net.corda.node.internal.NodeWithInfo
 import net.corda.node.services.Permissions
 import net.corda.testing.core.ALICE_NAME
