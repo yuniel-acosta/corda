@@ -5,7 +5,6 @@ import co.paralleluniverse.strands.Strand
 import net.corda.core.CordaInternal
 import net.corda.core.DeleteForDJVM
 import net.corda.core.concurrent.CordaFuture
-import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
@@ -15,7 +14,6 @@ import net.corda.core.internal.FlowAsyncOperation
 import net.corda.core.internal.FlowIORequest
 import net.corda.core.internal.FlowStateMachine
 import net.corda.core.internal.ServiceHubCoreInternal
-import net.corda.core.internal.WaitForStateConsumption
 import net.corda.core.internal.abbreviate
 import net.corda.core.internal.checkPayloadIs
 import net.corda.core.internal.concurrent.asCordaFuture
@@ -26,7 +24,6 @@ import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.serialization.SerializationDefaults
 import net.corda.core.serialization.serialize
-import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.UntrustworthyData
 import net.corda.core.utilities.debug
@@ -422,34 +419,34 @@ abstract class FlowLogic<out T> {
         }
     }
 
-    /**
-     * Suspends the flow until the transaction with the specified ID is received, successfully verified and
-     * sent to the vault for processing. Note that this call suspends until the transaction is considered
-     * valid by the local node, but that doesn't imply the vault will consider it relevant.
-     */
-    @Suspendable
-    @JvmOverloads
-    fun waitForLedgerCommit(hash: SecureHash, maySkipCheckpoint: Boolean = false): SignedTransaction {
-        val request = FlowIORequest.WaitForLedgerCommit(hash)
-        return stateMachine.suspend(request, maySkipCheckpoint = maySkipCheckpoint)
-    }
-
-    /**
-     * Suspends the current flow until all the provided [StateRef]s have been consumed.
-     *
-     * WARNING! Remember that the flow which uses this async operation will _NOT_ wake-up until all the supplied StateRefs
-     * have been consumed. If the node isn't aware of the supplied StateRefs or if the StateRefs are never consumed, then
-     * the calling flow will remain suspended FOREVER!!
-     *
-     * @param stateRefs the StateRefs which will be consumed in the future.
-     */
-    @Suspendable
-    fun waitForStateConsumption(stateRefs: Set<StateRef>) {
-        // Manually call the equivalent of [await] to remove extra wrapping of objects
-        // Makes serializing of object easier for [CheckpointDumper] as well
-        val request = FlowIORequest.ExecuteAsyncOperation(WaitForStateConsumption(stateRefs, serviceHub))
-        return stateMachine.suspend(request, false)
-    }
+//    /**
+//     * Suspends the flow until the transaction with the specified ID is received, successfully verified and
+//     * sent to the vault for processing. Note that this call suspends until the transaction is considered
+//     * valid by the local node, but that doesn't imply the vault will consider it relevant.
+//     */
+//    @Suspendable
+//    @JvmOverloads
+//    fun waitForLedgerCommit(hash: SecureHash, maySkipCheckpoint: Boolean = false): SignedTransaction {
+//        val request = FlowIORequest.WaitForLedgerCommit(hash)
+//        return stateMachine.suspend(request, maySkipCheckpoint = maySkipCheckpoint)
+//    }
+//
+//    /**
+//     * Suspends the current flow until all the provided [StateRef]s have been consumed.
+//     *
+//     * WARNING! Remember that the flow which uses this async operation will _NOT_ wake-up until all the supplied StateRefs
+//     * have been consumed. If the node isn't aware of the supplied StateRefs or if the StateRefs are never consumed, then
+//     * the calling flow will remain suspended FOREVER!!
+//     *
+//     * @param stateRefs the StateRefs which will be consumed in the future.
+//     */
+//    @Suspendable
+//    fun waitForStateConsumption(stateRefs: Set<StateRef>) {
+//        // Manually call the equivalent of [await] to remove extra wrapping of objects
+//        // Makes serializing of object easier for [CheckpointDumper] as well
+//        val request = FlowIORequest.ExecuteAsyncOperation(WaitForStateConsumption(stateRefs, serviceHub))
+//        return stateMachine.suspend(request, false)
+//    }
 
     /**
      * Returns a shallow copy of the Quasar stack frames at the time of call to [flowStackSnapshot]. Use this to inspect

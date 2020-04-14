@@ -8,7 +8,6 @@ import net.corda.core.crypto.sha256
 import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
-import net.corda.core.flows.MaybeSerializedSignedTransaction
 import net.corda.core.internal.FetchDataFlow.DownloadedVsRequestedDataMismatch
 import net.corda.core.internal.FetchDataFlow.HashNotFound
 import net.corda.core.node.NetworkParameters
@@ -18,7 +17,6 @@ import net.corda.core.serialization.CordaSerializationTransformEnumDefaults
 import net.corda.core.serialization.SerializationToken
 import net.corda.core.serialization.SerializeAsToken
 import net.corda.core.serialization.SerializeAsTokenContext
-import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.NonEmptySet
 import net.corda.core.utilities.UntrustworthyData
 import net.corda.core.utilities.debug
@@ -185,11 +183,11 @@ sealed class FetchDataFlow<T : NamedByHash, in W : Any>(
             if (logger.isTraceEnabled()) {
                 logger.trace { "Answers size = ${answers.size}" }
                 for ((respInd, item) in answers.withIndex()) {
-                    if (item is MaybeSerializedSignedTransaction) {
-                        logger.trace { "ValidateItem[$respInd]: '${item.id}': Type = MaybeSerializedSignedTransaction: ${item.payloadContentDescription()}" }
-                    } else {
+//                    if (item is MaybeSerializedSignedTransaction) {
+//                        logger.trace { "ValidateItem[$respInd]: '${item.id}': Type = MaybeSerializedSignedTransaction: ${item.payloadContentDescription()}" }
+//                    } else {
                         logger.trace("ValidateItem[$respInd]: Type = ${item.javaClass.name}")
-                    }
+//                    }
                 }
             }
 
@@ -257,34 +255,34 @@ class FetchAttachmentsFlow(requests: Set<SecureHash>,
     }
 }
 
-/**
- * Given a set of tx hashes (IDs), either loads them from local disk or asks the remote peer to provide them.
- *
- * A malicious response in which the data provided by the remote peer does not hash to the requested hash results in
- * [FetchDataFlow.DownloadedVsRequestedDataMismatch] being thrown.
- * If the remote peer doesn't have an entry, it results in a [FetchDataFlow.HashNotFound] exception.
- * If the remote peer is not authorized to request this transaction, it results in a [FetchDataFlow.IllegalTransactionRequest] exception.
- * Authorisation is accorded only on valid ancestors of the root transaction.
- * Note that returned transactions are not inserted into the database, because it's up to the caller to actually verify the transactions are valid.
- */
-class FetchTransactionsFlow(requests: Set<SecureHash>, otherSide: FlowSession) :
-        FetchDataFlow<SignedTransaction, SignedTransaction>(requests, otherSide, DataType.TRANSACTION) {
+///**
+// * Given a set of tx hashes (IDs), either loads them from local disk or asks the remote peer to provide them.
+// *
+// * A malicious response in which the data provided by the remote peer does not hash to the requested hash results in
+// * [FetchDataFlow.DownloadedVsRequestedDataMismatch] being thrown.
+// * If the remote peer doesn't have an entry, it results in a [FetchDataFlow.HashNotFound] exception.
+// * If the remote peer is not authorized to request this transaction, it results in a [FetchDataFlow.IllegalTransactionRequest] exception.
+// * Authorisation is accorded only on valid ancestors of the root transaction.
+// * Note that returned transactions are not inserted into the database, because it's up to the caller to actually verify the transactions are valid.
+// */
+//class FetchTransactionsFlow(requests: Set<SecureHash>, otherSide: FlowSession) :
+//        FetchDataFlow<SignedTransaction, SignedTransaction>(requests, otherSide, DataType.TRANSACTION) {
+//
+//    override fun load(txid: SecureHash): SignedTransaction? = serviceHub.validatedTransactions.getTransaction(txid)
+//}
 
-    override fun load(txid: SecureHash): SignedTransaction? = serviceHub.validatedTransactions.getTransaction(txid)
-}
-
-class FetchBatchTransactionsFlow(requests: Set<SecureHash>, otherSide: FlowSession) :
-        FetchDataFlow<MaybeSerializedSignedTransaction, MaybeSerializedSignedTransaction>(requests, otherSide, DataType.BATCH_TRANSACTION) {
-
-    override fun load(txid: SecureHash): MaybeSerializedSignedTransaction? {
-        val tran = serviceHub.validatedTransactions.getTransaction(txid)
-        return if (tran == null) {
-            null
-        } else {
-            MaybeSerializedSignedTransaction(txid, null, tran)
-        }
-    }
-}
+//class FetchBatchTransactionsFlow(requests: Set<SecureHash>, otherSide: FlowSession) :
+//        FetchDataFlow<MaybeSerializedSignedTransaction, MaybeSerializedSignedTransaction>(requests, otherSide, DataType.BATCH_TRANSACTION) {
+//
+//    override fun load(txid: SecureHash): MaybeSerializedSignedTransaction? {
+//        val tran = serviceHub.validatedTransactions.getTransaction(txid)
+//        return if (tran == null) {
+//            null
+//        } else {
+//            MaybeSerializedSignedTransaction(txid, null, tran)
+//        }
+//    }
+//}
 
 /**
  * Given a set of hashes either loads from local network parameters storage or requests them from the other peer. Downloaded

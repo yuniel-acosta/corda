@@ -4,7 +4,6 @@ import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.CordaInternal
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
-import net.corda.core.flows.WaitTimeUpdate
 import net.corda.core.utilities.UntrustworthyData
 
 const val MIN_PLATFORM_VERSION_FOR_BACKPRESSURE_MESSAGE = 4
@@ -25,9 +24,9 @@ abstract class BackpressureAwareTimedFlow<ResultType> : FlowLogic<ResultType>(),
             val wrappedResult = session.receive<Any>()
             val unwrapped = wrappedResult.fromUntrustedWorld
             when (unwrapped) {
-                is WaitTimeUpdate -> {
-                    applyWaitTimeUpdate(session, unwrapped)
-                }
+//                is WaitTimeUpdate -> {
+//                    applyWaitTimeUpdate(session, unwrapped)
+//                }
                 is ReceiveType -> @Suppress("UNCHECKED_CAST") // The compiler doesn't understand it's checked in the line above
                 return wrappedResult as UntrustworthyData<ReceiveType>
                 else -> throw throw IllegalArgumentException("We were expecting a ${ReceiveType::class.java.name} or WaitTimeUpdate but " +
@@ -36,9 +35,9 @@ abstract class BackpressureAwareTimedFlow<ResultType> : FlowLogic<ResultType>(),
         }
     }
 
-    open fun applyWaitTimeUpdate(session: FlowSession, update: WaitTimeUpdate) {
-        logger.info("Counterparty [${session.counterparty}] is busy - TimedFlow $runId has been asked to wait for an additional " +
-                "${update.waitTime} for completion.")
-        stateMachine.updateTimedFlowTimeout(update.waitTime.seconds)
-    }
+//    open fun applyWaitTimeUpdate(session: FlowSession, update: WaitTimeUpdate) {
+//        logger.info("Counterparty [${session.counterparty}] is busy - TimedFlow $runId has been asked to wait for an additional " +
+//                "${update.waitTime} for completion.")
+//        stateMachine.updateTimedFlowTimeout(update.waitTime.seconds)
+//    }
 }

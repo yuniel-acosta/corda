@@ -5,7 +5,6 @@ package net.corda.core.internal
 import net.corda.core.DeleteForDJVM
 import net.corda.core.KeepForDJVM
 import net.corda.core.contracts.Attachment
-import net.corda.core.contracts.ContractAttachment
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
 import net.corda.core.serialization.MissingAttachmentsException
@@ -33,7 +32,6 @@ val TRUSTED_UPLOADERS = listOf(DEPLOYED_CORDAPP_UPLOADER, RPC_UPLOADER, TESTDSL_
 fun isUploaderTrusted(uploader: String?): Boolean = uploader in TRUSTED_UPLOADERS
 
 fun Attachment.isUploaderTrusted(): Boolean = when (this) {
-    is ContractAttachment -> isUploaderTrusted(uploader)
     is AbstractAttachment -> isUploaderTrusted(uploader)
     else -> false
 }

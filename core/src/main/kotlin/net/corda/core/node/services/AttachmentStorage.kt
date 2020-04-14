@@ -6,8 +6,6 @@ import net.corda.core.KeepForDJVM
 import net.corda.core.contracts.Attachment
 import net.corda.core.crypto.SecureHash
 import net.corda.core.internal.cordapp.CordappImpl.Companion.DEFAULT_CORDAPP_VERSION
-import net.corda.core.node.services.vault.AttachmentQueryCriteria
-import net.corda.core.node.services.vault.AttachmentSort
 import java.io.IOException
 import java.io.InputStream
 import java.nio.file.FileAlreadyExistsException
@@ -58,14 +56,14 @@ interface AttachmentStorage {
     @Deprecated("More attachment information is required", replaceWith = ReplaceWith("importAttachment(jar, uploader, filename)"))
     fun importOrGetAttachment(jar: InputStream): AttachmentId
 
-    /**
-     * Searches attachment using given criteria and optional sort rules
-     * @param criteria Query criteria to use as a filter
-     * @param sorting Sorting definition, if not given, order is undefined
-     *
-     * @return List of AttachmentId of attachment matching criteria, sorted according to given sorting parameter
-     */
-    fun queryAttachments(criteria: AttachmentQueryCriteria, sorting: AttachmentSort? = null): List<AttachmentId>
+//    /**
+//     * Searches attachment using given criteria and optional sort rules
+//     * @param criteria Query criteria to use as a filter
+//     * @param sorting Sorting definition, if not given, order is undefined
+//     *
+//     * @return List of AttachmentId of attachment matching criteria, sorted according to given sorting parameter
+//     */
+//    fun queryAttachments(criteria: AttachmentQueryCriteria, sorting: AttachmentSort? = null): List<AttachmentId>
 
     /**
      * Searches for an attachment already in the store
@@ -74,11 +72,11 @@ interface AttachmentStorage {
      */
     fun hasAttachment(attachmentId: AttachmentId): Boolean
 
-    // Note: cannot apply @JvmOverloads to interfaces nor interface implementations.
-    // Java Helpers.
-    fun queryAttachments(criteria: AttachmentQueryCriteria): List<AttachmentId> {
-        return queryAttachments(criteria, null)
-    }
+//    // Note: cannot apply @JvmOverloads to interfaces nor interface implementations.
+//    // Java Helpers.
+//    fun queryAttachments(criteria: AttachmentQueryCriteria): List<AttachmentId> {
+//        return queryAttachments(criteria, null)
+//    }
 
     /**
      * Find the Attachment Id(s) of the contract attachments with the highest version for a given contract class name

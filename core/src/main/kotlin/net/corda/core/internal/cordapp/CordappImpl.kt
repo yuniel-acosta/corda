@@ -6,7 +6,6 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogic
 import net.corda.core.internal.PLATFORM_VERSION
 import net.corda.core.internal.VisibleForTesting
-import net.corda.core.internal.notary.NotaryService
 import net.corda.core.internal.toPath
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.serialization.SerializationCustomSerializer
@@ -17,11 +16,11 @@ import java.nio.file.Paths
 
 @DeleteForDJVM
 data class CordappImpl(
-        override val contractClassNames: List<String>,
+//        override val contractClassNames: List<String>,
         override val initiatedFlows: List<Class<out FlowLogic<*>>>,
         override val rpcFlows: List<Class<out FlowLogic<*>>>,
         override val serviceFlows: List<Class<out FlowLogic<*>>>,
-        override val schedulableFlows: List<Class<out FlowLogic<*>>>,
+//        override val schedulableFlows: List<Class<out FlowLogic<*>>>,
         override val services: List<Class<out SerializeAsToken>>,
         override val serializationWhitelists: List<SerializationWhitelist>,
         override val serializationCustomSerializers: List<SerializationCustomSerializer<*, *>>,
@@ -32,7 +31,7 @@ data class CordappImpl(
         override val jarHash: SecureHash.SHA256,
         override val minimumPlatformVersion: Int,
         override val targetPlatformVersion: Int,
-        val notaryService: Class<out NotaryService>? = null,
+//        val notaryService: Class<out NotaryService>? = null,
         /** Indicates whether the CorDapp is loaded from external sources, or generated on node startup (virtual). */
         val isLoaded: Boolean = true,
         private val explicitCordappClasses: List<String> = emptyList(),
@@ -42,8 +41,8 @@ data class CordappImpl(
 
     // TODO: Also add [SchedulableFlow] as a Cordapp class
     override val cordappClasses: List<String> = run {
-        val classList = rpcFlows + initiatedFlows + services + serializationWhitelists.flatMap { it.whitelist } + notaryService
-        classList.mapNotNull { it?.name } + contractClassNames + explicitCordappClasses
+        val classList = rpcFlows + initiatedFlows + services + serializationWhitelists.flatMap { it.whitelist } // + notaryService
+        classList.mapNotNull { it?.name } + explicitCordappClasses
     }
 
     companion object {
@@ -71,11 +70,9 @@ data class CordappImpl(
 
         @VisibleForTesting
         val TEST_INSTANCE = CordappImpl(
-                contractClassNames = emptyList(),
                 initiatedFlows = emptyList(),
                 rpcFlows = emptyList(),
                 serviceFlows = emptyList(),
-                schedulableFlows = emptyList(),
                 services = emptyList(),
                 serializationWhitelists = emptyList(),
                 serializationCustomSerializers = emptyList(),
@@ -85,8 +82,8 @@ data class CordappImpl(
                 allFlows = emptyList(),
                 jarHash = SecureHash.allOnesHash,
                 minimumPlatformVersion = 1,
-                targetPlatformVersion = PLATFORM_VERSION,
-                notaryService = null
+                targetPlatformVersion = PLATFORM_VERSION//,
+//                notaryService = null
         )
     }
 }

@@ -21,23 +21,16 @@ import java.lang.UnsupportedOperationException
 @DeleteForDJVM
 class CordappContext private constructor(
         val cordapp: Cordapp,
-        val attachmentId: SecureHash?,
+//        val attachmentId: SecureHash?,
         val classLoader: ClassLoader,
         val config: CordappConfig
 ) {
     companion object {
         @CordaInternal
-        fun create(cordapp: Cordapp, attachmentId: SecureHash?, classLoader: ClassLoader, config: CordappConfig): CordappContext {
-            return CordappContext(cordapp, attachmentId, classLoader, config)
+        fun create(cordapp: Cordapp, classLoader: ClassLoader, config: CordappConfig): CordappContext {
+            return CordappContext(cordapp, classLoader, config)
         }
     }
-
-    @Deprecated("CordappContexts should not be created. Instead retrieve them using `CordappProvider.getAppContext()`.")
-    constructor(
-            cordapp: Cordapp,
-            attachmentId: SecureHash?,
-            classLoader: ClassLoader
-    ) : this(cordapp, attachmentId, classLoader, EmptyCordappConfig)
 
     private object EmptyCordappConfig : CordappConfig {
         override fun exists(path: String): Boolean {

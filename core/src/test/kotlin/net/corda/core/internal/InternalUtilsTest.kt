@@ -3,7 +3,6 @@ package net.corda.core.internal
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.times
 import com.nhaarman.mockito_kotlin.verify
-import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.SecureHash
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.assertArrayEquals
@@ -102,7 +101,7 @@ open class InternalUtilsTest {
         assertThat(PublicObject::class.java.kotlinObjectInstance).isSameAs(PublicObject)
         assertThat(PrivateObject::class.java.kotlinObjectInstance).isSameAs(PrivateObject)
         assertThat(ProtectedObject::class.java.kotlinObjectInstance).isSameAs(ProtectedObject)
-        assertThat(TimeWindow::class.java.kotlinObjectInstance).isNull()
+//        assertThat(TimeWindow::class.java.kotlinObjectInstance).isNull()
         assertThat(PrivateClass::class.java.kotlinObjectInstance).isNull()
     }
 

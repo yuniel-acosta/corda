@@ -4,7 +4,6 @@ package net.corda.core.identity
 
 import net.corda.core.internal.toMultiMap
 import net.corda.core.node.ServiceHub
-import net.corda.core.transactions.SignedTransaction
 import java.security.PublicKey
 
 /**
@@ -70,13 +69,13 @@ fun groupAbstractPartyByWellKnownParty(serviceHub: ServiceHub, parties: Collecti
  */
 fun <T> excludeHostNode(serviceHub: ServiceHub, map: Map<Party, T>): Map<Party, T> = map.filterKeys { !serviceHub.myInfo.isLegalIdentity(it) }
 
-/**
- * Remove the [Party] associated with the notary of a [SignedTransaction] from the a map of [Party]s.  It is a no-op
- * if the notary is null.
- *
- * @return a new copy of the map, with the well known [Party] for the notary removed.
- */
-fun <T> excludeNotary(map: Map<Party, T>, stx: SignedTransaction): Map<Party, T> = map.filterKeys { it != stx.notary }
+///**
+// * Remove the [Party] associated with the notary of a [SignedTransaction] from the a map of [Party]s.  It is a no-op
+// * if the notary is null.
+// *
+// * @return a new copy of the map, with the well known [Party] for the notary removed.
+// */
+//fun <T> excludeNotary(map: Map<Party, T>, stx: SignedTransaction): Map<Party, T> = map.filterKeys { it != stx.notary }
 
 /**
  * Check if [x500name] matches the [query].

@@ -2,7 +2,6 @@ package net.corda.core.context
 
 import net.corda.core.DeleteForDJVM
 import net.corda.core.KeepForDJVM
-import net.corda.core.contracts.ScheduledStateRef
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.serialization.CordaSerializable
 import java.security.Principal
@@ -48,12 +47,12 @@ data class InvocationContext(val origin: InvocationOrigin, val trace: Trace, val
         @JvmStatic
         fun service(serviceClassName: String, owningLegalIdentity: CordaX500Name, trace: Trace = Trace.newInstance(), externalTrace: Trace? = null): InvocationContext = newInstance(InvocationOrigin.Service(serviceClassName, owningLegalIdentity), trace, null, externalTrace)
 
-        /**
-         * Creates an [InvocationContext] with [InvocationOrigin.Scheduled] origin.
-         */
-        @DeleteForDJVM
-        @JvmStatic
-        fun scheduled(scheduledState: ScheduledStateRef, trace: Trace = Trace.newInstance(), externalTrace: Trace? = null): InvocationContext = newInstance(InvocationOrigin.Scheduled(scheduledState), trace, null, externalTrace)
+//        /**
+//         * Creates an [InvocationContext] with [InvocationOrigin.Scheduled] origin.
+//         */
+//        @DeleteForDJVM
+//        @JvmStatic
+//        fun scheduled(scheduledState: ScheduledStateRef, trace: Trace = Trace.newInstance(), externalTrace: Trace? = null): InvocationContext = newInstance(InvocationOrigin.Scheduled(scheduledState), trace, null, externalTrace)
 
         /**
          * Creates an [InvocationContext] with [InvocationOrigin.Shell] origin.
@@ -122,12 +121,12 @@ sealed class InvocationOrigin {
         override fun principal() = Principal { serviceClassName }
     }
 
-    /**
-     * Origin was a scheduled activity.
-     */
-    data class Scheduled(val scheduledState: ScheduledStateRef) : InvocationOrigin() {
-        override fun principal() = Principal { "Scheduler" }
-    }
+//    /**
+//     * Origin was a scheduled activity.
+//     */
+//    data class Scheduled(val scheduledState: ScheduledStateRef) : InvocationOrigin() {
+//        override fun principal() = Principal { "Scheduler" }
+//    }
 
     // TODO When proper ssh access enabled, add username/use RPC?
     /**

@@ -2,8 +2,6 @@ package net.corda.core.cordapp
 
 import net.corda.core.DeleteForDJVM
 import net.corda.core.DoNotImplement
-import net.corda.core.contracts.ContractClassName
-import net.corda.core.node.services.AttachmentId
 
 /**
  * Provides access to what the node knows about loaded applications.
@@ -22,11 +20,11 @@ interface CordappProvider {
      */
     fun getAppContext(): CordappContext
 
-    /**
-     * Resolve an attachment ID for a given contract name
-     *
-     * @param contractClassName The contract to find the attachment for
-     * @return An attachment ID if it exists
-     */
-    fun getContractAttachmentID(contractClassName: ContractClassName): AttachmentId?
+//    /**
+//     * Resolve an attachment ID for a given contract name
+//     *
+//     * @param contractClassName The contract to find the attachment for
+//     * @return An attachment ID if it exists
+//     */
+//    fun getContractAttachmentID(contractClassName: ContractClassName): AttachmentId?
 }
