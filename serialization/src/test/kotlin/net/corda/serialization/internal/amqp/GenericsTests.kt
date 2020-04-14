@@ -1,9 +1,6 @@
 package net.corda.serialization.internal.amqp
 
 import net.corda.core.contracts.Attachment
-import net.corda.core.contracts.AttachmentConstraint
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.CordaX500Name
@@ -19,13 +16,13 @@ import java.net.URI
 import java.util.*
 import kotlin.test.assertEquals
 
-data class TestContractState(
-        override val participants: List<AbstractParty>
-) : ContractState
-
-class TestAttachmentConstraint : AttachmentConstraint {
-    override fun isSatisfiedBy(attachment: Attachment) = true
-}
+//data class TestContractState(
+//        override val participants: List<AbstractParty>
+//) : ContractState
+//
+//class TestAttachmentConstraint : AttachmentConstraint {
+//    override fun isSatisfiedBy(attachment: Attachment) = true
+//}
 
 class GenericsTests {
     companion object {
@@ -276,8 +273,8 @@ class GenericsTests {
                         GenericsTests::class.java.getResource(resource).readBytes())).t)
     }
 
-    data class StateAndString(val state: TransactionState<*>, val ref: String)
-    data class GenericStateAndString<out T: ContractState>(val state: TransactionState<T>, val ref: String)
+//    data class StateAndString(val state: TransactionState<*>, val ref: String)
+//    data class GenericStateAndString<out T: ContractState>(val state: TransactionState<T>, val ref: String)
 
     //
     // If this doesn't blow up all is fine
@@ -313,65 +310,65 @@ class GenericsTests {
         DeserializationInput(factory4).deserializeAndReturnEnvelope(ser2.obj)
     }
 
-    @Test(timeout=300_000)
-	fun fingerprintingDiffers() {
-        val state = TransactionState(
-                TestContractState(listOf(MINI_CORP_PARTY)),
-                "wibble",MINI_CORP_PARTY,
-                encumbrance = null,
-                constraint = TestAttachmentConstraint())
+//    @Test(timeout=300_000)
+//	fun fingerprintingDiffers() {
+//        val state = TransactionState(
+//                TestContractState(listOf(MINI_CORP_PARTY)),
+//                "wibble",MINI_CORP_PARTY,
+//                encumbrance = null,
+//                constraint = TestAttachmentConstraint())
+//
+//        val sas = StateAndString(state, "wibble")
+//
+//        fingerprintingDiffersStrip(sas)
+//    }
+//
+//    @Test(timeout=300_000)
+//	fun fingerprintingDiffersList() {
+//        val state = TransactionState(
+//                TestContractState(listOf(MINI_CORP_PARTY)),
+//                "wibble", MINI_CORP_PARTY,
+//                encumbrance = null,
+//                constraint = TestAttachmentConstraint())
+//
+//        val sas = StateAndString(state, "wibble")
+//
+//        fingerprintingDiffersStrip(Collections.singletonList(sas))
+//    }
 
-        val sas = StateAndString(state, "wibble")
 
-        fingerprintingDiffersStrip(sas)
-    }
-
-    @Test(timeout=300_000)
-	fun fingerprintingDiffersList() {
-        val state = TransactionState(
-                TestContractState(listOf(MINI_CORP_PARTY)),
-                "wibble", MINI_CORP_PARTY,
-                encumbrance = null,
-                constraint = TestAttachmentConstraint())
-
-        val sas = StateAndString(state, "wibble")
-
-        fingerprintingDiffersStrip(Collections.singletonList(sas))
-    }
-
-
-    //
-    // Force object to be serialised as Example<T> and deserialized as Example<?>
-    //
-    @Test(timeout=300_000)
-	fun fingerprintingDiffersListLoaded() {
-        //
-        // using this wrapper class we force the object to be serialised as
-        //      net.corda.core.contracts.TransactionState<T>
-        //
-        data class TransactionStateWrapper<out T : ContractState> (val o: List<GenericStateAndString<T>>)
-
-        val state = TransactionState<TestContractState> (
-                TestContractState(listOf(MINI_CORP_PARTY)),
-                "wibble", MINI_CORP_PARTY,
-                encumbrance = null,
-                constraint = TestAttachmentConstraint())
-
-        val sas = GenericStateAndString(state, "wibble")
-
-        val factory1 = testDefaultFactoryNoEvolution()
-        val factory2 = testDefaultFactory()
-
-        factory1.register(net.corda.serialization.internal.amqp.custom.PublicKeySerializer)
-        factory2.register(net.corda.serialization.internal.amqp.custom.PublicKeySerializer)
-
-        val ser1 = TestSerializationOutput(VERBOSE, factory1).serializeAndReturnSchema(
-                TransactionStateWrapper(Collections.singletonList(sas)))
-
-        val des1 = DeserializationInput(factory2).deserializeAndReturnEnvelope(ser1.obj)
-
-        assertEquals(sas.ref, des1.obj.o.firstOrNull()?.ref ?: "WILL NOT MATCH")
-    }
+//    //
+//    // Force object to be serialised as Example<T> and deserialized as Example<?>
+//    //
+//    @Test(timeout=300_000)
+//	fun fingerprintingDiffersListLoaded() {
+//        //
+//        // using this wrapper class we force the object to be serialised as
+//        //      net.corda.core.contracts.TransactionState<T>
+//        //
+//        data class TransactionStateWrapper<out T : ContractState> (val o: List<GenericStateAndString<T>>)
+//
+//        val state = TransactionState<TestContractState> (
+//                TestContractState(listOf(MINI_CORP_PARTY)),
+//                "wibble", MINI_CORP_PARTY,
+//                encumbrance = null,
+//                constraint = TestAttachmentConstraint())
+//
+//        val sas = GenericStateAndString(state, "wibble")
+//
+//        val factory1 = testDefaultFactoryNoEvolution()
+//        val factory2 = testDefaultFactory()
+//
+//        factory1.register(net.corda.serialization.internal.amqp.custom.PublicKeySerializer)
+//        factory2.register(net.corda.serialization.internal.amqp.custom.PublicKeySerializer)
+//
+//        val ser1 = TestSerializationOutput(VERBOSE, factory1).serializeAndReturnSchema(
+//                TransactionStateWrapper(Collections.singletonList(sas)))
+//
+//        val des1 = DeserializationInput(factory2).deserializeAndReturnEnvelope(ser1.obj)
+//
+//        assertEquals(sas.ref, des1.obj.o.firstOrNull()?.ref ?: "WILL NOT MATCH")
+//    }
 
     @Test(timeout=300_000)
 	fun nestedGenericsWithBound() {

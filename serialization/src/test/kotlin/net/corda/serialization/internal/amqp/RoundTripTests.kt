@@ -1,9 +1,5 @@
 package net.corda.serialization.internal.amqp
 
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.StateAndRef
-import net.corda.core.contracts.StateRef
-import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.entropyToKeyPair
 import net.corda.core.identity.AbstractParty
@@ -134,35 +130,35 @@ class RoundTripTests {
         assertThat(deserialized.squared).isEqualTo(2)
     }
 
-    data class MembershipState<out T: Any>(val metadata: T): ContractState {
-        override val participants: List<AbstractParty>
-            get() = emptyList()
-    }
-
-    data class OnMembershipChanged(val changedMembership : StateAndRef<MembershipState<Any>>)
-
-    @Test(timeout=300_000)
-	fun canSerializeClassesWithUntypedProperties() {
-        val data = MembershipState<Any>(mapOf("foo" to "bar"))
-        val party = Party(
-                CordaX500Name(organisation = "Test Corp", locality = "Madrid", country = "ES"),
-                entropyToKeyPair(BigInteger.valueOf(83)).public)
-        val transactionState = TransactionState(
-                data,
-                "foo",
-                party
-        )
-        val ref = StateRef(SecureHash.zeroHash, 0)
-        val instance = OnMembershipChanged(StateAndRef(
-                transactionState,
-                ref
-        ))
-
-        val factory = testDefaultFactoryNoEvolution().apply { register(PublicKeySerializer) }
-        val bytes = SerializationOutput(factory).serialize(instance)
-        val deserialized = DeserializationInput(factory).deserialize(bytes)
-        assertEquals(mapOf("foo" to "bar"), deserialized.changedMembership.state.data.metadata)
-    }
+//    data class MembershipState<out T: Any>(val metadata: T): ContractState {
+//        override val participants: List<AbstractParty>
+//            get() = emptyList()
+//    }
+//
+//    data class OnMembershipChanged(val changedMembership : StateAndRef<MembershipState<Any>>)
+//
+//    @Test(timeout=300_000)
+//	fun canSerializeClassesWithUntypedProperties() {
+//        val data = MembershipState<Any>(mapOf("foo" to "bar"))
+//        val party = Party(
+//                CordaX500Name(organisation = "Test Corp", locality = "Madrid", country = "ES"),
+//                entropyToKeyPair(BigInteger.valueOf(83)).public)
+//        val transactionState = TransactionState(
+//                data,
+//                "foo",
+//                party
+//        )
+//        val ref = StateRef(SecureHash.zeroHash, 0)
+//        val instance = OnMembershipChanged(StateAndRef(
+//                transactionState,
+//                ref
+//        ))
+//
+//        val factory = testDefaultFactoryNoEvolution().apply { register(PublicKeySerializer) }
+//        val bytes = SerializationOutput(factory).serialize(instance)
+//        val deserialized = DeserializationInput(factory).deserialize(bytes)
+//        assertEquals(mapOf("foo" to "bar"), deserialized.changedMembership.state.data.metadata)
+//    }
 
     interface I2<T> {
         val t: T
