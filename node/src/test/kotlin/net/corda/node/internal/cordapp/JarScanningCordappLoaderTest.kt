@@ -91,16 +91,16 @@ class JarScanningCordappLoaderTest {
 //        assertThat(actualCordapp.schedulableFlows).first().hasSameClassAs(DummySchedulableFlow::class.java)
     }
 
-    // This test exists because the appClassLoader is used by serialisation and we need to ensure it is the classloader
-    // being used internally. Later iterations will use a classloader per cordapp and this test can be retired.
-    @Test(timeout=300_000)
-	fun `cordapp classloader can load cordapp classes`() {
-        val isolatedJAR = JarScanningCordappLoaderTest::class.java.getResource("/isolated.jar")
-        val loader = JarScanningCordappLoader.fromJarUrls(listOf(isolatedJAR), VersionInfo.UNKNOWN)
-
-        loader.appClassLoader.loadClass(isolatedContractId)
-        loader.appClassLoader.loadClass(isolatedFlowName)
-    }
+//    // This test exists because the appClassLoader is used by serialisation and we need to ensure it is the classloader
+//    // being used internally. Later iterations will use a classloader per cordapp and this test can be retired.
+//    @Test(timeout=300_000)
+//	fun `cordapp classloader can load cordapp classes`() {
+//        val isolatedJAR = JarScanningCordappLoaderTest::class.java.getResource("/isolated.jar")
+//        val loader = JarScanningCordappLoader.fromJarUrls(listOf(isolatedJAR), VersionInfo.UNKNOWN)
+//
+//        loader.appClassLoader.loadClass(isolatedContractId)
+//        loader.appClassLoader.loadClass(isolatedFlowName)
+//    }
 
     @Test(timeout=300_000)
 	fun `cordapp classloader sets target and min version to 1 if not specified`() {

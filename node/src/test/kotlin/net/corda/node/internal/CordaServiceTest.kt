@@ -16,7 +16,6 @@ import net.corda.node.internal.cordapp.DummyRPCFlow
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
-import net.corda.testing.node.internal.FINANCE_CONTRACTS_CORDAPP
 import net.corda.testing.node.internal.enclosedCordapp
 import org.junit.After
 import org.junit.Before
@@ -30,7 +29,7 @@ class CordaServiceTest {
 
     @Before
     fun start() {
-        mockNet = MockNetwork(MockNetworkParameters(threadPerNode = true, cordappsForAllNodes = listOf(FINANCE_CONTRACTS_CORDAPP, enclosedCordapp())))
+        mockNet = MockNetwork(MockNetworkParameters(threadPerNode = true, cordappsForAllNodes = listOf(enclosedCordapp())))
         nodeA = mockNet.createNode()
         mockNet.startNodes()
     }
@@ -110,7 +109,7 @@ class CordaServiceTest {
     @CordaService
     class JdbcSessionQueryService(val serviceHub: AppServiceHub): SingletonSerializeAsToken() {
         init {
-            serviceHub.jdbcSession().prepareStatement("SELECT * FROM VAULT_STATES").execute()
+            serviceHub.jdbcSession().prepareStatement("SELECT * FROM NODE_INFOS").execute()
         }
     }
 
@@ -118,7 +117,7 @@ class CordaServiceTest {
     class EntityManagerService(val serviceHub: AppServiceHub): SingletonSerializeAsToken() {
         init {
             serviceHub.withEntityManager {
-                createNativeQuery("SELECT * FROM VAULT_STATES").resultList
+                createNativeQuery("SELECT * FROM NODE_INFOS").resultList
             }
         }
     }

@@ -3,7 +3,6 @@ package net.corda.node
 import net.corda.core.internal.PLATFORM_VERSION
 import net.corda.testing.driver.DriverParameters
 import net.corda.testing.driver.driver
-import net.corda.testing.node.internal.FINANCE_CONTRACTS_CORDAPP
 import net.corda.testing.node.internal.FINANCE_WORKFLOWS_CORDAPP
 import org.junit.Ignore
 import org.junit.Test
@@ -13,7 +12,7 @@ import kotlin.test.assertTrue
 class NodeRPCTests {
     private val CORDA_VERSION_REGEX = "\\d+(\\.\\d+)?(-\\w+)?".toRegex()
     private val CORDA_VENDOR = "Corda Open Source"
-    private val CORDAPPS = listOf(FINANCE_CONTRACTS_CORDAPP, FINANCE_WORKFLOWS_CORDAPP)
+    private val CORDAPPS = listOf(FINANCE_WORKFLOWS_CORDAPP)
     private val CORDAPP_TYPES = setOf("Contract CorDapp", "Workflow CorDapp")
     private val CORDAPP_WORKFLOWS_NAME_REGEX = "corda-finance-workflows-$CORDA_VERSION_REGEX".toRegex()
     private val CORDAPP_SHORT_NAME = "Corda Finance Demo"
