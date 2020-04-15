@@ -136,7 +136,7 @@ fun <A> rpcDriver(
                             jmxPolicy = jmxPolicy,
                             compatibilityZone = null,
                             networkParameters = networkParameters,
-                            notaryCustomOverrides = notaryCustomOverrides,
+//                            notaryCustomOverrides = notaryCustomOverrides,
                             inMemoryDB = inMemoryDB,
                             cordappsForAllNodes = cordappsForAllNodes,
                             djvmBootstrapSource = djvmBootstrapSource,

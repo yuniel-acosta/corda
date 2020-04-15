@@ -289,11 +289,11 @@ interface CordaRPCOps : RPCOps {
      */
     fun notaryIdentities(): List<Party>
 
-    /** Add note(s) to an existing Vault transaction. */
-    fun addVaultTransactionNote(txnId: SecureHash, txnNote: String)
-
-    /** Retrieve existing note(s) for a given Vault transaction. */
-    fun getVaultTransactionNotes(txnId: SecureHash): Iterable<String>
+//    /** Add note(s) to an existing Vault transaction. */
+//    fun addVaultTransactionNote(txnId: SecureHash, txnNote: String)
+//
+//    /** Retrieve existing note(s) for a given Vault transaction. */
+//    fun getVaultTransactionNotes(txnId: SecureHash): Iterable<String>
 
     /** Checks whether an attachment with the given hash is stored on the node. */
     fun attachmentExists(id: SecureHash): Boolean

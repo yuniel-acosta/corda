@@ -14,10 +14,10 @@ import java.util.*
  */
 sealed class Action {
 
-    /**
-     * Track a transaction hash and notify the state machine once the corresponding transaction has committed.
-     */
-    data class TrackTransaction(val hash: SecureHash) : Action()
+//    /**
+//     * Track a transaction hash and notify the state machine once the corresponding transaction has committed.
+//     */
+//    data class TrackTransaction(val hash: SecureHash) : Action()
 
     /**
      * Send an initial session message to [destination].
@@ -127,10 +127,10 @@ sealed class Action {
      */
     data class ExecuteAsyncOperation(val deduplicationId: String, val operation: FlowAsyncOperation<*>) : Action()
 
-    /**
-     * Release soft locks associated with given ID (currently the flow ID).
-     */
-    data class ReleaseSoftLocks(val uuid: UUID?) : Action()
+//    /**
+//     * Release soft locks associated with given ID (currently the flow ID).
+//     */
+//    data class ReleaseSoftLocks(val uuid: UUID?) : Action()
 
     /**
      * Retry a flow from the last checkpoint, or if there is no checkpoint, restart the flow with the same invocation details.

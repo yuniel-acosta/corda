@@ -6,9 +6,7 @@ import net.corda.client.rpc.PermissionException
 import net.corda.core.context.AuthServiceId
 import net.corda.core.context.InvocationContext
 import net.corda.core.contracts.Amount
-import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.Issued
-import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.crypto.keys
 import net.corda.core.flows.FlowLogic
@@ -18,13 +16,6 @@ import net.corda.core.identity.Party
 import net.corda.core.internal.RPC_UPLOADER
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.messaging.*
-import net.corda.core.node.services.StatesNotAvailableException
-import net.corda.core.node.services.Vault
-import net.corda.core.node.services.queryBy
-import net.corda.core.node.services.vault.AttachmentQueryCriteria
-import net.corda.core.node.services.vault.ColumnPredicate
-import net.corda.core.node.services.vault.EqualityComparisonOperator
-import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.NonEmptySet
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.getOrThrow
@@ -84,10 +75,10 @@ class CordaRPCOpsImplTest {
     private lateinit var mockNet: InternalMockNetwork
     private lateinit var aliceNode: TestStartedNode
     private lateinit var alice: Party
-    private lateinit var notary: Party
+//    private lateinit var notary: Party
     private lateinit var rpc: CordaRPCOps
     private lateinit var stateMachineUpdates: Observable<StateMachineUpdate>
-    private lateinit var transactions: Observable<SignedTransaction>
+//    private lateinit var transactions: Observable<SignedTransaction>
 
     @Before
     fun setup() {
@@ -97,9 +88,9 @@ class CordaRPCOpsImplTest {
         CURRENT_RPC_CONTEXT.set(RpcAuthContext(InvocationContext.rpc(testActor()), buildSubject("TEST_USER", emptySet())))
 
         mockNet.runNetwork()
-        withPermissions(invokeRpc(CordaRPCOps::notaryIdentities)) {
-            notary = rpc.notaryIdentities().single()
-        }
+//        withPermissions(invokeRpc(CordaRPCOps::notaryIdentities)) {
+//            notary = rpc.notaryIdentities().single()
+//        }
         alice = aliceNode.services.myInfo.identityFromX500Name(ALICE_NAME)
     }
 
@@ -159,24 +150,24 @@ class CordaRPCOpsImplTest {
         }
     }
 
-    @Test(timeout=300_000)
-	fun `attachment uploaded with metadata has specified filename`() {
-        CURRENT_RPC_CONTEXT.set(RpcAuthContext(InvocationContext.rpc(testActor()), buildSubject("TEST_USER", emptySet())))
-        withPermissions(invokeRpc(CordaRPCOps::uploadAttachmentWithMetadata), invokeRpc(CordaRPCOps::queryAttachments)) {
-            val inputJar = Thread.currentThread().contextClassLoader.getResourceAsStream(testJar)
-            rpc.uploadAttachmentWithMetadata(inputJar, "The Punisher", "Season 1")
-            assertEquals(
-                rpc.queryAttachments(
-                    AttachmentQueryCriteria.AttachmentsQueryCriteria(
-                        filenameCondition = ColumnPredicate.EqualityComparison(
-                            EqualityComparisonOperator.EQUAL,
-                            "Season 1"
-                        )
-                    ), null
-                ).size, 1
-            )
-        }
-    }
+//    @Test(timeout=300_000)
+//	fun `attachment uploaded with metadata has specified filename`() {
+//        CURRENT_RPC_CONTEXT.set(RpcAuthContext(InvocationContext.rpc(testActor()), buildSubject("TEST_USER", emptySet())))
+//        withPermissions(invokeRpc(CordaRPCOps::uploadAttachmentWithMetadata), invokeRpc(CordaRPCOps::queryAttachments)) {
+//            val inputJar = Thread.currentThread().contextClassLoader.getResourceAsStream(testJar)
+//            rpc.uploadAttachmentWithMetadata(inputJar, "The Punisher", "Season 1")
+//            assertEquals(
+//                rpc.queryAttachments(
+//                    AttachmentQueryCriteria.AttachmentsQueryCriteria(
+//                        filenameCondition = ColumnPredicate.EqualityComparison(
+//                            EqualityComparisonOperator.EQUAL,
+//                            "Season 1"
+//                        )
+//                    ), null
+//                ).size, 1
+//            )
+//        }
+//    }
 
     @Test(timeout=300_000)
 	fun `attachment uploaded with metadata can be from a privileged user`() {
@@ -188,24 +179,24 @@ class CordaRPCOpsImplTest {
         }
     }
 
-    @Test(timeout=300_000)
-	fun `attachment uploaded with metadata has specified uploader`() {
-        CURRENT_RPC_CONTEXT.set(RpcAuthContext(InvocationContext.rpc(testActor()), buildSubject("TEST_USER", emptySet())))
-        withPermissions(invokeRpc(CordaRPCOps::uploadAttachmentWithMetadata), invokeRpc(CordaRPCOps::queryAttachments)) {
-            val inputJar = Thread.currentThread().contextClassLoader.getResourceAsStream(testJar)
-            rpc.uploadAttachmentWithMetadata(inputJar, "Daredevil", "Season 3")
-            assertEquals(
-                rpc.queryAttachments(
-                    AttachmentQueryCriteria.AttachmentsQueryCriteria(
-                        uploaderCondition = ColumnPredicate.EqualityComparison(
-                            EqualityComparisonOperator.EQUAL,
-                            "Daredevil"
-                        )
-                    ), null
-                ).size, 1
-            )
-        }
-    }
+//    @Test(timeout=300_000)
+//	fun `attachment uploaded with metadata has specified uploader`() {
+//        CURRENT_RPC_CONTEXT.set(RpcAuthContext(InvocationContext.rpc(testActor()), buildSubject("TEST_USER", emptySet())))
+//        withPermissions(invokeRpc(CordaRPCOps::uploadAttachmentWithMetadata), invokeRpc(CordaRPCOps::queryAttachments)) {
+//            val inputJar = Thread.currentThread().contextClassLoader.getResourceAsStream(testJar)
+//            rpc.uploadAttachmentWithMetadata(inputJar, "Daredevil", "Season 3")
+//            assertEquals(
+//                rpc.queryAttachments(
+//                    AttachmentQueryCriteria.AttachmentsQueryCriteria(
+//                        uploaderCondition = ColumnPredicate.EqualityComparison(
+//                            EqualityComparisonOperator.EQUAL,
+//                            "Daredevil"
+//                        )
+//                    ), null
+//                ).size, 1
+//            )
+//        }
+//    }
 
     @Test(timeout=300_000)
 	fun `attempt to start non-RPC flow`() {
@@ -249,15 +240,15 @@ class CordaRPCOpsImplTest {
         }
     }
 
-    @StartableByRPC
-    class SoftLock(private val stateRef: StateRef, private val duration: Duration) : FlowLogic<Unit>() {
-        @Suspendable
-        override fun call() {
-            logger.info("Soft locking state with hash $stateRef...")
-            serviceHub.vaultService.softLockReserve(runId.uuid, NonEmptySet.of(stateRef))
-            sleep(duration)
-        }
-    }
+//    @StartableByRPC
+//    class SoftLock(private val stateRef: StateRef, private val duration: Duration) : FlowLogic<Unit>() {
+//        @Suspendable
+//        override fun call() {
+//            logger.info("Soft locking state with hash $stateRef...")
+//            serviceHub.vaultService.softLockReserve(runId.uuid, NonEmptySet.of(stateRef))
+//            sleep(duration)
+//        }
+//    }
 
     @Test(timeout=300_000)
 	fun `kill a nonexistent flow through RPC`() {

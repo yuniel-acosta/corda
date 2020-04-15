@@ -42,17 +42,17 @@ open class FlowLogicRefFactoryImpl(private val classloader: ClassLoader) : Singl
     }
 
     override fun create(flowClass: Class<out FlowLogic<*>>, vararg args: Any?): FlowLogicRef {
-        if (!flowClass.isAnnotationPresent(SchedulableFlow::class.java)) {
-            throw IllegalFlowLogicException(flowClass, "because it's not a schedulable flow")
-        }
+//        if (!flowClass.isAnnotationPresent(SchedulableFlow::class.java)) {
+//            throw IllegalFlowLogicException(flowClass, "because it's not a schedulable flow")
+//        }
         return createForRPC(flowClass, *args)
     }
 
     override fun create(flowClassName: String, vararg args: Any?): FlowLogicRef {
         val flowClass = validatedFlowClassFromName(flowClassName)
-        if (!flowClass.isAnnotationPresent(SchedulableFlow::class.java)) {
-            throw IllegalFlowLogicException(flowClass, "because it's not a schedulable flow")
-        }
+//        if (!flowClass.isAnnotationPresent(SchedulableFlow::class.java)) {
+//            throw IllegalFlowLogicException(flowClass, "because it's not a schedulable flow")
+//        }
         return createForRPC(flowClass, *args)
     }
 

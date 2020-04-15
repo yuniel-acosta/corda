@@ -6,7 +6,6 @@ import net.corda.core.context.AuthServiceId
 import net.corda.core.context.InvocationContext
 import net.corda.core.context.InvocationOrigin
 import net.corda.core.context.Trace
-import net.corda.core.contracts.FungibleAsset
 import net.corda.core.crypto.random63BitValue
 import net.corda.core.identity.Party
 import net.corda.core.internal.concurrent.flatMap
@@ -184,45 +183,45 @@ class CordaRPCClientTest : NodeBasedTest(listOf("net.corda.finance"), notaries =
         assertThat(reconnects).isEqualTo(0)
     }
 
-    private fun checkShellNotification(info: StateMachineInfo) {
-        val context = info.invocationContext
-        assertThat(context.origin).isInstanceOf(InvocationOrigin.Shell::class.java)
-    }
+//    private fun checkShellNotification(info: StateMachineInfo) {
+//        val context = info.invocationContext
+//        assertThat(context.origin).isInstanceOf(InvocationOrigin.Shell::class.java)
+//    }
+//
+//    private fun checkRpcNotification(info: StateMachineInfo,
+//                                     rpcUsername: String,
+//                                     historicalIds: MutableSet<Trace.InvocationId>,
+//                                     externalTrace: Trace?,
+//                                     impersonatedActor: Actor?) {
+//        val context = info.invocationContext
+//        assertThat(context.origin).isInstanceOf(InvocationOrigin.RPC::class.java)
+//        assertThat(context.externalTrace).isEqualTo(externalTrace)
+//        assertThat(context.impersonatedActor).isEqualTo(impersonatedActor)
+//        assertThat(context.actor?.id?.value).isEqualTo(rpcUsername)
+//        assertThat(historicalIds).doesNotContain(context.trace.invocationId)
+//        historicalIds.add(context.trace.invocationId)
+//    }
 
-    private fun checkRpcNotification(info: StateMachineInfo,
-                                     rpcUsername: String,
-                                     historicalIds: MutableSet<Trace.InvocationId>,
-                                     externalTrace: Trace?,
-                                     impersonatedActor: Actor?) {
-        val context = info.invocationContext
-        assertThat(context.origin).isInstanceOf(InvocationOrigin.RPC::class.java)
-        assertThat(context.externalTrace).isEqualTo(externalTrace)
-        assertThat(context.impersonatedActor).isEqualTo(impersonatedActor)
-        assertThat(context.actor?.id?.value).isEqualTo(rpcUsername)
-        assertThat(historicalIds).doesNotContain(context.trace.invocationId)
-        historicalIds.add(context.trace.invocationId)
-    }
-
-    private object StandaloneCashRpcClient {
-        @JvmStatic
-        fun main(args: Array<String>) {
-            checkNotOnClasspath("net.corda.finance.contracts.asset.Cash") {
-                "The finance module cannot be on the system classpath"
-            }
-            val address = NetworkHostAndPort.parse(args[0])
-            val financeClassLoader = URLClassLoader(arrayOf(Paths.get(args[1]).toUri().toURL()))
-            val rpcUser = CordaRPCClientTest.rpcUser
-            val client = CordaRPCClient(address, classLoader = financeClassLoader)
-            val state = client.use(rpcUser.username, rpcUser.password) {
-                // financeClassLoader should be allowing the Cash.State to materialise
-                @Suppress("DEPRECATION")
-                it.proxy.internalVerifiedTransactionsSnapshot()[0].tx.outputsOfType<FungibleAsset<*>>()[0]
-            }
-            assertThat(state.javaClass.name).isEqualTo("net.corda.finance.contracts.asset.Cash${'$'}State")
-            assertThat(state.amount.quantity).isEqualTo(10000)
-            assertThat(state.amount.token.product).isEqualTo(Currency.getInstance("GBP"))
-            // This particular check assures us that the Cash.State we have hasn't been carpented.
-            assertThat(state.participants).isEqualTo(listOf(state.owner))
-        }
-    }
+//    private object StandaloneCashRpcClient {
+//        @JvmStatic
+//        fun main(args: Array<String>) {
+//            checkNotOnClasspath("net.corda.finance.contracts.asset.Cash") {
+//                "The finance module cannot be on the system classpath"
+//            }
+//            val address = NetworkHostAndPort.parse(args[0])
+//            val financeClassLoader = URLClassLoader(arrayOf(Paths.get(args[1]).toUri().toURL()))
+//            val rpcUser = CordaRPCClientTest.rpcUser
+//            val client = CordaRPCClient(address, classLoader = financeClassLoader)
+//            val state = client.use(rpcUser.username, rpcUser.password) {
+//                // financeClassLoader should be allowing the Cash.State to materialise
+//                @Suppress("DEPRECATION")
+//                it.proxy.internalVerifiedTransactionsSnapshot()[0].tx.outputsOfType<FungibleAsset<*>>()[0]
+//            }
+//            assertThat(state.javaClass.name).isEqualTo("net.corda.finance.contracts.asset.Cash${'$'}State")
+//            assertThat(state.amount.quantity).isEqualTo(10000)
+//            assertThat(state.amount.token.product).isEqualTo(Currency.getInstance("GBP"))
+//            // This particular check assures us that the Cash.State we have hasn't been carpented.
+//            assertThat(state.participants).isEqualTo(listOf(state.owner))
+//        }
+//    }
 }

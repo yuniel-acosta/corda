@@ -35,7 +35,7 @@ class StartedFlowTransition(
             is FlowIORequest.Send -> sendTransition(flowIORequest)
             is FlowIORequest.Receive -> receiveTransition(flowIORequest)
             is FlowIORequest.SendAndReceive -> sendAndReceiveTransition(flowIORequest)
-            is FlowIORequest.WaitForLedgerCommit -> waitForLedgerCommitTransition(flowIORequest)
+//            is FlowIORequest.WaitForLedgerCommit -> waitForLedgerCommitTransition(flowIORequest)
             is FlowIORequest.Sleep -> sleepTransition(flowIORequest)
             is FlowIORequest.GetFlowInfo -> getFlowInfoTransition(flowIORequest)
             is FlowIORequest.WaitForSessionConfirmations -> waitForSessionConfirmationsTransition()
@@ -93,22 +93,22 @@ class StartedFlowTransition(
         }
     }
 
-    private fun waitForLedgerCommitTransition(flowIORequest: FlowIORequest.WaitForLedgerCommit): TransitionResult {
-        // This ensures that the [WaitForLedgerCommit] request is not executed multiple times if extra
-        // [DoRemainingWork] events are pushed onto the fiber's event queue before the flow has really woken up
-        return if (!startingState.isWaitingForFuture) {
-            TransitionResult(
-                newState = startingState.copy(isWaitingForFuture = true),
-                actions = listOf(
-                    Action.CreateTransaction,
-                    Action.TrackTransaction(flowIORequest.hash),
-                    Action.CommitTransaction
-                )
-            )
-        } else {
-            TransitionResult(startingState)
-        }
-    }
+//    private fun waitForLedgerCommitTransition(flowIORequest: FlowIORequest.WaitForLedgerCommit): TransitionResult {
+//        // This ensures that the [WaitForLedgerCommit] request is not executed multiple times if extra
+//        // [DoRemainingWork] events are pushed onto the fiber's event queue before the flow has really woken up
+//        return if (!startingState.isWaitingForFuture) {
+//            TransitionResult(
+//                newState = startingState.copy(isWaitingForFuture = true),
+//                actions = listOf(
+//                    Action.CreateTransaction,
+//                    Action.TrackTransaction(flowIORequest.hash),
+//                    Action.CommitTransaction
+//                )
+//            )
+//        } else {
+//            TransitionResult(startingState)
+//        }
+//    }
 
     private fun sendAndReceiveTransition(flowIORequest: FlowIORequest.SendAndReceive): TransitionResult {
         val sessionIdToMessage = LinkedHashMap<SessionId, SerializedBytes<Any>>()
@@ -373,9 +373,9 @@ class StartedFlowTransition(
                 val sessionIds = flowIORequest.sessionToMessage.keys.map(this::sessionToSessionId)
                 collectErroredSessionErrors(sessionIds, checkpoint) + collectEndedSessionErrors(sessionIds, checkpoint)
             }
-            is FlowIORequest.WaitForLedgerCommit -> {
-                collectErroredSessionErrors(checkpoint.sessions.keys, checkpoint)
-            }
+//            is FlowIORequest.WaitForLedgerCommit -> {
+//                collectErroredSessionErrors(checkpoint.sessions.keys, checkpoint)
+//            }
             is FlowIORequest.GetFlowInfo -> {
                 collectErroredSessionErrors(flowIORequest.sessions.map(this::sessionToSessionId), checkpoint)
             }

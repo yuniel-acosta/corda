@@ -1,8 +1,6 @@
 package net.corda.webserver.internal
 
-import net.corda.core.contracts.ContractState
 import net.corda.core.messaging.CordaRPCOps
-import net.corda.core.messaging.vaultQueryBy
 import net.corda.webserver.api.APIServer
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -32,5 +30,5 @@ class APIServerImpl(val rpcOps: CordaRPCOps) : APIServer {
 
     override fun flows() = rpcOps.registeredFlows()
 
-    override fun states() = rpcOps.vaultQueryBy<ContractState>().states
+//    override fun states() = rpcOps.vaultQueryBy<ContractState>().states
 }

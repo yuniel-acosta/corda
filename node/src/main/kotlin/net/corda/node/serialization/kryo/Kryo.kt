@@ -12,11 +12,9 @@ import net.corda.core.contracts.PrivacySalt
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
-import net.corda.core.internal.LazyMappedList
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.serialization.SerializeAsTokenContext
 import net.corda.core.serialization.SerializedBytes
-import net.corda.core.transactions.*
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.serialization.internal.serializationContextKey
 import org.slf4j.Logger
@@ -203,76 +201,76 @@ fun Input.readBytesWithLength(): ByteArray {
     return this.readBytes(size)
 }
 
-/** A serialisation engine that knows how to deserialise code inside a sandbox */
-@ThreadSafe
-object WireTransactionSerializer : Serializer<WireTransaction>() {
-    override fun write(kryo: Kryo, output: Output, obj: WireTransaction) {
-        kryo.writeClassAndObject(output, obj.componentGroups)
-        kryo.writeClassAndObject(output, obj.privacySalt)
-    }
-
-    override fun read(kryo: Kryo, input: Input, type: Class<WireTransaction>): WireTransaction {
-        val componentGroups: List<ComponentGroup> = uncheckedCast(kryo.readClassAndObject(input))
-        val privacySalt = kryo.readClassAndObject(input) as PrivacySalt
-        return WireTransaction(componentGroups, privacySalt)
-    }
-}
-
-@ThreadSafe
-object NotaryChangeWireTransactionSerializer : Serializer<NotaryChangeWireTransaction>() {
-    override fun write(kryo: Kryo, output: Output, obj: NotaryChangeWireTransaction) {
-        kryo.writeClassAndObject(output, obj.serializedComponents)
-    }
-
-    override fun read(kryo: Kryo, input: Input, type: Class<NotaryChangeWireTransaction>): NotaryChangeWireTransaction {
-        val components: List<OpaqueBytes> = uncheckedCast(kryo.readClassAndObject(input))
-        return NotaryChangeWireTransaction(components)
-    }
-}
-
-@ThreadSafe
-object ContractUpgradeWireTransactionSerializer : Serializer<ContractUpgradeWireTransaction>() {
-    override fun write(kryo: Kryo, output: Output, obj: ContractUpgradeWireTransaction) {
-        kryo.writeClassAndObject(output, obj.serializedComponents)
-        kryo.writeClassAndObject(output, obj.privacySalt)
-    }
-
-    override fun read(kryo: Kryo, input: Input, type: Class<ContractUpgradeWireTransaction>): ContractUpgradeWireTransaction {
-        val components: List<OpaqueBytes> = uncheckedCast(kryo.readClassAndObject(input))
-        val privacySalt = kryo.readClassAndObject(input) as PrivacySalt
-
-        return ContractUpgradeWireTransaction(components, privacySalt)
-    }
-}
-
-@ThreadSafe
-object ContractUpgradeFilteredTransactionSerializer : Serializer<ContractUpgradeFilteredTransaction>() {
-    override fun write(kryo: Kryo, output: Output, obj: ContractUpgradeFilteredTransaction) {
-        kryo.writeClassAndObject(output, obj.visibleComponents)
-        kryo.writeClassAndObject(output, obj.hiddenComponents)
-    }
-
-    override fun read(kryo: Kryo, input: Input, type: Class<ContractUpgradeFilteredTransaction>): ContractUpgradeFilteredTransaction {
-        val visibleComponents: Map<Int, ContractUpgradeFilteredTransaction.FilteredComponent> = uncheckedCast(kryo.readClassAndObject(input))
-        val hiddenComponents: Map<Int, SecureHash> = uncheckedCast(kryo.readClassAndObject(input))
-        return ContractUpgradeFilteredTransaction(visibleComponents, hiddenComponents)
-    }
-}
-
-@ThreadSafe
-object SignedTransactionSerializer : Serializer<SignedTransaction>() {
-    override fun write(kryo: Kryo, output: Output, obj: SignedTransaction) {
-        kryo.writeClassAndObject(output, obj.txBits)
-        kryo.writeClassAndObject(output, obj.sigs)
-    }
-
-    override fun read(kryo: Kryo, input: Input, type: Class<SignedTransaction>): SignedTransaction {
-        return SignedTransaction(
-                uncheckedCast<Any?, SerializedBytes<CoreTransaction>>(kryo.readClassAndObject(input)),
-                uncheckedCast<Any?, List<TransactionSignature>>(kryo.readClassAndObject(input))
-        )
-    }
-}
+///** A serialisation engine that knows how to deserialise code inside a sandbox */
+//@ThreadSafe
+//object WireTransactionSerializer : Serializer<WireTransaction>() {
+//    override fun write(kryo: Kryo, output: Output, obj: WireTransaction) {
+//        kryo.writeClassAndObject(output, obj.componentGroups)
+//        kryo.writeClassAndObject(output, obj.privacySalt)
+//    }
+//
+//    override fun read(kryo: Kryo, input: Input, type: Class<WireTransaction>): WireTransaction {
+//        val componentGroups: List<ComponentGroup> = uncheckedCast(kryo.readClassAndObject(input))
+//        val privacySalt = kryo.readClassAndObject(input) as PrivacySalt
+//        return WireTransaction(componentGroups, privacySalt)
+//    }
+//}
+//
+//@ThreadSafe
+//object NotaryChangeWireTransactionSerializer : Serializer<NotaryChangeWireTransaction>() {
+//    override fun write(kryo: Kryo, output: Output, obj: NotaryChangeWireTransaction) {
+//        kryo.writeClassAndObject(output, obj.serializedComponents)
+//    }
+//
+//    override fun read(kryo: Kryo, input: Input, type: Class<NotaryChangeWireTransaction>): NotaryChangeWireTransaction {
+//        val components: List<OpaqueBytes> = uncheckedCast(kryo.readClassAndObject(input))
+//        return NotaryChangeWireTransaction(components)
+//    }
+//}
+//
+//@ThreadSafe
+//object ContractUpgradeWireTransactionSerializer : Serializer<ContractUpgradeWireTransaction>() {
+//    override fun write(kryo: Kryo, output: Output, obj: ContractUpgradeWireTransaction) {
+//        kryo.writeClassAndObject(output, obj.serializedComponents)
+//        kryo.writeClassAndObject(output, obj.privacySalt)
+//    }
+//
+//    override fun read(kryo: Kryo, input: Input, type: Class<ContractUpgradeWireTransaction>): ContractUpgradeWireTransaction {
+//        val components: List<OpaqueBytes> = uncheckedCast(kryo.readClassAndObject(input))
+//        val privacySalt = kryo.readClassAndObject(input) as PrivacySalt
+//
+//        return ContractUpgradeWireTransaction(components, privacySalt)
+//    }
+//}
+//
+//@ThreadSafe
+//object ContractUpgradeFilteredTransactionSerializer : Serializer<ContractUpgradeFilteredTransaction>() {
+//    override fun write(kryo: Kryo, output: Output, obj: ContractUpgradeFilteredTransaction) {
+//        kryo.writeClassAndObject(output, obj.visibleComponents)
+//        kryo.writeClassAndObject(output, obj.hiddenComponents)
+//    }
+//
+//    override fun read(kryo: Kryo, input: Input, type: Class<ContractUpgradeFilteredTransaction>): ContractUpgradeFilteredTransaction {
+//        val visibleComponents: Map<Int, ContractUpgradeFilteredTransaction.FilteredComponent> = uncheckedCast(kryo.readClassAndObject(input))
+//        val hiddenComponents: Map<Int, SecureHash> = uncheckedCast(kryo.readClassAndObject(input))
+//        return ContractUpgradeFilteredTransaction(visibleComponents, hiddenComponents)
+//    }
+//}
+//
+//@ThreadSafe
+//object SignedTransactionSerializer : Serializer<SignedTransaction>() {
+//    override fun write(kryo: Kryo, output: Output, obj: SignedTransaction) {
+//        kryo.writeClassAndObject(output, obj.txBits)
+//        kryo.writeClassAndObject(output, obj.sigs)
+//    }
+//
+//    override fun read(kryo: Kryo, input: Input, type: Class<SignedTransaction>): SignedTransaction {
+//        return SignedTransaction(
+//                uncheckedCast<Any?, SerializedBytes<CoreTransaction>>(kryo.readClassAndObject(input)),
+//                uncheckedCast<Any?, List<TransactionSignature>>(kryo.readClassAndObject(input))
+//        )
+//    }
+//}
 
 @ThreadSafe
 object PrivateKeySerializer : Serializer<PrivateKey>() {

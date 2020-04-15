@@ -7,8 +7,6 @@ import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party
 import net.corda.core.internal.packageName
 import net.corda.core.messaging.startFlow
-import net.corda.core.node.services.queryBy
-import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.seconds
 import net.corda.coretests.flows.AbstractFlowExternalOperationTest.CustomTableEntity
@@ -17,8 +15,6 @@ import net.corda.coretests.flows.AbstractFlowExternalOperationTest.ExternalOpera
 import net.corda.coretests.flows.AbstractFlowExternalOperationTest.FlowWithExternalProcess
 import net.corda.coretests.flows.AbstractFlowExternalOperationTest.FutureService
 import net.corda.coretests.flows.AbstractFlowExternalOperationTest.MyCordaException
-import net.corda.testing.contracts.DummyContract
-import net.corda.testing.contracts.DummyState
 import net.corda.testing.core.ALICE_NAME
 import net.corda.testing.core.BOB_NAME
 import net.corda.testing.core.singleIdentity
@@ -166,20 +162,20 @@ class FlowExternalOperationTest : AbstractFlowExternalOperationTest() {
         }
     }
 
-    @Test(timeout=300_000)
-	fun `vault can be queried`() {
-        driver(
-            DriverParameters(
-                cordappsForAllNodes = cordappsForPackages(DummyState::class.packageName),
-                startNodesInProcess = true
-            )
-        ) {
-            val alice = startNode(providedName = ALICE_NAME).getOrThrow()
-            val success = alice.rpc.startFlow(::FlowWithWithExternalOperationThatQueriesVault)
-                .returnValue.getOrThrow(20.seconds)
-            assertTrue(success)
-        }
-    }
+//    @Test(timeout=300_000)
+//	fun `vault can be queried`() {
+//        driver(
+//            DriverParameters(
+//                cordappsForAllNodes = cordappsForPackages(DummyState::class.packageName),
+//                startNodesInProcess = true
+//            )
+//        ) {
+//            val alice = startNode(providedName = ALICE_NAME).getOrThrow()
+//            val success = alice.rpc.startFlow(::FlowWithWithExternalOperationThatQueriesVault)
+//                .returnValue.getOrThrow(20.seconds)
+//            assertTrue(success)
+//        }
+//    }
 
     @Test(timeout=300_000)
 	fun `data can be persisted to node database via entity manager`() {
@@ -313,23 +309,23 @@ class FlowExternalOperationTest : AbstractFlowExternalOperationTest() {
         }
     }
 
-    @StartableByRPC
-    class FlowWithWithExternalOperationThatQueriesVault : FlowLogic<Boolean>() {
-
-        @Suspendable
-        override fun call(): Boolean {
-            val state = DummyState(1, listOf(ourIdentity))
-            val tx = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.first()).apply {
-                addOutputState(state)
-                addCommand(DummyContract.Commands.Create(), listOf(ourIdentity.owningKey))
-            }
-            val stx = serviceHub.signInitialTransaction(tx)
-            serviceHub.recordTransactions(stx)
-            return await(ExternalOperation(serviceHub) { serviceHub, _ ->
-                serviceHub.vaultService.queryBy<DummyState>().states.single().state.data == state
-            })
-        }
-    }
+//    @StartableByRPC
+//    class FlowWithWithExternalOperationThatQueriesVault : FlowLogic<Boolean>() {
+//
+//        @Suspendable
+//        override fun call(): Boolean {
+//            val state = DummyState(1, listOf(ourIdentity))
+//            val tx = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.first()).apply {
+//                addOutputState(state)
+//                addCommand(DummyContract.Commands.Create(), listOf(ourIdentity.owningKey))
+//            }
+//            val stx = serviceHub.signInitialTransaction(tx)
+//            serviceHub.recordTransactions(stx)
+//            return await(ExternalOperation(serviceHub) { serviceHub, _ ->
+//                serviceHub.vaultService.queryBy<DummyState>().states.single().state.data == state
+//            })
+//        }
+//    }
 
     abstract class FlowWithExternalOperationThatPersistsToDatabase : FlowLogic<Boolean>() {
 

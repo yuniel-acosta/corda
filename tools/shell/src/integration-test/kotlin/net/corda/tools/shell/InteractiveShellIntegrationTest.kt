@@ -25,9 +25,6 @@ import net.corda.core.messaging.ClientRpcSslOptions
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.messaging.startFlow
 import net.corda.core.node.ServiceHub
-import net.corda.core.transactions.LedgerTransaction
-import net.corda.core.transactions.SignedTransaction
-import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.getOrThrow
@@ -336,75 +333,75 @@ class InteractiveShellIntegrationTest {
         }
     }
 
-    @Test(timeout=300_000)
-	fun `dumpCheckpoints correctly serializes WaitForStateConsumption`() {
-        driver(DriverParameters(notarySpecs = emptyList(), startNodesInProcess = true)) {
-            val alice = startNode(providedName = ALICE_NAME).getOrThrow()
-            (alice.baseDirectory / NodeStartup.LOGS_DIRECTORY_NAME).createDirectories()
-            val stateRefs = setOf(
-                StateRef(SecureHash.randomSHA256(), 0),
-                StateRef(SecureHash.randomSHA256(), 1),
-                StateRef(SecureHash.randomSHA256(), 2)
-            )
-            assertThrows<TimeoutException> {
-                alice.rpc.startFlow(::WaitForStateConsumptionFlow, stateRefs).returnValue.getOrThrow(10.seconds)
-            }
-            InteractiveShell.runDumpCheckpoints(alice.rpc as InternalCordaRPCOps)
-            val zipFile = (alice.baseDirectory / NodeStartup.LOGS_DIRECTORY_NAME).list().first { "checkpoints_dump-" in it.toString() }
-            val json = ZipInputStream(zipFile.inputStream()).use { zip ->
-                zip.nextEntry
-                ObjectMapper().readTree(zip)
-            }
-
-            assertEquals(stateRefs, json["suspendedOn"]["waitForStateConsumption"].valueAs<List<StateRef>>(inputObjectMapper).toSet())
-        }
-    }
-
-    @Test(timeout=300_000)
-	fun `dumpCheckpoints creates zip with json file for suspended flow`() {
-        val user = User("u", "p", setOf(all()))
-        driver(DriverParameters(startNodesInProcess = true, cordappsForAllNodes = listOf(enclosedCordapp()))) {
-            val aliceNode = startNode(providedName = ALICE_NAME, rpcUsers = listOf(user)).getOrThrow()
-            val bobNode = startNode(providedName = BOB_NAME, rpcUsers = listOf(user)).getOrThrow()
-            bobNode.stop()
-
-            // Create logs directory since the driver is not creating it
-            (aliceNode.baseDirectory / NodeStartup.LOGS_DIRECTORY_NAME).createDirectories()
-
-            startShell(aliceNode)
-
-            val linearId = UniqueIdentifier(id = UUID.fromString("7c0719f0-e489-46e8-bf3b-ee203156fc7c"))
-            aliceNode.rpc.startFlow(
-                    ::FlowForCheckpointDumping,
-                    MyState(
-                            "some random string",
-                            linearId,
-                            listOf(aliceNode.nodeInfo.singleIdentity(), bobNode.nodeInfo.singleIdentity())
-                    ),
-                    bobNode.nodeInfo.singleIdentity()
-            )
-
-            Thread.sleep(5000)
-
-            mockRenderPrintWriter()
-            InteractiveShell.runDumpCheckpoints(aliceNode.rpc as InternalCordaRPCOps)
-
-            val zipFile = (aliceNode.baseDirectory / NodeStartup.LOGS_DIRECTORY_NAME).list().first { "checkpoints_dump-" in it.toString() }
-            val json = ZipInputStream(zipFile.inputStream()).use { zip ->
-                zip.nextEntry
-                ObjectMapper().readTree(zip)
-            }
-
-            assertNotNull(json["flowId"].asText())
-            assertEquals(FlowForCheckpointDumping::class.java.name, json["topLevelFlowClass"].asText())
-            assertEquals(linearId.id.toString(), json["topLevelFlowLogic"]["myState"]["linearId"]["id"].asText())
-            assertEquals(4, json["flowCallStackSummary"].size())
-            assertEquals(4, json["flowCallStack"].size())
-            val sendAndReceiveJson = json["suspendedOn"]["sendAndReceive"][0]
-            assertEquals(bobNode.nodeInfo.singleIdentity().toString(), sendAndReceiveJson["session"]["peer"].asText())
-            assertEquals(SignedTransaction::class.qualifiedName, sendAndReceiveJson["sentPayloadType"].asText())
-        }
-    }
+//    @Test(timeout=300_000)
+//	fun `dumpCheckpoints correctly serializes WaitForStateConsumption`() {
+//        driver(DriverParameters(notarySpecs = emptyList(), startNodesInProcess = true)) {
+//            val alice = startNode(providedName = ALICE_NAME).getOrThrow()
+//            (alice.baseDirectory / NodeStartup.LOGS_DIRECTORY_NAME).createDirectories()
+//            val stateRefs = setOf(
+//                StateRef(SecureHash.randomSHA256(), 0),
+//                StateRef(SecureHash.randomSHA256(), 1),
+//                StateRef(SecureHash.randomSHA256(), 2)
+//            )
+//            assertThrows<TimeoutException> {
+//                alice.rpc.startFlow(::WaitForStateConsumptionFlow, stateRefs).returnValue.getOrThrow(10.seconds)
+//            }
+//            InteractiveShell.runDumpCheckpoints(alice.rpc as InternalCordaRPCOps)
+//            val zipFile = (alice.baseDirectory / NodeStartup.LOGS_DIRECTORY_NAME).list().first { "checkpoints_dump-" in it.toString() }
+//            val json = ZipInputStream(zipFile.inputStream()).use { zip ->
+//                zip.nextEntry
+//                ObjectMapper().readTree(zip)
+//            }
+//
+//            assertEquals(stateRefs, json["suspendedOn"]["waitForStateConsumption"].valueAs<List<StateRef>>(inputObjectMapper).toSet())
+//        }
+//    }
+//
+//    @Test(timeout=300_000)
+//	fun `dumpCheckpoints creates zip with json file for suspended flow`() {
+//        val user = User("u", "p", setOf(all()))
+//        driver(DriverParameters(startNodesInProcess = true, cordappsForAllNodes = listOf(enclosedCordapp()))) {
+//            val aliceNode = startNode(providedName = ALICE_NAME, rpcUsers = listOf(user)).getOrThrow()
+//            val bobNode = startNode(providedName = BOB_NAME, rpcUsers = listOf(user)).getOrThrow()
+//            bobNode.stop()
+//
+//            // Create logs directory since the driver is not creating it
+//            (aliceNode.baseDirectory / NodeStartup.LOGS_DIRECTORY_NAME).createDirectories()
+//
+//            startShell(aliceNode)
+//
+//            val linearId = UniqueIdentifier(id = UUID.fromString("7c0719f0-e489-46e8-bf3b-ee203156fc7c"))
+//            aliceNode.rpc.startFlow(
+//                    ::FlowForCheckpointDumping,
+//                    MyState(
+//                            "some random string",
+//                            linearId,
+//                            listOf(aliceNode.nodeInfo.singleIdentity(), bobNode.nodeInfo.singleIdentity())
+//                    ),
+//                    bobNode.nodeInfo.singleIdentity()
+//            )
+//
+//            Thread.sleep(5000)
+//
+//            mockRenderPrintWriter()
+//            InteractiveShell.runDumpCheckpoints(aliceNode.rpc as InternalCordaRPCOps)
+//
+//            val zipFile = (aliceNode.baseDirectory / NodeStartup.LOGS_DIRECTORY_NAME).list().first { "checkpoints_dump-" in it.toString() }
+//            val json = ZipInputStream(zipFile.inputStream()).use { zip ->
+//                zip.nextEntry
+//                ObjectMapper().readTree(zip)
+//            }
+//
+//            assertNotNull(json["flowId"].asText())
+//            assertEquals(FlowForCheckpointDumping::class.java.name, json["topLevelFlowClass"].asText())
+//            assertEquals(linearId.id.toString(), json["topLevelFlowLogic"]["myState"]["linearId"]["id"].asText())
+//            assertEquals(4, json["flowCallStackSummary"].size())
+//            assertEquals(4, json["flowCallStack"].size())
+//            val sendAndReceiveJson = json["suspendedOn"]["sendAndReceive"][0]
+//            assertEquals(bobNode.nodeInfo.singleIdentity().toString(), sendAndReceiveJson["session"]["peer"].asText())
+//            assertEquals(SignedTransaction::class.qualifiedName, sendAndReceiveJson["sentPayloadType"].asText())
+//        }
+//    }
 
     private fun startShell(node: NodeHandle, ssl: ClientRpcSslOptions? = null, sshdPort: Int? = null) {
         val user = node.rpcUsers[0]
@@ -476,50 +473,50 @@ class InteractiveShellIntegrationTest {
         }
     }
 
-    @InitiatingFlow
-    @StartableByRPC
-    class FlowForCheckpointDumping(private val myState: MyState, private val party: Party): FlowLogic<Unit>() {
-        // Make sure any SerializeAsToken instances are not serialised
-        private var services: ServiceHub? = null
-
-        @Suspendable
-        override fun call() {
-            services = serviceHub
-            val tx = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.first()).apply {
-                addOutputState(myState)
-                addCommand(MyContract.Create(), listOf(ourIdentity, party).map(Party::owningKey))
-            }
-            val sessions = listOf(initiateFlow(party))
-            val stx = serviceHub.signInitialTransaction(tx)
-            subFlow(CollectSignaturesFlow(stx, sessions))
-            throw IllegalStateException("The test should not get here")
-        }
-    }
-
-    @InitiatedBy(FlowForCheckpointDumping::class)
-    class FlowForCheckpointDumpingResponder(private val session: FlowSession): FlowLogic<Unit>() {
-        override fun call() {
-            val signTxFlow = object : SignTransactionFlow(session) {
-                override fun checkTransaction(stx: SignedTransaction) {
-
-                }
-            }
-            subFlow(signTxFlow)
-            throw IllegalStateException("The test should not get here")
-        }
-    }
-
-    class MyContract : Contract {
-        class Create : CommandData
-        override fun verify(tx: LedgerTransaction) {}
-    }
-
-    @BelongsToContract(MyContract::class)
-    data class MyState(
-            val data: String,
-            override val linearId: UniqueIdentifier,
-            override val participants: List<AbstractParty>
-    ) : LinearState
+//    @InitiatingFlow
+//    @StartableByRPC
+//    class FlowForCheckpointDumping(private val myState: MyState, private val party: Party): FlowLogic<Unit>() {
+//        // Make sure any SerializeAsToken instances are not serialised
+//        private var services: ServiceHub? = null
+//
+//        @Suspendable
+//        override fun call() {
+//            services = serviceHub
+//            val tx = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.first()).apply {
+//                addOutputState(myState)
+//                addCommand(MyContract.Create(), listOf(ourIdentity, party).map(Party::owningKey))
+//            }
+//            val sessions = listOf(initiateFlow(party))
+//            val stx = serviceHub.signInitialTransaction(tx)
+//            subFlow(CollectSignaturesFlow(stx, sessions))
+//            throw IllegalStateException("The test should not get here")
+//        }
+//    }
+//
+//    @InitiatedBy(FlowForCheckpointDumping::class)
+//    class FlowForCheckpointDumpingResponder(private val session: FlowSession): FlowLogic<Unit>() {
+//        override fun call() {
+//            val signTxFlow = object : SignTransactionFlow(session) {
+//                override fun checkTransaction(stx: SignedTransaction) {
+//
+//                }
+//            }
+//            subFlow(signTxFlow)
+//            throw IllegalStateException("The test should not get here")
+//        }
+//    }
+//
+//    class MyContract : Contract {
+//        class Create : CommandData
+//        override fun verify(tx: LedgerTransaction) {}
+//    }
+//
+//    @BelongsToContract(MyContract::class)
+//    data class MyState(
+//            val data: String,
+//            override val linearId: UniqueIdentifier,
+//            override val participants: List<AbstractParty>
+//    ) : LinearState
 
     @StartableByRPC
     class ExternalAsyncOperationFlow : FlowLogic<Unit>() {
@@ -564,11 +561,11 @@ class InteractiveShellIntegrationTest {
         }
     }
 
-    @StartableByRPC
-    class WaitForStateConsumptionFlow(private val stateRefs: Set<StateRef>) : FlowLogic<Unit>() {
-        @Suspendable
-        override fun call() {
-            waitForStateConsumption(stateRefs)
-        }
-    }
+//    @StartableByRPC
+//    class WaitForStateConsumptionFlow(private val stateRefs: Set<StateRef>) : FlowLogic<Unit>() {
+//        @Suspendable
+//        override fun call() {
+//            waitForStateConsumption(stateRefs)
+//        }
+//    }
 }

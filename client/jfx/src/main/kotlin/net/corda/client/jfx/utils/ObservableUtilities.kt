@@ -13,11 +13,8 @@ import javafx.collections.MapChangeListener
 import javafx.collections.ObservableList
 import javafx.collections.ObservableMap
 import javafx.collections.transformation.FilteredList
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.StateAndRef
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.messaging.DataFeed
-import net.corda.core.node.services.Vault
 import org.fxmisc.easybind.EasyBind
 import rx.Observable
 import rx.schedulers.Schedulers
@@ -331,27 +328,27 @@ fun <A> ObservableList<A>.firstOrNullObservable(predicate: (A) -> Boolean): Obse
  */
 fun <T> Observable<T>.observeOnFXThread(): Observable<T> = observeOn(Schedulers.from(Platform::runLater))
 
-/**
- * Given a [DataFeed] that contains the results of a vault query and a subsequent stream of changes, returns a JavaFX
- * [ObservableList] that mirrors the streamed results on the UI thread. Note that the paging is *not* respected by this
- * function: if a state is added that would not have appeared in the page in the initial query, it will still be added
- * to the observable list.
- *
- * @see toFXListOfStates if you want just the state objects and not the ledger pointers too.
- */
-fun <T : ContractState> DataFeed<Vault.Page<T>, Vault.Update<T>>.toFXListOfStateRefs(): ObservableList<StateAndRef<T>> {
-    val list = FXCollections.observableArrayList(snapshot.states)
-    updates.observeOnFXThread().subscribe { (consumed, produced) ->
-        list.removeAll(consumed)
-        list.addAll(produced)
-    }
-    return list
-}
-
-/**
- * Returns the same list as [toFXListOfStateRefs] but which contains the states instead of [StateAndRef] wrappers.
- * The same notes apply as with that function.
- */
-fun <T : ContractState> DataFeed<Vault.Page<T>, Vault.Update<T>>.toFXListOfStates(): ObservableList<T> {
-    return toFXListOfStateRefs().map { it.state.data }
-}
+///**
+// * Given a [DataFeed] that contains the results of a vault query and a subsequent stream of changes, returns a JavaFX
+// * [ObservableList] that mirrors the streamed results on the UI thread. Note that the paging is *not* respected by this
+// * function: if a state is added that would not have appeared in the page in the initial query, it will still be added
+// * to the observable list.
+// *
+// * @see toFXListOfStates if you want just the state objects and not the ledger pointers too.
+// */
+//fun <T : ContractState> DataFeed<Vault.Page<T>, Vault.Update<T>>.toFXListOfStateRefs(): ObservableList<StateAndRef<T>> {
+//    val list = FXCollections.observableArrayList(snapshot.states)
+//    updates.observeOnFXThread().subscribe { (consumed, produced) ->
+//        list.removeAll(consumed)
+//        list.addAll(produced)
+//    }
+//    return list
+//}
+//
+///**
+// * Returns the same list as [toFXListOfStateRefs] but which contains the states instead of [StateAndRef] wrappers.
+// * The same notes apply as with that function.
+// */
+//fun <T : ContractState> DataFeed<Vault.Page<T>, Vault.Update<T>>.toFXListOfStates(): ObservableList<T> {
+//    return toFXListOfStateRefs().map { it.state.data }
+//}

@@ -99,14 +99,14 @@ class InternalMockNetworkTests {
         assertEquals(2, received)
     }
 
-    @Test(timeout=300_000)
-	fun `does not leak serialization env if init fails`() {
-        val e = Exception("didn't work")
-        assertThatThrownBy {
-            object : InternalMockNetwork(cordappsForAllNodes = emptySet()) {
-                override fun createNotaries() = throw e
-            }
-        }.isSameAs(e)
-        assertThatThrownBy { effectiveSerializationEnv }.isInstanceOf(IllegalStateException::class.java)
-    }
+//    @Test(timeout=300_000)
+//	fun `does not leak serialization env if init fails`() {
+//        val e = Exception("didn't work")
+//        assertThatThrownBy {
+//            object : InternalMockNetwork(cordappsForAllNodes = emptySet()) {
+//                override fun createNotaries() = throw e
+//            }
+//        }.isSameAs(e)
+//        assertThatThrownBy { effectiveSerializationEnv }.isInstanceOf(IllegalStateException::class.java)
+//    }
 }

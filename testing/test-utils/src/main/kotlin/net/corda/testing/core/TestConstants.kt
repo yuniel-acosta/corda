@@ -2,8 +2,6 @@
 
 package net.corda.testing.core
 
-import net.corda.core.contracts.Command
-import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.crypto.generateKeyPair
 import net.corda.core.identity.CordaX500Name
 import java.security.PublicKey
@@ -33,11 +31,11 @@ val BOB_NAME = CordaX500Name("Bob Plc", "Rome", "IT")
 @JvmField
 val CHARLIE_NAME = CordaX500Name("Charlie Ltd", "Athens", "GR")
 
-/** Generates a dummy command that doesn't do anything useful for use in tests **/
-fun dummyCommand(vararg signers: PublicKey = arrayOf(generateKeyPair().public)) = Command<TypeOnlyCommandData>(DummyCommandData, signers.toList())
-
-/** Trivial implementation of [TypeOnlyCommandData] for test purposes */
-object DummyCommandData : TypeOnlyCommandData()
+///** Generates a dummy command that doesn't do anything useful for use in tests **/
+//fun dummyCommand(vararg signers: PublicKey = arrayOf(generateKeyPair().public)) = Command<TypeOnlyCommandData>(DummyCommandData, signers.toList())
+//
+///** Trivial implementation of [TypeOnlyCommandData] for test purposes */
+//object DummyCommandData : TypeOnlyCommandData()
 
 /** Maximum artemis message size. 10 MiB maximum allowed file size for attachments, including message headers. */
 const val MAX_MESSAGE_SIZE: Int = 10485760

@@ -4,7 +4,6 @@
 package net.corda.testing.core
 
 import net.corda.core.contracts.PartyAndReference
-import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.*
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -42,8 +41,8 @@ import java.util.concurrent.atomic.AtomicInteger
  *   - The Int.DOLLARS syntax doesn't work from Java.  Use the DOLLARS(int) function instead.
  */
 
-/** Returns a fake state reference for testing purposes. **/
-fun generateStateRef(): StateRef = StateRef(SecureHash.randomSHA256(), 0)
+///** Returns a fake state reference for testing purposes. **/
+//fun generateStateRef(): StateRef = StateRef(SecureHash.randomSHA256(), 0)
 
 private val freePortCounter = AtomicInteger(30000)
 

@@ -18,40 +18,40 @@ enum class VerifierType {
  * */
 @DoNotImplement
 interface DriverDSL {
-    /** Returns a list of [NotaryHandle]s matching the list of [NotarySpec]s passed into [driver]. */
-    val notaryHandles: List<NotaryHandle>
-
-    /**
-     * Returns the [NotaryHandle] for the single notary on the network. Throws if there are none or more than one.
-     * @see notaryHandles
-     */
-    val defaultNotaryHandle: NotaryHandle
-        get() {
-            return when (notaryHandles.size) {
-                0 -> throw IllegalStateException("There are no notaries defined on the network")
-                1 -> notaryHandles[0]
-                else -> throw IllegalStateException("There is more than one notary defined on the network")
-            }
-        }
-
-    /**
-     * Returns the identity of the single notary on the network. Throws if there are none or more than one.
-     * @see defaultNotaryHandle
-     */
-    val defaultNotaryIdentity: Party get() = defaultNotaryHandle.identity
-
-    /**
-     * Returns a [CordaFuture] on the [NodeHandle] for the single-node notary on the network. Throws if there
-     * are no notaries or more than one, or if the notary is a distributed cluster.
-     * @see defaultNotaryHandle
-     * @see notaryHandles
-     */
-    val defaultNotaryNode: CordaFuture<NodeHandle>
-        get() {
-            return defaultNotaryHandle.nodeHandles.map {
-                it.singleOrNull() ?: throw IllegalStateException("Default notary is not a single node")
-            }
-        }
+//    /** Returns a list of [NotaryHandle]s matching the list of [NotarySpec]s passed into [driver]. */
+//    val notaryHandles: List<NotaryHandle>
+//
+//    /**
+//     * Returns the [NotaryHandle] for the single notary on the network. Throws if there are none or more than one.
+//     * @see notaryHandles
+//     */
+//    val defaultNotaryHandle: NotaryHandle
+//        get() {
+//            return when (notaryHandles.size) {
+//                0 -> throw IllegalStateException("There are no notaries defined on the network")
+//                1 -> notaryHandles[0]
+//                else -> throw IllegalStateException("There is more than one notary defined on the network")
+//            }
+//        }
+//
+//    /**
+//     * Returns the identity of the single notary on the network. Throws if there are none or more than one.
+//     * @see defaultNotaryHandle
+//     */
+//    val defaultNotaryIdentity: Party get() = defaultNotaryHandle.identity
+//
+//    /**
+//     * Returns a [CordaFuture] on the [NodeHandle] for the single-node notary on the network. Throws if there
+//     * are no notaries or more than one, or if the notary is a distributed cluster.
+//     * @see defaultNotaryHandle
+//     * @see notaryHandles
+//     */
+//    val defaultNotaryNode: CordaFuture<NodeHandle>
+//        get() {
+//            return defaultNotaryHandle.nodeHandles.map {
+//                it.singleOrNull() ?: throw IllegalStateException("Default notary is not a single node")
+//            }
+//        }
 
     /**
      * Start a node using the default values of [NodeParameters].

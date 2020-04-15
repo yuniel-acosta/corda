@@ -11,20 +11,16 @@ import de.javakaffee.kryoserializers.ArraysAsListSerializer
 import de.javakaffee.kryoserializers.BitSetSerializer
 import de.javakaffee.kryoserializers.UnmodifiableCollectionsSerializer
 import de.javakaffee.kryoserializers.guava.*
-import net.corda.core.contracts.ContractAttachment
-import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.crypto.CompositeKey
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.internal.AbstractAttachment
-import net.corda.core.internal.LazyMappedList
 import net.corda.core.internal.readFully
 import net.corda.core.serialization.MissingAttachmentsException
 import net.corda.core.serialization.SerializationWhitelist
 import net.corda.core.serialization.SerializeAsToken
 import net.corda.core.serialization.SerializedBytes
-import net.corda.core.transactions.*
 import net.corda.core.utilities.NonEmptySet
 import net.corda.core.utilities.toNonEmptySet
 import net.corda.serialization.internal.DefaultWhitelist
@@ -82,9 +78,9 @@ object DefaultKryoCustomizer {
             // TODO: re-organise registrations into logical groups before v1.0
 
             register(Arrays.asList("").javaClass, ArraysAsListSerializer())
-            register(LazyMappedList::class.java, LazyMappedListSerializer)
-            register(SignedTransaction::class.java, SignedTransactionSerializer)
-            register(WireTransaction::class.java, WireTransactionSerializer)
+//            register(LazyMappedList::class.java, LazyMappedListSerializer)
+//            register(SignedTransaction::class.java, SignedTransactionSerializer)
+//            register(WireTransaction::class.java, WireTransactionSerializer)
             register(SerializedBytes::class.java, SerializedBytesSerializer)
             UnmodifiableCollectionsSerializer.registerSerializers(this)
             ImmutableListSerializer.registerSerializers(this)
@@ -95,7 +91,7 @@ object DefaultKryoCustomizer {
             // InputStream subclasses whitelisting, required for attachments.
             register(BufferedInputStream::class.java, InputStreamSerializer)
             register(Class.forName("sun.net.www.protocol.jar.JarURLConnection\$JarURLInputStream"), InputStreamSerializer)
-            noReferencesWithin<WireTransaction>()
+//            noReferencesWithin<WireTransaction>()
             register(PublicKey::class.java, publicKeySerializer)
             register(PrivateKey::class.java, PrivateKeySerializer)
             register(EdDSAPublicKey::class.java, publicKeySerializer)
@@ -115,19 +111,19 @@ object DefaultKryoCustomizer {
             register(BCRSAPublicKey::class.java, publicKeySerializer)
             register(BCSphincs256PrivateKey::class.java, PrivateKeySerializer)
             register(BCSphincs256PublicKey::class.java, publicKeySerializer)
-            register(NotaryChangeWireTransaction::class.java, NotaryChangeWireTransactionSerializer)
+//            register(NotaryChangeWireTransaction::class.java, NotaryChangeWireTransactionSerializer)
             register(PartyAndCertificate::class.java, PartyAndCertificateSerializer)
 
             // Don't deserialize PrivacySalt via its default constructor.
             register(PrivacySalt::class.java, PrivacySaltSerializer)
 
             // Used by the remote verifier, and will possibly be removed in future.
-            register(ContractAttachment::class.java, ContractAttachmentSerializer)
+//            register(ContractAttachment::class.java, ContractAttachmentSerializer)
 
             register(java.lang.invoke.SerializedLambda::class.java)
             register(ClosureSerializer.Closure::class.java, CordaClosureBlacklistSerializer)
-            register(ContractUpgradeWireTransaction::class.java, ContractUpgradeWireTransactionSerializer)
-            register(ContractUpgradeFilteredTransaction::class.java, ContractUpgradeFilteredTransactionSerializer)
+//            register(ContractUpgradeWireTransaction::class.java, ContractUpgradeWireTransactionSerializer)
+//            register(ContractUpgradeFilteredTransaction::class.java, ContractUpgradeFilteredTransactionSerializer)
 
             for (whitelistProvider in serializationWhitelists) {
                 val types = whitelistProvider.whitelist
@@ -198,52 +194,52 @@ object DefaultKryoCustomizer {
         }
     }
 
-    private object ContractAttachmentSerializer : Serializer<ContractAttachment>() {
-        override fun write(kryo: Kryo, output: Output, obj: ContractAttachment) {
-            if (kryo.serializationContext() != null) {
-                obj.attachment.id.writeTo(output)
-            } else {
-                val buffer = ByteArrayOutputStream()
-                obj.attachment.open().use { it.copyTo(buffer) }
-                output.writeBytesWithLength(buffer.toByteArray())
-            }
-            output.writeString(obj.contract)
-            kryo.writeClassAndObject(output, obj.additionalContracts)
-            output.writeString(obj.uploader)
-            kryo.writeClassAndObject(output, obj.signerKeys)
-            output.writeInt(obj.version)
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        override fun read(kryo: Kryo, input: Input, type: Class<ContractAttachment>): ContractAttachment {
-            if (kryo.serializationContext() != null) {
-                val attachmentHash = SecureHash.SHA256(input.readBytes(32))
-                val contract = input.readString()
-                val additionalContracts = kryo.readClassAndObject(input) as Set<ContractClassName>
-                val uploader = input.readString()
-                val signers = kryo.readClassAndObject(input) as List<PublicKey>
-                val version = input.readInt()
-                val context = kryo.serializationContext()!!
-                val attachmentStorage = context.serviceHub.attachments
-
-                val lazyAttachment = object : AbstractAttachment({
-                    val attachment = attachmentStorage.openAttachment(attachmentHash)
-                            ?: throw MissingAttachmentsException(listOf(attachmentHash))
-                    attachment.open().readFully()
-                }, uploader) {
-                    override val id = attachmentHash
-                }
-
-                return ContractAttachment.create(lazyAttachment, contract, additionalContracts, uploader, signers, version)
-            } else {
-                val attachment = GeneratedAttachment(input.readBytesWithLength(), "generated")
-                val contract = input.readString()
-                val additionalContracts = kryo.readClassAndObject(input) as Set<ContractClassName>
-                val uploader = input.readString()
-                val signers = kryo.readClassAndObject(input) as List<PublicKey>
-                val version = input.readInt()
-                return ContractAttachment.create(attachment, contract, additionalContracts, uploader, signers, version)
-            }
-        }
-    }
+//    private object ContractAttachmentSerializer : Serializer<ContractAttachment>() {
+//        override fun write(kryo: Kryo, output: Output, obj: ContractAttachment) {
+//            if (kryo.serializationContext() != null) {
+//                obj.attachment.id.writeTo(output)
+//            } else {
+//                val buffer = ByteArrayOutputStream()
+//                obj.attachment.open().use { it.copyTo(buffer) }
+//                output.writeBytesWithLength(buffer.toByteArray())
+//            }
+//            output.writeString(obj.contract)
+//            kryo.writeClassAndObject(output, obj.additionalContracts)
+//            output.writeString(obj.uploader)
+//            kryo.writeClassAndObject(output, obj.signerKeys)
+//            output.writeInt(obj.version)
+//        }
+//
+//        @Suppress("UNCHECKED_CAST")
+//        override fun read(kryo: Kryo, input: Input, type: Class<ContractAttachment>): ContractAttachment {
+//            if (kryo.serializationContext() != null) {
+//                val attachmentHash = SecureHash.SHA256(input.readBytes(32))
+//                val contract = input.readString()
+//                val additionalContracts = kryo.readClassAndObject(input) as Set<ContractClassName>
+//                val uploader = input.readString()
+//                val signers = kryo.readClassAndObject(input) as List<PublicKey>
+//                val version = input.readInt()
+//                val context = kryo.serializationContext()!!
+//                val attachmentStorage = context.serviceHub.attachments
+//
+//                val lazyAttachment = object : AbstractAttachment({
+//                    val attachment = attachmentStorage.openAttachment(attachmentHash)
+//                            ?: throw MissingAttachmentsException(listOf(attachmentHash))
+//                    attachment.open().readFully()
+//                }, uploader) {
+//                    override val id = attachmentHash
+//                }
+//
+//                return ContractAttachment.create(lazyAttachment, contract, additionalContracts, uploader, signers, version)
+//            } else {
+//                val attachment = GeneratedAttachment(input.readBytesWithLength(), "generated")
+//                val contract = input.readString()
+//                val additionalContracts = kryo.readClassAndObject(input) as Set<ContractClassName>
+//                val uploader = input.readString()
+//                val signers = kryo.readClassAndObject(input) as List<PublicKey>
+//                val version = input.readInt()
+//                return ContractAttachment.create(attachment, contract, additionalContracts, uploader, signers, version)
+//            }
+//        }
+//    }
 }

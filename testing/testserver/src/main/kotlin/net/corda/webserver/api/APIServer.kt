@@ -1,7 +1,7 @@
 package net.corda.webserver.api
 
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.StateAndRef
+//import net.corda.core.contracts.ContractState
+//import net.corda.core.contracts.StateAndRef
 import net.corda.core.identity.Party
 import net.corda.core.utilities.NetworkHostAndPort
 import java.time.LocalDateTime
@@ -84,11 +84,11 @@ interface APIServer {
     @Produces(MediaType.APPLICATION_JSON)
     fun flows(): List<String>
 
-    /**
-     * Report this node's vault states.
-     */
-    @GET
-    @Path("states")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun states(): List<StateAndRef<ContractState>>
+//    /**
+//     * Report this node's vault states.
+//     */
+//    @GET
+//    @Path("states")
+//    @Produces(MediaType.APPLICATION_JSON)
+//    fun states(): List<StateAndRef<ContractState>>
 }

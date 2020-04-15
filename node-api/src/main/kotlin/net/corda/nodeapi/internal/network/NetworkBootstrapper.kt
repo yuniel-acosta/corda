@@ -56,14 +56,15 @@ class NetworkBootstrapper
 @VisibleForTesting
 internal constructor(private val initSerEnv: Boolean,
                      private val embeddedCordaJar: () -> URL,
-                     private val nodeInfosGenerator: (List<Path>) -> List<Path>,
-                     private val contractsJarConverter: (Path) -> ContractsJar) : NetworkBootstrapperWithOverridableParameters {
+                     private val nodeInfosGenerator: (List<Path>) -> List<Path>//,
+//                     private val contractsJarConverter: (Path) -> ContractsJar
+) : NetworkBootstrapperWithOverridableParameters {
 
     constructor() : this(
             initSerEnv = true,
             embeddedCordaJar = ::extractEmbeddedCordaJar,
-            nodeInfosGenerator = ::generateNodeInfos,
-            contractsJarConverter = ::ContractsJarFile
+            nodeInfosGenerator = ::generateNodeInfos//,
+//            contractsJarConverter = ::ContractsJarFile
     )
 
     companion object {
@@ -264,13 +265,13 @@ internal constructor(private val initSerEnv: Boolean,
             val existingNetParams = loadNetworkParameters(nodeDirs)
             println(existingNetParams ?: "none found")
             println("Gathering notary identities")
-            val notaryInfos = gatherNotaryInfos(nodeInfoFiles, configs)
+//            val notaryInfos = gatherNotaryInfos(nodeInfoFiles, configs)
             println("Generating contract implementations whitelist")
-            val signedJars = cordappJars.filter { isSigned(it) } // signed JARs are excluded by default, optionally include them in order to transition states from CZ whitelist to signature constraint
-            val unsignedJars = cordappJars - signedJars
-            val newWhitelist = generateWhitelist(existingNetParams, readExcludeWhitelist(directory), unsignedJars.map(contractsJarConverter),
-                    readIncludeWhitelist(directory), signedJars.map(contractsJarConverter))
-            val newNetParams = installNetworkParameters(notaryInfos, newWhitelist, existingNetParams, nodeDirs, networkParametersOverrides)
+//            val signedJars = cordappJars.filter { isSigned(it) } // signed JARs are excluded by default, optionally include them in order to transition states from CZ whitelist to signature constraint
+//            val unsignedJars = cordappJars - signedJars
+//            val newWhitelist = generateWhitelist(existingNetParams, readExcludeWhitelist(directory), unsignedJars.map(contractsJarConverter),
+//                    readIncludeWhitelist(directory), signedJars.map(contractsJarConverter))
+            val newNetParams = installNetworkParameters(existingNetParams, nodeDirs, networkParametersOverrides)
             if (newNetParams != existingNetParams) {
                 println("${if (existingNetParams == null) "New" else "Updated"} $newNetParams")
             } else {
@@ -359,20 +360,20 @@ internal constructor(private val initSerEnv: Boolean,
         }
     }
 
-    private fun gatherNotaryInfos(nodeInfoFiles: List<Path>, configs: Map<Path, Config>): List<NotaryInfo> {
-        return nodeInfoFiles.mapNotNull { nodeInfoFile ->
-            // The config contains the notary type
-            val nodeConfig = configs[nodeInfoFile.parent]!!
-            if (nodeConfig.hasPath("notary")) {
-                val validating = nodeConfig.getBooleanCaseInsensitive("notary.validating")
-                // And the node-info file contains the notary's identity
-                val nodeInfo = nodeInfoFile.readObject<SignedNodeInfo>().verified()
-                NotaryInfo(nodeInfo.notaryIdentity(), validating)
-            } else {
-                null
-            }
-        }.distinct() // We need distinct as nodes part of a distributed notary share the same notary identity
-    }
+//    private fun gatherNotaryInfos(nodeInfoFiles: List<Path>, configs: Map<Path, Config>): List<NotaryInfo> {
+//        return nodeInfoFiles.mapNotNull { nodeInfoFile ->
+//            // The config contains the notary type
+//            val nodeConfig = configs[nodeInfoFile.parent]!!
+//            if (nodeConfig.hasPath("notary")) {
+//                val validating = nodeConfig.getBooleanCaseInsensitive("notary.validating")
+//                // And the node-info file contains the notary's identity
+//                val nodeInfo = nodeInfoFile.readObject<SignedNodeInfo>().verified()
+//                NotaryInfo(nodeInfo.notaryIdentity(), validating)
+//            } else {
+//                null
+//            }
+//        }.distinct() // We need distinct as nodes part of a distributed notary share the same notary identity
+//    }
 
     private fun loadNetworkParameters(nodeDirs: List<Path>): NetworkParameters? {
         val netParamsFilesGrouped = nodeDirs.mapNotNull {
@@ -403,15 +404,17 @@ internal constructor(private val initSerEnv: Boolean,
         throw IllegalStateException(msg.toString())
     }
 
-    private fun defaultNetworkParametersWith(notaryInfos: List<NotaryInfo>,
-                                             whitelist: Map<String, List<AttachmentId>>): NetworkParameters {
+    private fun defaultNetworkParametersWith(
+//            notaryInfos: List<NotaryInfo>,
+//            whitelist: Map<String, List<AttachmentId>>
+    ): NetworkParameters {
         return NetworkParameters(
                 minimumPlatformVersion = PLATFORM_VERSION,
-                notaries = notaryInfos,
+                notaries = emptyList(),
                 modifiedTime = Instant.now(),
                 maxMessageSize = DEFAULT_MAX_MESSAGE_SIZE,
                 maxTransactionSize = DEFAULT_MAX_TRANSACTION_SIZE,
-                whitelistedContractImplementations = whitelist,
+                whitelistedContractImplementations = emptyMap(),
                 packageOwnership = emptyMap(),
                 epoch = 1,
                 eventHorizon = 30.days
@@ -419,15 +422,15 @@ internal constructor(private val initSerEnv: Boolean,
     }
 
     private fun installNetworkParameters(
-            notaryInfos: List<NotaryInfo>,
-            whitelist: Map<String, List<AttachmentId>>,
+//            notaryInfos: List<NotaryInfo>,
+//            whitelist: Map<String, List<AttachmentId>>,
             existingNetParams: NetworkParameters?,
             nodeDirs: List<Path>,
             networkParametersOverrides: NetworkParametersOverrides
     ): NetworkParameters {
         val netParams = if (existingNetParams != null) {
             val newNetParams = existingNetParams
-                    .copy(notaries = notaryInfos, whitelistedContractImplementations = whitelist)
+//                    .copy(notaries = notaryInfos, whitelistedContractImplementations = whitelist)
                     .overrideWith(networkParametersOverrides)
             if (newNetParams != existingNetParams) {
                 newNetParams.copy(
@@ -438,23 +441,23 @@ internal constructor(private val initSerEnv: Boolean,
                 existingNetParams
             }
         } else {
-            defaultNetworkParametersWith(notaryInfos, whitelist).overrideWith(networkParametersOverrides)
+            defaultNetworkParametersWith().overrideWith(networkParametersOverrides)
         }
         val copier = NetworkParametersCopier(netParams, overwriteFile = true)
         nodeDirs.forEach(copier::install)
         return netParams
     }
 
-    private fun NodeInfo.notaryIdentity(): Party {
-        return when (legalIdentities.size) {
-            // Single node notaries have just one identity like all other nodes. This identity is the notary identity
-            1 -> legalIdentities[0]
-            // Nodes which are part of a distributed notary have a second identity which is the composite identity of the
-            // cluster and is shared by all the other members. This is the notary identity.
-            2 -> legalIdentities[1]
-            else -> throw IllegalArgumentException("Not sure how to get the notary identity in this scenario: $this")
-        }
-    }
+//    private fun NodeInfo.notaryIdentity(): Party {
+//        return when (legalIdentities.size) {
+//            // Single node notaries have just one identity like all other nodes. This identity is the notary identity
+//            1 -> legalIdentities[0]
+//            // Nodes which are part of a distributed notary have a second identity which is the composite identity of the
+//            // cluster and is shared by all the other members. This is the notary identity.
+//            2 -> legalIdentities[1]
+//            else -> throw IllegalArgumentException("Not sure how to get the notary identity in this scenario: $this")
+//        }
+//    }
 
     // We need to to set serialization env, because generation of parameters is run from Cordform.
     private fun initialiseSerialization() {

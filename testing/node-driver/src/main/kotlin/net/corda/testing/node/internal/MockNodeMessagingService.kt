@@ -65,7 +65,7 @@ class MockNodeMessagingService(private val configuration: NodeConfiguration,
      * executor.
      * @param id the numeric ID to use, e.g. set to whatever ID the node used last time.
      */
-    fun start(network: InMemoryMessagingNetwork, manuallyPumped: Boolean, id: Int, notaryService: PartyAndCertificate?) {
+    fun start(network: InMemoryMessagingNetwork, manuallyPumped: Boolean, id: Int) {
         val peerHandle = InMemoryMessagingNetwork.PeerHandle(id, configuration.myLegalName)
 
         this.network = network
@@ -88,7 +88,7 @@ class MockNodeMessagingService(private val configuration: NodeConfiguration,
             }
         }
 
-        network.addNotaryIdentity(this, notaryService)
+//        network.addNotaryIdentity(this, notaryService)
         ready.set(null)
     }
 

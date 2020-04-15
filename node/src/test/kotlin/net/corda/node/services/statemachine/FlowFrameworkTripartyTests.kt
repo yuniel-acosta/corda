@@ -53,7 +53,6 @@ class FlowFrameworkTripartyTests {
         alice = aliceNode.info.singleIdentity()
         bob = bobNode.info.singleIdentity()
         charlie = charlieNode.info.singleIdentity()
-        notaryIdentity = mockNet.defaultNotaryIdentity
 
         receivedSessionMessagesObservable().forEach { receivedSessionMessages += it }
     }

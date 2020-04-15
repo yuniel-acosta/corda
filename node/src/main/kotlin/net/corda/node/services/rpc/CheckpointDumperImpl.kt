@@ -24,8 +24,6 @@ import net.corda.client.jackson.JacksonSupport
 import net.corda.client.jackson.internal.jsonObject
 import net.corda.core.context.InvocationOrigin
 import net.corda.core.contracts.Attachment
-import net.corda.core.contracts.ScheduledStateRef
-import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowInfo
 import net.corda.core.flows.FlowLogic
@@ -36,7 +34,6 @@ import net.corda.core.identity.Party
 import net.corda.core.node.AppServiceHub.Companion.SERVICE_PRIORITY_NORMAL
 import net.corda.core.internal.FlowAsyncOperation
 import net.corda.core.internal.FlowIORequest
-import net.corda.core.internal.WaitForStateConsumption
 import net.corda.core.internal.declaredField
 import net.corda.core.internal.div
 import net.corda.core.internal.exists
@@ -283,7 +280,7 @@ class CheckpointDumperImpl(private val checkpointStorage: CheckpointStorage, pri
             val rpc: String? = null,
             val peer: CordaX500Name? = null,
             val service: String? = null,
-            val scheduled: ScheduledStateRef? = null,
+//            val scheduled: ScheduledStateRef? = null,
             val shell: InvocationOrigin.Shell? = null
     )
 
@@ -292,7 +289,7 @@ class CheckpointDumperImpl(private val checkpointStorage: CheckpointStorage, pri
             is InvocationOrigin.RPC -> Origin(rpc = actor.id.value)
             is InvocationOrigin.Peer -> Origin(peer = party)
             is InvocationOrigin.Service -> Origin(service = serviceClassName)
-            is InvocationOrigin.Scheduled -> Origin(scheduled = scheduledState)
+//            is InvocationOrigin.Scheduled -> Origin(scheduled = scheduledState)
             is InvocationOrigin.Shell -> Origin(shell = this)
         }
     }
@@ -318,7 +315,7 @@ class CheckpointDumperImpl(private val checkpointStorage: CheckpointStorage, pri
             val receive: NonEmptySet<FlowSession>? = null,
             val sendAndReceive: List<SendJson>? = null,
             val waitForLedgerCommit: SecureHash? = null,
-            val waitForStateConsumption: Set<StateRef>? = null,
+//            val waitForStateConsumption: Set<StateRef>? = null,
             val getFlowInfo: NonEmptySet<FlowSession>? = null,
             val sleepTill: Instant? = null,
             val waitForSessionConfirmations: FlowIORequest.WaitForSessionConfirmations? = null,
@@ -344,14 +341,14 @@ class CheckpointDumperImpl(private val checkpointStorage: CheckpointStorage, pri
             is FlowIORequest.Send -> SuspendedOn(send = sessionToMessage.toJson())
             is FlowIORequest.Receive -> SuspendedOn(receive = sessions)
             is FlowIORequest.SendAndReceive -> SuspendedOn(sendAndReceive = sessionToMessage.toJson())
-            is FlowIORequest.WaitForLedgerCommit -> SuspendedOn(waitForLedgerCommit = hash)
+//            is FlowIORequest.WaitForLedgerCommit -> SuspendedOn(waitForLedgerCommit = hash)
             is FlowIORequest.GetFlowInfo -> SuspendedOn(getFlowInfo = sessions)
             is FlowIORequest.Sleep -> SuspendedOn(sleepTill = wakeUpAfter)
             is FlowIORequest.WaitForSessionConfirmations -> SuspendedOn(waitForSessionConfirmations = this)
             is FlowIORequest.ForceCheckpoint -> SuspendedOn(forceCheckpoint = this)
             is FlowIORequest.ExecuteAsyncOperation -> {
                 when (operation) {
-                    is WaitForStateConsumption -> SuspendedOn(waitForStateConsumption = (operation as WaitForStateConsumption).stateRefs)
+//                    is WaitForStateConsumption -> SuspendedOn(waitForStateConsumption = (operation as WaitForStateConsumption).stateRefs)
                     else -> SuspendedOn(customOperation = this)
                 }
             }

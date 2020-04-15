@@ -8,8 +8,6 @@ import com.google.common.hash.HashingInputStream
 import com.google.common.io.CountingInputStream
 import net.corda.core.CordaRuntimeException
 import net.corda.core.contracts.Attachment
-import net.corda.core.contracts.ContractAttachment
-import net.corda.core.contracts.ContractClassName
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.sha256
 import net.corda.core.internal.*
@@ -18,13 +16,8 @@ import net.corda.core.internal.cordapp.CordappImpl.Companion.CORDAPP_CONTRACT_VE
 import net.corda.core.internal.cordapp.CordappImpl.Companion.DEFAULT_CORDAPP_VERSION
 import net.corda.core.node.ServicesForResolution
 import net.corda.core.node.services.AttachmentId
-import net.corda.core.node.services.vault.AttachmentQueryCriteria
-import net.corda.core.node.services.vault.AttachmentSort
-import net.corda.core.node.services.vault.Builder
-import net.corda.core.node.services.vault.Sort
 import net.corda.core.serialization.*
 import net.corda.core.utilities.contextLogger
-import net.corda.node.services.vault.HibernateAttachmentQueryCriteriaParser
 import net.corda.node.utilities.InfrequentlyMutatedCache
 import net.corda.node.utilities.NonInvalidatingCache
 import net.corda.node.utilities.NonInvalidatingWeightBasedCache
@@ -32,7 +25,6 @@ import net.corda.nodeapi.exceptions.DuplicateAttachmentException
 import net.corda.nodeapi.internal.persistence.CordaPersistence
 import net.corda.nodeapi.internal.persistence.NODE_DATABASE_PREFIX
 import net.corda.nodeapi.internal.persistence.currentDBSession
-import net.corda.nodeapi.internal.withContractsInJar
 import org.hibernate.query.Query
 import java.io.FilterInputStream
 import java.io.IOException
@@ -130,21 +122,21 @@ class NodeAttachmentService @JvmOverloads constructor(
             @Column(name = "filename", updatable = false, nullable = true)
             var filename: String? = null,
 
-            @ElementCollection
-            @Column(name = "contract_class_name", nullable = false)
-            @CollectionTable(name = "${NODE_DATABASE_PREFIX}attachments_contracts", joinColumns = [(JoinColumn(name = "att_id", referencedColumnName = "att_id"))],
-                    foreignKey = ForeignKey(name = "FK__ctr_class__attachments"))
-            var contractClassNames: List<ContractClassName>? = null,
+//            @ElementCollection
+//            @Column(name = "contract_class_name", nullable = false)
+//            @CollectionTable(name = "${NODE_DATABASE_PREFIX}attachments_contracts", joinColumns = [(JoinColumn(name = "att_id", referencedColumnName = "att_id"))],
+//                    foreignKey = ForeignKey(name = "FK__ctr_class__attachments"))
+//            var contractClassNames: List<ContractClassName>? = null,
 
             @ElementCollection(targetClass = PublicKey::class, fetch = FetchType.EAGER)
             @Column(name = "signer", nullable = false)
             @CollectionTable(name = "${NODE_DATABASE_PREFIX}attachments_signers", joinColumns = [(JoinColumn(name = "att_id", referencedColumnName = "att_id"))],
                     foreignKey = ForeignKey(name = "FK__signers__attachments"))
-            var signers: List<PublicKey>? = null,
+            var signers: List<PublicKey>? = null//,
 
-            // Assumption: only Contract Attachments are versioned, version unknown or value for other attachments other than Contract Attachment defaults to 1
-            @Column(name = "version", nullable = false)
-            var version: Int = DEFAULT_CORDAPP_VERSION
+//            // Assumption: only Contract Attachments are versioned, version unknown or value for other attachments other than Contract Attachment defaults to 1
+//            @Column(name = "version", nullable = false)
+//            var version: Int = DEFAULT_CORDAPP_VERSION
     )
 
     @VisibleForTesting
@@ -294,19 +286,20 @@ class NodeAttachmentService @JvmOverloads constructor(
             uploader = attachment.uploader,
             signerKeys = attachment.signers?.toList() ?: emptyList()
         )
-        val contracts = attachment.contractClassNames
-        return if (contracts != null && contracts.isNotEmpty()) {
-            ContractAttachment.create(
-                attachment = attachmentImpl,
-                contract = contracts.first(),
-                additionalContracts = contracts.drop(1).toSet(),
-                uploader = attachment.uploader,
-                signerKeys = attachment.signers?.toList() ?: emptyList(),
-                version = attachment.version
-            )
-        } else {
-            attachmentImpl
-        }
+//        val contracts = attachment.contractClassNames
+//        return if (contracts != null && contracts.isNotEmpty()) {
+//            ContractAttachment.create(
+//                attachment = attachmentImpl,
+//                contract = contracts.first(),
+//                additionalContracts = contracts.drop(1).toSet(),
+//                uploader = attachment.uploader,
+//                signerKeys = attachment.signers?.toList() ?: emptyList(),
+//                version = attachment.version
+//            )
+//        } else {
+//            attachmentImpl
+//        }
+        return attachmentImpl
     }
 
     private val attachmentCache = NonInvalidatingCache<SecureHash, Optional<Attachment>>(
@@ -366,26 +359,26 @@ class NodeAttachmentService @JvmOverloads constructor(
         currentDBSession().find(DBAttachment::class.java, attachmentId.toString()) != null
     }
 
-    private fun increaseDefaultVersionIfWhitelistedAttachment(contractClassNames: List<ContractClassName>, contractVersionFromFile: Int, attachmentId: AttachmentId) =
-            if (contractVersionFromFile == DEFAULT_CORDAPP_VERSION) {
-                val versions = contractClassNames.mapNotNull { servicesForResolution.networkParameters.whitelistedContractImplementations[it]?.indexOf(attachmentId) }
-                        .filter { it >= 0 }.map { it + 1 } // +1 as versions starts from 1 not 0
-                val max = versions.max()
-                if (max != null && max > contractVersionFromFile) {
-                    val msg = "Updating version of attachment $attachmentId from '$contractVersionFromFile' to '$max'"
-                    if (versions.toSet().size > 1)
-                        log.warn("Several versions based on whitelistedContractImplementations position are available: ${versions.toSet()}. $msg")
-                    else
-                        log.debug(msg)
-                    max
-                } else contractVersionFromFile
-            } else contractVersionFromFile
+//    private fun increaseDefaultVersionIfWhitelistedAttachment(contractClassNames: List<ContractClassName>, contractVersionFromFile: Int, attachmentId: AttachmentId) =
+//            if (contractVersionFromFile == DEFAULT_CORDAPP_VERSION) {
+//                val versions = contractClassNames.mapNotNull { servicesForResolution.networkParameters.whitelistedContractImplementations[it]?.indexOf(attachmentId) }
+//                        .filter { it >= 0 }.map { it + 1 } // +1 as versions starts from 1 not 0
+//                val max = versions.max()
+//                if (max != null && max > contractVersionFromFile) {
+//                    val msg = "Updating version of attachment $attachmentId from '$contractVersionFromFile' to '$max'"
+//                    if (versions.toSet().size > 1)
+//                        log.warn("Several versions based on whitelistedContractImplementations position are available: ${versions.toSet()}. $msg")
+//                    else
+//                        log.debug(msg)
+//                    max
+//                } else contractVersionFromFile
+//            } else contractVersionFromFile
 
     // TODO: PLT-147: The attachment should be randomised to prevent brute force guessing and thus privacy leaks.
     private fun import(jar: InputStream, uploader: String?, filename: String?): AttachmentId {
         return database.transaction {
-            withContractsInJar(jar) { contractClassNames, inputStream ->
-                require(inputStream !is JarInputStream) { "Input stream must not be a JarInputStream" }
+//            withContractsInJar(jar) { contractClassNames, inputStream ->
+                require(jar !is JarInputStream) { "Input stream must not be a JarInputStream" }
 
                 // Read the file into RAM and then calculate its hash. The attachment must fit into memory.
                 // TODO: Switch to a two-phase insert so we can handle attachments larger than RAM.
@@ -393,27 +386,27 @@ class NodeAttachmentService @JvmOverloads constructor(
                 // the insert/upload is complete. We can then query to see if it's a duplicate and if so, erase, and if not
                 // set the hash field of the new attachment record.
 
-                val bytes = inputStream.readFully()
+                val bytes = jar.readFully()
                 val id = bytes.sha256()
                 if (!hasAttachment(id)) {
                     checkIsAValidJAR(bytes.inputStream())
                     val jarSigners = getSigners(bytes)
-                    val contractVersion = increaseDefaultVersionIfWhitelistedAttachment(contractClassNames, getVersion(bytes), id)
+//                    val contractVersion = increaseDefaultVersionIfWhitelistedAttachment(contractClassNames, getVersion(bytes), id)
                     val session = currentDBSession()
                     val attachment = DBAttachment(
                             attId = id.toString(),
                             content = bytes,
                             uploader = uploader,
                             filename = filename,
-                            contractClassNames = contractClassNames,
-                            signers = jarSigners,
-                            version = contractVersion
+//                            contractClassNames = contractClassNames,
+                            signers = jarSigners//,
+//                            version = contractVersion
                     )
                     session.save(attachment)
                     attachmentCount.inc()
                     log.info("Stored new attachment: id=$id uploader=$uploader filename=$filename")
-                    contractClassNames.forEach { contractsCache.invalidate(it) }
-                    return@withContractsInJar id
+//                    contractClassNames.forEach { contractsCache.invalidate(it) }
+                    return@transaction id
                 }
                 if (isUploaderTrusted(uploader)) {
                     val session = currentDBSession()
@@ -422,18 +415,18 @@ class NodeAttachmentService @JvmOverloads constructor(
                     if (attachment.uploader != uploader) {
                         attachment.uploader = uploader
                         log.info("Updated attachment $id with uploader $uploader")
-                        contractClassNames.forEach { contractsCache.invalidate(it) }
+//                        contractClassNames.forEach { contractsCache.invalidate(it) }
                         loadAttachmentContent(id)?.let { attachmentAndContent ->
                             // TODO: this is racey. ENT-2870
                             attachmentContentCache.put(id, Optional.of(attachmentAndContent))
                             attachmentCache.put(id, Optional.of(attachmentAndContent.first))
                         }
-                        return@withContractsInJar id
+                        return@transaction id
                     }
                     // If the uploader is the same, throw the exception because the attachment cannot be overridden by the same uploader.
                 }
                 throw DuplicateAttachmentException(id.toString())
-            }
+//            }
         }
     }
 
@@ -458,37 +451,37 @@ class NodeAttachmentService @JvmOverloads constructor(
         }
     }
 
-    // TODO do not retrieve whole attachments only to return ids - https://r3-cev.atlassian.net/browse/CORDA-3191 raised to address this
-    override fun queryAttachments(criteria: AttachmentQueryCriteria, sorting: AttachmentSort?): List<AttachmentId> {
-        log.info("Attachment query criteria: $criteria, sorting: $sorting")
-        return database.transaction {
-            createAttachmentsQuery(
-                criteria,
-                sorting
-            ).resultList.map { AttachmentId.parse(it.attId) }
-        }
-    }
+//    // TODO do not retrieve whole attachments only to return ids - https://r3-cev.atlassian.net/browse/CORDA-3191 raised to address this
+//    override fun queryAttachments(criteria: AttachmentQueryCriteria, sorting: AttachmentSort?): List<AttachmentId> {
+//        log.info("Attachment query criteria: $criteria, sorting: $sorting")
+//        return database.transaction {
+//            createAttachmentsQuery(
+//                criteria,
+//                sorting
+//            ).resultList.map { AttachmentId.parse(it.attId) }
+//        }
+//    }
 
-    private fun createAttachmentsQuery(
-        criteria: AttachmentQueryCriteria,
-        sorting: AttachmentSort?
-    ): Query<DBAttachment> {
-        val session = currentDBSession()
-        val criteriaBuilder = session.criteriaBuilder
-
-        val criteriaQuery = criteriaBuilder.createQuery(DBAttachment::class.java)
-
-        val criteriaParser = HibernateAttachmentQueryCriteriaParser(
-            criteriaBuilder,
-            criteriaQuery,
-            criteriaQuery.from(DBAttachment::class.java)
-        )
-
-        // parse criteria and build where predicates
-        criteriaParser.parse(criteria, sorting)
-        // prepare query for execution
-        return session.createQuery(criteriaQuery)
-    }
+//    private fun createAttachmentsQuery(
+//        criteria: AttachmentQueryCriteria,
+//        sorting: AttachmentSort?
+//    ): Query<DBAttachment> {
+//        val session = currentDBSession()
+//        val criteriaBuilder = session.criteriaBuilder
+//
+//        val criteriaQuery = criteriaBuilder.createQuery(DBAttachment::class.java)
+//
+//        val criteriaParser = HibernateAttachmentQueryCriteriaParser(
+//            criteriaBuilder,
+//            criteriaQuery,
+//            criteriaQuery.from(DBAttachment::class.java)
+//        )
+//
+//        // parse criteria and build where predicates
+//        criteriaParser.parse(criteria, sorting)
+//        // prepare query for execution
+//        return session.createQuery(criteriaQuery)
+//    }
 
     // Holds onto a signed and/or unsigned attachment (at least one or the other).
     private data class AttachmentIds(val signed: AttachmentId?, val unsigned: AttachmentId?) {
@@ -505,38 +498,38 @@ class NodeAttachmentService @JvmOverloads constructor(
                 } else listOf(unsigned!!)
     }
 
-    /**
-     * This caches contract attachment versions by contract class name.  For each version, we support one signed and one unsigned attachment, since that is allowed.
-     *
-     * It is correctly invalidated as new attachments are uploaded.
-     */
-    private val contractsCache = InfrequentlyMutatedCache<ContractClassName, NavigableMap<Version, AttachmentIds>>("NodeAttachmentService_contractAttachmentVersions", cacheFactory)
+//    /**
+//     * This caches contract attachment versions by contract class name.  For each version, we support one signed and one unsigned attachment, since that is allowed.
+//     *
+//     * It is correctly invalidated as new attachments are uploaded.
+//     */
+//    private val contractsCache = InfrequentlyMutatedCache<ContractClassName, NavigableMap<Version, AttachmentIds>>("NodeAttachmentService_contractAttachmentVersions", cacheFactory)
 
-    private fun getContractAttachmentVersions(contractClassName: String): NavigableMap<Version, AttachmentIds> = contractsCache.get(contractClassName) { name ->
-        val attachmentQueryCriteria = AttachmentQueryCriteria.AttachmentsQueryCriteria(
-            contractClassNamesCondition = Builder.equal(listOf(name)),
-            versionCondition = Builder.greaterThanOrEqual(0),
-            uploaderCondition = Builder.`in`(TRUSTED_UPLOADERS)
-        )
-        val attachmentSort = AttachmentSort(
-            listOf(
-                AttachmentSort.AttachmentSortColumn(
-                    AttachmentSort.AttachmentSortAttribute.VERSION,
-                    Sort.Direction.DESC
-                ),
-                AttachmentSort.AttachmentSortColumn(
-                    AttachmentSort.AttachmentSortAttribute.INSERTION_DATE,
-                    Sort.Direction.DESC
-                )
-            )
-        )
-        database.transaction {
-            createAttachmentsQuery(
-                attachmentQueryCriteria,
-                attachmentSort
-            ).resultList.groupBy { it.version }.map { makeAttachmentIds(it, name) }.toMap(TreeMap())
-        }
-    }
+//    private fun getContractAttachmentVersions(contractClassName: String): NavigableMap<Version, AttachmentIds> = contractsCache.get(contractClassName) { name ->
+//        val attachmentQueryCriteria = AttachmentQueryCriteria.AttachmentsQueryCriteria(
+//            contractClassNamesCondition = Builder.equal(listOf(name)),
+//            versionCondition = Builder.greaterThanOrEqual(0),
+//            uploaderCondition = Builder.`in`(TRUSTED_UPLOADERS)
+//        )
+//        val attachmentSort = AttachmentSort(
+//            listOf(
+//                AttachmentSort.AttachmentSortColumn(
+//                    AttachmentSort.AttachmentSortAttribute.VERSION,
+//                    Sort.Direction.DESC
+//                ),
+//                AttachmentSort.AttachmentSortColumn(
+//                    AttachmentSort.AttachmentSortAttribute.INSERTION_DATE,
+//                    Sort.Direction.DESC
+//                )
+//            )
+//        )
+//        database.transaction {
+//            createAttachmentsQuery(
+//                attachmentQueryCriteria,
+//                attachmentSort
+//            ).resultList.groupBy { it.version }.map { makeAttachmentIds(it, name) }.toMap(TreeMap())
+//        }
+//    }
 
     private fun makeAttachmentIds(it: Map.Entry<Int, List<DBAttachment>>, contractClassName: String): Pair<Version, AttachmentIds> {
         val signed = it.value.filter { it.signers?.isNotEmpty() ?: false }.map { AttachmentId.parse(it.attId) }
@@ -550,21 +543,21 @@ class NodeAttachmentService @JvmOverloads constructor(
         return it.key to AttachmentIds(signed.firstOrNull(), unsigned.firstOrNull())
     }
 
-    override fun getLatestContractAttachments(contractClassName: String, minContractVersion: Int): List<AttachmentId> {
-        val versions: NavigableMap<Version, AttachmentIds> = getContractAttachmentVersions(contractClassName)
-        val newestAttachmentIds = versions.tailMap(minContractVersion, true)
-        val newestSignedAttachment = newestAttachmentIds.values.map { it.signed }.lastOrNull { it != null }
-        val newestUnsignedAttachment = newestAttachmentIds.values.map { it.unsigned }.lastOrNull { it != null }
-        return if (newestSignedAttachment != null || newestUnsignedAttachment != null)
-            AttachmentIds(newestSignedAttachment, newestUnsignedAttachment).toList()
-        else
-            emptyList()
-    }
-
-    override fun getAllAttachmentsByCriteria(criteria: AttachmentQueryCriteria): Stream<Pair<String?, Attachment>> {
-        return createAttachmentsQuery(
-            criteria,
-            null
-        ).resultStream.map { it.filename to createAttachmentFromDatabase(it) }
-    }
+//    override fun getLatestContractAttachments(contractClassName: String, minContractVersion: Int): List<AttachmentId> {
+//        val versions: NavigableMap<Version, AttachmentIds> = getContractAttachmentVersions(contractClassName)
+//        val newestAttachmentIds = versions.tailMap(minContractVersion, true)
+//        val newestSignedAttachment = newestAttachmentIds.values.map { it.signed }.lastOrNull { it != null }
+//        val newestUnsignedAttachment = newestAttachmentIds.values.map { it.unsigned }.lastOrNull { it != null }
+//        return if (newestSignedAttachment != null || newestUnsignedAttachment != null)
+//            AttachmentIds(newestSignedAttachment, newestUnsignedAttachment).toList()
+//        else
+//            emptyList()
+//    }
+//
+//    override fun getAllAttachmentsByCriteria(criteria: AttachmentQueryCriteria): Stream<Pair<String?, Attachment>> {
+//        return createAttachmentsQuery(
+//            criteria,
+//            null
+//        ).resultStream.map { it.filename to createAttachmentFromDatabase(it) }
+//    }
 }

@@ -14,7 +14,7 @@ fun MockNetNotaryConfig.toNotaryConfig(): NotaryConfig {
 
 fun MockNodeConfigOverrides.applyMockNodeOverrides(config: NodeConfiguration) {
     config.also {
-        this.notary?.also { n -> doReturn(n.toNotaryConfig()).whenever(it).notary }
+//        this.notary?.also { n -> doReturn(n.toNotaryConfig()).whenever(it).notary }
         this.extraDataSourceProperties?.forEach { k, v -> it.dataSourceProperties.put(k, v) }
         this.flowTimeout?.also { fto -> doReturn(FlowTimeoutConfiguration(fto.timeout, fto.maxRestartCount, fto.backoffBase)).whenever(config).flowTimeout }
     }

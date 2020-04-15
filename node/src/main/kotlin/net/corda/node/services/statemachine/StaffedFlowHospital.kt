@@ -3,10 +3,6 @@ package net.corda.node.services.statemachine
 import net.corda.core.crypto.newSecureRandom
 import net.corda.core.flows.FlowException
 import net.corda.core.flows.HospitalizeFlowException
-import net.corda.core.flows.NotaryError
-import net.corda.core.flows.NotaryException
-import net.corda.core.flows.ReceiveFinalityFlow
-import net.corda.core.flows.ReceiveTransactionFlow
 import net.corda.core.flows.StateMachineRunId
 import net.corda.core.flows.UnexpectedFlowEndException
 import net.corda.core.identity.Party
@@ -20,7 +16,6 @@ import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.debug
 import net.corda.core.utilities.minutes
 import net.corda.core.utilities.seconds
-import net.corda.node.services.FinalityHandler
 import org.hibernate.exception.ConstraintViolationException
 import rx.subjects.PublishSubject
 import java.sql.SQLException
@@ -46,12 +41,12 @@ class StaffedFlowHospital(private val flowMessaging: FlowMessaging,
             DeadlockNurse,
             DuplicateInsertSpecialist,
             DoctorTimeout,
-            FinalityDoctor,
+//            FinalityDoctor,
             TransientConnectionCardiologist,
             DatabaseEndocrinologist,
             TransitionErrorGeneralPractitioner,
-            SedationNurse,
-            NotaryDoctor
+            SedationNurse//,
+//            NotaryDoctor
         )
 
         @VisibleForTesting
@@ -415,59 +410,59 @@ class StaffedFlowHospital(private val flowMessaging: FlowMessaging,
         }
     }
 
-    object FinalityDoctor : Staff {
-        override fun consult(flowFiber: FlowFiber, currentState: StateMachineState, newError: Throwable, history: FlowMedicalHistory): Diagnosis {
-            return if (currentState.flowLogic is FinalityHandler) {
-                log.warn("Flow ${flowFiber.id} failed to be finalised. Manual intervention may be required before retrying " +
-                        "the flow by re-starting the node. State machine state: $currentState", newError)
-                Diagnosis.OVERNIGHT_OBSERVATION
-            } else if (isFromReceiveFinalityFlow(newError)) {
-                if (isErrorPropagatedFromCounterparty(newError) && isErrorThrownDuringReceiveFinality(newError)) {
-                    // no need to keep around the flow, since notarisation has already failed at the counterparty.
-                    Diagnosis.NOT_MY_SPECIALTY
-                } else {
-                    log.warn("Flow ${flowFiber.id} failed to be finalised. Manual intervention may be required before retrying " +
-                            "the flow by re-starting the node. State machine state: $currentState", newError)
-                    Diagnosis.OVERNIGHT_OBSERVATION
-                }
-            } else {
-                Diagnosis.NOT_MY_SPECIALTY
-            }
-        }
-
-        private fun isFromReceiveFinalityFlow(throwable: Throwable): Boolean {
-            return throwable.stackTrace.any { it.className == ReceiveFinalityFlow::class.java.name }
-        }
-
-        private fun isErrorPropagatedFromCounterparty(error: Throwable): Boolean {
-            return when (error) {
-                is UnexpectedFlowEndException -> {
-                    val peer = DeclaredField<Party?>(UnexpectedFlowEndException::class.java, "peer", error).value
-                    peer != null
-                }
-                is FlowException -> {
-                    val peer = DeclaredField<Party?>(FlowException::class.java, "peer", error).value
-                    peer != null
-                }
-                else -> false
-            }
-        }
-
-        /**
-         * This method will return true if [ReceiveTransactionFlow] is at the top of the stack during the error.
-         * As a result, if the failure happened during a sub-flow invoked from [ReceiveTransactionFlow], the method will return false.
-         *
-         * This is because in the latter case, the transaction might have already been finalised and deleting the flow
-         * would introduce risk for inconsistency between nodes.
-         */
-        private fun isErrorThrownDuringReceiveFinality(error: Throwable): Boolean {
-            val strippedStacktrace = error.stackTrace
-                    .filterNot { it?.className?.contains("counter-flow exception from peer") ?: false }
-                    .filterNot { it?.className?.startsWith("net.corda.node.services.statemachine.") ?: false }
-            return strippedStacktrace.isNotEmpty()
-                    && strippedStacktrace.first().className.startsWith(ReceiveTransactionFlow::class.qualifiedName!!)
-        }
-    }
+//    object FinalityDoctor : Staff {
+//        override fun consult(flowFiber: FlowFiber, currentState: StateMachineState, newError: Throwable, history: FlowMedicalHistory): Diagnosis {
+//            return if (currentState.flowLogic is FinalityHandler) {
+//                log.warn("Flow ${flowFiber.id} failed to be finalised. Manual intervention may be required before retrying " +
+//                        "the flow by re-starting the node. State machine state: $currentState", newError)
+//                Diagnosis.OVERNIGHT_OBSERVATION
+//            } else if (isFromReceiveFinalityFlow(newError)) {
+//                if (isErrorPropagatedFromCounterparty(newError) && isErrorThrownDuringReceiveFinality(newError)) {
+//                    // no need to keep around the flow, since notarisation has already failed at the counterparty.
+//                    Diagnosis.NOT_MY_SPECIALTY
+//                } else {
+//                    log.warn("Flow ${flowFiber.id} failed to be finalised. Manual intervention may be required before retrying " +
+//                            "the flow by re-starting the node. State machine state: $currentState", newError)
+//                    Diagnosis.OVERNIGHT_OBSERVATION
+//                }
+//            } else {
+//                Diagnosis.NOT_MY_SPECIALTY
+//            }
+//        }
+//
+//        private fun isFromReceiveFinalityFlow(throwable: Throwable): Boolean {
+//            return throwable.stackTrace.any { it.className == ReceiveFinalityFlow::class.java.name }
+//        }
+//
+//        private fun isErrorPropagatedFromCounterparty(error: Throwable): Boolean {
+//            return when (error) {
+//                is UnexpectedFlowEndException -> {
+//                    val peer = DeclaredField<Party?>(UnexpectedFlowEndException::class.java, "peer", error).value
+//                    peer != null
+//                }
+//                is FlowException -> {
+//                    val peer = DeclaredField<Party?>(FlowException::class.java, "peer", error).value
+//                    peer != null
+//                }
+//                else -> false
+//            }
+//        }
+//
+//        /**
+//         * This method will return true if [ReceiveTransactionFlow] is at the top of the stack during the error.
+//         * As a result, if the failure happened during a sub-flow invoked from [ReceiveTransactionFlow], the method will return false.
+//         *
+//         * This is because in the latter case, the transaction might have already been finalised and deleting the flow
+//         * would introduce risk for inconsistency between nodes.
+//         */
+//        private fun isErrorThrownDuringReceiveFinality(error: Throwable): Boolean {
+//            val strippedStacktrace = error.stackTrace
+//                    .filterNot { it?.className?.contains("counter-flow exception from peer") ?: false }
+//                    .filterNot { it?.className?.startsWith("net.corda.node.services.statemachine.") ?: false }
+//            return strippedStacktrace.isNotEmpty()
+//                    && strippedStacktrace.first().className.startsWith(ReceiveTransactionFlow::class.qualifiedName!!)
+//        }
+//    }
 
     /**
      * [SQLTransientConnectionException] detection that arise from failing to connect the underlying database/datasource
@@ -578,21 +573,21 @@ class StaffedFlowHospital(private val flowMessaging: FlowMessaging,
         }
     }
 
-    /**
-     * Retry notarisation if the flow errors with a [NotaryError.General]. Notary flows are idempotent and only success or conflict
-     * responses should be returned to the client.
-     */
-    object NotaryDoctor : Staff, Chronic {
-        override fun consult(flowFiber: FlowFiber,
-                             currentState: StateMachineState,
-                             newError: Throwable,
-                             history: FlowMedicalHistory): Diagnosis {
-            if (newError is NotaryException && newError.error is NotaryError.General) {
-                return Diagnosis.DISCHARGE
-            }
-            return Diagnosis.NOT_MY_SPECIALTY
-        }
-    }
+//    /**
+//     * Retry notarisation if the flow errors with a [NotaryError.General]. Notary flows are idempotent and only success or conflict
+//     * responses should be returned to the client.
+//     */
+//    object NotaryDoctor : Staff, Chronic {
+//        override fun consult(flowFiber: FlowFiber,
+//                             currentState: StateMachineState,
+//                             newError: Throwable,
+//                             history: FlowMedicalHistory): Diagnosis {
+//            if (newError is NotaryException && newError.error is NotaryError.General) {
+//                return Diagnosis.DISCHARGE
+//            }
+//            return Diagnosis.NOT_MY_SPECIALTY
+//        }
+//    }
 }
 
 private fun <T : Throwable> Throwable?.mentionsThrowable(exceptionType: Class<T>, errorMessage: String? = null): Boolean {

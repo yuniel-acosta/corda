@@ -19,8 +19,6 @@ import net.corda.core.CordaInternal
 import net.corda.core.CordaOID
 import net.corda.core.DoNotImplement
 import net.corda.core.contracts.Amount
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.*
 import net.corda.core.identity.*
 import net.corda.core.internal.*
@@ -29,9 +27,6 @@ import net.corda.core.node.NodeInfo
 import net.corda.core.node.services.IdentityService
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.serialize
-import net.corda.core.transactions.CoreTransaction
-import net.corda.core.transactions.NotaryChangeWireTransaction
-import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.parsePublicKeyBase58
 import net.corda.core.utilities.toBase58String
@@ -490,26 +485,26 @@ object JacksonSupport {
         }
     }
 
-    @Deprecated("This is an internal class, do not use")
-    @Suppress("unused")
-    abstract class SignedTransactionMixin {
-        @JsonIgnore abstract fun getTxBits(): SerializedBytes<CoreTransaction>
-        @JsonProperty("signatures") protected abstract fun getSigs(): List<TransactionSignature>
-        @JsonProperty protected abstract fun getTransaction(): CoreTransaction
-        @JsonIgnore abstract fun getTx(): WireTransaction
-        @JsonIgnore abstract fun getNotaryChangeTx(): NotaryChangeWireTransaction
-        @JsonIgnore abstract fun getInputs(): List<StateRef>
-        @JsonIgnore abstract fun getNotary(): Party?
-        @JsonIgnore abstract fun getId(): SecureHash
-        @JsonIgnore abstract fun getRequiredSigningKeys(): Set<PublicKey>
-    }
-
-    @Deprecated("This is an internal class, do not use")
-    @Suppress("unused")
-    abstract class WireTransactionMixin {
-        @JsonIgnore abstract fun getMerkleTree(): MerkleTree
-        @JsonIgnore abstract fun getAvailableComponents(): List<Any>
-        @JsonIgnore abstract fun getAvailableComponentHashes(): List<SecureHash>
-        @JsonIgnore abstract fun getOutputStates(): List<ContractState>
-    }
+//    @Deprecated("This is an internal class, do not use")
+//    @Suppress("unused")
+//    abstract class SignedTransactionMixin {
+//        @JsonIgnore abstract fun getTxBits(): SerializedBytes<CoreTransaction>
+//        @JsonProperty("signatures") protected abstract fun getSigs(): List<TransactionSignature>
+//        @JsonProperty protected abstract fun getTransaction(): CoreTransaction
+//        @JsonIgnore abstract fun getTx(): WireTransaction
+//        @JsonIgnore abstract fun getNotaryChangeTx(): NotaryChangeWireTransaction
+//        @JsonIgnore abstract fun getInputs(): List<StateRef>
+//        @JsonIgnore abstract fun getNotary(): Party?
+//        @JsonIgnore abstract fun getId(): SecureHash
+//        @JsonIgnore abstract fun getRequiredSigningKeys(): Set<PublicKey>
+//    }
+//
+//    @Deprecated("This is an internal class, do not use")
+//    @Suppress("unused")
+//    abstract class WireTransactionMixin {
+//        @JsonIgnore abstract fun getMerkleTree(): MerkleTree
+//        @JsonIgnore abstract fun getAvailableComponents(): List<Any>
+//        @JsonIgnore abstract fun getAvailableComponentHashes(): List<SecureHash>
+//        @JsonIgnore abstract fun getOutputStates(): List<ContractState>
+//    }
 }

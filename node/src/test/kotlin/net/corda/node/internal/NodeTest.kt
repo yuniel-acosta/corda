@@ -189,7 +189,7 @@ class NodeTest {
                 flowTimeout = FlowTimeoutConfiguration(timeout = Duration.ZERO, backoffBase = 1.0, maxRestartCount = 1),
                 rpcSettings = NodeRpcSettings(address = fakeAddress, adminAddress = null, ssl = null),
                 messagingServerAddress = null,
-                notary = null,
+//                notary = null,
                 flowOverrides = FlowOverrideConfig(listOf()),
                 configurationWithOptions = mock()
         )

@@ -6,7 +6,6 @@ import net.corda.core.internal.tee
 import net.corda.core.observable.internal.ResilientSubscriber
 import net.corda.core.observable.internal.OnNextFailedException
 import net.corda.core.observable.continueOnError
-import net.corda.node.services.vault.resilientOnError
 import net.corda.nodeapi.internal.persistence.*
 import net.corda.testing.internal.configureDatabase
 import net.corda.testing.node.MockServices.Companion.makeTestDataSourceProperties
@@ -401,23 +400,6 @@ class ObservablesTests {
         assertFailsWith<OnErrorNotImplementedException> { source.onNext(1) }
         assertFailsWith<OnErrorNotImplementedException> { source.onNext(1) }
         assertEquals(2, heartBeat)
-    }
-
-    @Test(timeout=300_000)
-    fun `test OnResilientSubscribe strictMode = false will not replace SafeSubscriber subclass`() {
-        var heartBeat = 0
-        val customSafeSubscriber = CustomSafeSubscriber(
-            Subscribers.create<Int> {
-                heartBeat++
-                throw IllegalArgumentException()
-            })
-
-        val source = PublishSubject.create<Int>()
-        source.resilientOnError().subscribe(customSafeSubscriber) // it should not replace CustomSafeSubscriber with ResilientSubscriber
-
-        assertFailsWith<OnErrorNotImplementedException> { source.onNext(1) }
-        source.onNext(1)
-        assertEquals(1, heartBeat)
     }
 
     @Test(timeout=300_000)

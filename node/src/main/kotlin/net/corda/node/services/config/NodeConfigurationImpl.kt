@@ -47,7 +47,7 @@ data class NodeConfigurationImpl(
         private val rpcSettings: NodeRpcSettings,
         override val messagingServerAddress: NetworkHostAndPort?,
         override val messagingServerExternal: Boolean = Defaults.messagingServerExternal(messagingServerAddress),
-        override val notary: NotaryConfig?,
+//        override val notary: NotaryConfig?,
         @Suppress("DEPRECATION")
         @Deprecated("Do not configure")
         override val certificateChainCheckPolicies: List<CertChainPolicyConfig> = Defaults.certificateChainCheckPolicies,

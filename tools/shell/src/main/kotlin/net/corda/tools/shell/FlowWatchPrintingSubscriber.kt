@@ -6,7 +6,6 @@ import net.corda.core.context.InvocationContext
 import net.corda.core.messaging.StateMachineUpdate
 import net.corda.core.messaging.StateMachineUpdate.Added
 import net.corda.core.messaging.StateMachineUpdate.Removed
-import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.Try
 import org.crsh.text.Color
 import org.crsh.text.Decoration
@@ -112,7 +111,7 @@ class FlowWatchPrintingSubscriber(private val toStream: RenderPrintWriter) : Sub
     private fun formatFlowResult(flowResult: Try<*>): String {
         fun successFormat(value: Any?): String {
             return when (value) {
-                is SignedTransaction -> "Tx ID: " + value.id.toString()
+//                is SignedTransaction -> "Tx ID: " + value.id.toString()
                 is kotlin.Unit -> "No return value"
                 null -> "No return value"
                 else -> value.toString()

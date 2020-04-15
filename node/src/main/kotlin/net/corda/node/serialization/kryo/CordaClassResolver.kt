@@ -11,7 +11,6 @@ import net.corda.core.internal.writer
 import net.corda.core.serialization.internal.CheckpointSerializationContext
 import net.corda.core.serialization.ClassWhitelist
 import net.corda.core.utilities.contextLogger
-import net.corda.core.serialization.internal.AttachmentsClassLoader
 import net.corda.serialization.internal.MutableClassWhitelist
 import net.corda.serialization.internal.TransientClassWhiteList
 import net.corda.serialization.internal.amqp.hasCordaSerializable
@@ -108,10 +107,8 @@ class CordaClassResolver(serializationContext: CheckpointSerializationContext) :
     // We also do not allow extension of KryoSerializable for annotated classes, or combination with @DefaultSerializer for custom serialisation.
     // TODO: Later we can support annotations on attachment classes and spin up a proxy via bytecode that we know is harmless.
     private fun checkForAnnotation(type: Class<*>): Boolean {
-        return (type.classLoader !is AttachmentsClassLoader)
-                && !KryoSerializable::class.java.isAssignableFrom(type)
-                && !type.isAnnotationPresent(DefaultSerializer::class.java)
-                && hasCordaSerializable(type)
+//        return (type.classLoader !is AttachmentsClassLoader) &&
+        return !KryoSerializable::class.java.isAssignableFrom(type) && !type.isAnnotationPresent(DefaultSerializer::class.java) && hasCordaSerializable(type)
     }
 
     // Need to clear out class names from attachments.
@@ -122,7 +119,7 @@ class CordaClassResolver(serializationContext: CheckpointSerializationContext) :
         if (nameToClass != null) {
             val classesToRemove: MutableList<String> = ArrayList(nameToClass.size)
             nameToClass.entries()
-                    .filter { it.value.classLoader is AttachmentsClassLoader }
+//                    .filter { it.value.classLoader is AttachmentsClassLoader }
                     .forEach { classesToRemove += it.key }
             for (className in classesToRemove) {
                 nameToClass.remove(className)

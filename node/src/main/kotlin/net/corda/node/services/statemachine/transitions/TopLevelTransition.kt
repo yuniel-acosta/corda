@@ -37,7 +37,7 @@ class TopLevelTransition(
             is Event.DoRemainingWork -> DoRemainingWorkTransition(context, startingState).transition()
             is Event.DeliverSessionMessage -> DeliverSessionMessageTransition(context, startingState, event).transition()
             is Event.Error -> errorTransition(event)
-            is Event.TransactionCommitted -> transactionCommittedTransition(event)
+//            is Event.TransactionCommitted -> transactionCommittedTransition(event)
             is Event.SoftShutdown -> softShutdownTransition()
             is Event.StartErrorPropagation -> startErrorPropagationTransition()
             is Event.EnterSubFlow -> enterSubFlowTransition(event)
@@ -58,32 +58,32 @@ class TopLevelTransition(
         }
     }
 
-    private fun transactionCommittedTransition(event: Event.TransactionCommitted): TransitionResult {
-        return builder {
-            val checkpoint = currentState.checkpoint
-            if (isWaitingForLedgerCommit(currentState, checkpoint, event.transaction.id)) {
-                currentState = currentState.copy(isWaitingForFuture = false)
-                if (isErrored()) {
-                    return@builder FlowContinuation.ProcessEvents
-                }
-                resumeFlowLogic(event.transaction)
-            } else {
-                freshErrorTransition(UnexpectedEventInState())
-                FlowContinuation.ProcessEvents
-            }
-        }
-    }
+//    private fun transactionCommittedTransition(event: Event.TransactionCommitted): TransitionResult {
+//        return builder {
+//            val checkpoint = currentState.checkpoint
+//            if (isWaitingForLedgerCommit(currentState, checkpoint, event.transaction.id)) {
+//                currentState = currentState.copy(isWaitingForFuture = false)
+//                if (isErrored()) {
+//                    return@builder FlowContinuation.ProcessEvents
+//                }
+//                resumeFlowLogic(event.transaction)
+//            } else {
+//                freshErrorTransition(UnexpectedEventInState())
+//                FlowContinuation.ProcessEvents
+//            }
+//        }
+//    }
 
-    private fun isWaitingForLedgerCommit(
-        currentState: StateMachineState,
-        checkpoint: Checkpoint,
-        transactionId: SecureHash
-    ): Boolean {
-        return currentState.isWaitingForFuture &&
-                checkpoint.flowState is FlowState.Started &&
-                checkpoint.flowState.flowIORequest is FlowIORequest.WaitForLedgerCommit &&
-                checkpoint.flowState.flowIORequest.hash == transactionId
-    }
+//    private fun isWaitingForLedgerCommit(
+//        currentState: StateMachineState,
+//        checkpoint: Checkpoint,
+//        transactionId: SecureHash
+//    ): Boolean {
+//        return currentState.isWaitingForFuture &&
+//                checkpoint.flowState is FlowState.Started &&
+//                checkpoint.flowState.flowIORequest is FlowIORequest.WaitForLedgerCommit &&
+//                checkpoint.flowState.flowIORequest.hash == transactionId
+//    }
 
     private fun softShutdownTransition(): TransitionResult {
         val lastState = startingState.copy(isRemoved = true)
@@ -219,7 +219,7 @@ class TopLevelTransition(
                     }
                     actions.addAll(arrayOf(
                             Action.PersistDeduplicationFacts(pendingDeduplicationHandlers),
-                            Action.ReleaseSoftLocks(event.softLocksId),
+//                            Action.ReleaseSoftLocks(event.softLocksId),
                             Action.CommitTransaction,
                             Action.AcknowledgeMessages(pendingDeduplicationHandlers),
                             Action.RemoveSessionBindings(allSourceSessionIds),

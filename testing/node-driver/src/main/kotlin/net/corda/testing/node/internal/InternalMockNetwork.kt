@@ -13,7 +13,6 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.internal.*
-import net.corda.core.internal.notary.NotaryService
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.messaging.MessageRecipients
 import net.corda.core.messaging.RPCOps
@@ -111,7 +110,7 @@ interface TestStartedNode {
     val rpcOps: CordaRPCOps
     val network: MockNodeMessagingService
     val database: CordaPersistence
-    val notaryService: NotaryService?
+//    val notaryService: NotaryService?
 
     fun dispose() = internals.stop()
 
@@ -175,34 +174,34 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
     /** A read only view of the current set of nodes. */
     val nodes: List<MockNode> get() = _nodes
 
-    /**
-     * Returns the list of nodes started by the network. Each notary specified when the network is constructed ([notarySpecs]
-     * parameter) maps 1:1 to the notaries returned by this list.
-     */
-    val notaryNodes: List<TestStartedNode>
+//    /**
+//     * Returns the list of nodes started by the network. Each notary specified when the network is constructed ([notarySpecs]
+//     * parameter) maps 1:1 to the notaries returned by this list.
+//     */
+//    val notaryNodes: List<TestStartedNode>
 
-    /**
-     * Returns the single notary node on the network. Throws if there are none or more than one.
-     * @see notaryNodes
-     */
-    val defaultNotaryNode: TestStartedNode
-        get() {
-            return when (notaryNodes.size) {
-                0 -> throw IllegalStateException("There are no notaries defined on the network")
-                1 -> notaryNodes[0]
-                else -> throw IllegalStateException("There is more than one notary defined on the network")
-            }
-        }
+//    /**
+//     * Returns the single notary node on the network. Throws if there are none or more than one.
+//     * @see notaryNodes
+//     */
+//    val defaultNotaryNode: TestStartedNode
+//        get() {
+//            return when (notaryNodes.size) {
+//                0 -> throw IllegalStateException("There are no notaries defined on the network")
+//                1 -> notaryNodes[0]
+//                else -> throw IllegalStateException("There is more than one notary defined on the network")
+//            }
+//        }
 
-    /**
-     * Return the identity of the default notary node.
-     * @see defaultNotaryNode
-     */
-    val defaultNotaryIdentity: Party
-        get() {
-            return defaultNotaryNode.info.legalIdentities.singleOrNull()
-                    ?: throw IllegalStateException("Default notary has multiple identities")
-        }
+//    /**
+//     * Return the identity of the default notary node.
+//     * @see defaultNotaryNode
+//     */
+//    val defaultNotaryIdentity: Party
+//        get() {
+//            return defaultNotaryNode.info.legalIdentities.singleOrNull()
+//                    ?: throw IllegalStateException("Default notary has multiple identities")
+//        }
 
     /**
      * Because this executor is shared, we need to be careful about nodes shutting it down.
@@ -228,35 +227,35 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
 
     init {
         try {
-            val notaryInfos = generateNotaryIdentities()
-            networkParameters = initialNetworkParameters.copy(notaries = notaryInfos)
+//            val notaryInfos = generateNotaryIdentities()
+//            networkParameters = initialNetworkParameters.copy(notaries = notaryInfos)
             // The network parameters must be serialised before starting any of the nodes
-            networkParametersCopier = NetworkParametersCopier(networkParameters)
-            @Suppress("LeakingThis")
+            networkParametersCopier = NetworkParametersCopier(initialNetworkParameters)
+//            @Suppress("LeakingThis")
             // Notary nodes need a platform version >= network min platform version.
-            notaryNodes = createNotaries()
+//            notaryNodes = createNotaries()
         } catch (t: Throwable) {
             stopNodes()
             throw t
         }
     }
 
-    private fun generateNotaryIdentities(): List<NotaryInfo> {
-        return notarySpecs.mapIndexed { index, (name, validating) ->
-            val identity = DevIdentityGenerator.installKeyStoreWithNodeIdentity(baseDirectory(nextNodeId + index), name)
-            NotaryInfo(identity, validating)
-        }
-    }
-
-    @VisibleForTesting
-    internal open fun createNotaries(): List<TestStartedNode> {
-        return notarySpecs.map { spec ->
-            createNode(InternalMockNodeParameters(
-                    legalName = spec.name,
-                    configOverrides = { doReturn(NotaryConfig(spec.validating, className = spec.className)).whenever(it).notary }
-            ))
-        }
-    }
+//    private fun generateNotaryIdentities(): List<NotaryInfo> {
+//        return notarySpecs.mapIndexed { index, (name, validating) ->
+//            val identity = DevIdentityGenerator.installKeyStoreWithNodeIdentity(baseDirectory(nextNodeId + index), name)
+//            NotaryInfo(identity, validating)
+//        }
+//    }
+//
+//    @VisibleForTesting
+//    internal open fun createNotaries(): List<TestStartedNode> {
+//        return notarySpecs.map { spec ->
+//            createNode(InternalMockNodeParameters(
+//                    legalName = spec.name,
+//                    configOverrides = { doReturn(NotaryConfig(spec.validating, className = spec.className)).whenever(it).notary }
+//            ))
+//        }
+//    }
 
     private fun getServerThread(id: Int): ServiceAffinityExecutor {
         return if (threadPerNode) {
@@ -289,8 +288,9 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
                 override val info: NodeInfo,
                 override val smm: StateMachineManager,
                 override val database: CordaPersistence,
-                override val rpcOps: CordaRPCOps,
-                override val notaryService: NotaryService?) : TestStartedNode {
+                override val rpcOps: CordaRPCOps//,
+//                override val notaryService: NotaryService?
+        ) : TestStartedNode {
 
             override fun dispose() = internals.stop()
 
@@ -328,7 +328,7 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
 
         override val started: TestStartedNode? get() = super.started
 
-        override fun createStartedNode(nodeInfo: NodeInfo, rpcOps: CordaRPCOps, notaryService: NotaryService?): TestStartedNode {
+        override fun createStartedNode(nodeInfo: NodeInfo, rpcOps: CordaRPCOps): TestStartedNode {
             return TestStartedNodeImpl(
                     this,
                     attachments,
@@ -337,8 +337,8 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
                     nodeInfo,
                     smm,
                     database,
-                    rpcOps,
-                    notaryService
+                    rpcOps//,
+//                    notaryService
             )
         }
 
@@ -363,9 +363,9 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
 
         override fun startMessagingService(rpcOps: RPCOps,
                                            nodeInfo: NodeInfo,
-                                           myNotaryIdentity: PartyAndCertificate?,
+//                                           myNotaryIdentity: PartyAndCertificate?,
                                            networkParameters: NetworkParameters) {
-            (network as MockNodeMessagingService).start(mockNet.messagingNetwork, !mockNet.threadPerNode, id, myNotaryIdentity)
+            (network as MockNodeMessagingService).start(mockNet.messagingNetwork, !mockNet.threadPerNode, id)
         }
 
         fun setMessagingServiceSpy(spy: MessagingServiceSpy) {
@@ -602,7 +602,7 @@ private fun mockNodeConfiguration(certificatesDirectory: Path): NodeConfiguratio
         doReturn(p2pSslConfiguration).whenever(it).p2pSslOptions
         doReturn(signingCertificateStore).whenever(it).signingCertificateStore
         doReturn(emptyList<User>()).whenever(it).rpcUsers
-        doReturn(null).whenever(it).notary
+//        doReturn(null).whenever(it).notary
         doReturn(DatabaseConfig()).whenever(it).database
         doReturn("").whenever(it).emailAddress
         doReturn(null).whenever(it).jmxMonitoringHttpPort

@@ -64,9 +64,9 @@ abstract class CordaMigration : CustomTaskChange {
 
         cordaDB.transaction {
             identityService.ourNames = setOf(ourName)
-             val dbTransactions = DBTransactionStorage(cordaDB, cacheFactory, SimpleClock(Clock.systemUTC()))
+//             val dbTransactions = DBTransactionStorage(cordaDB, cacheFactory, SimpleClock(Clock.systemUTC()))
              val attachmentsService = NodeAttachmentService(metricRegistry, cacheFactory, cordaDB)
-            _servicesForResolution = MigrationServicesForResolution(identityService, attachmentsService, dbTransactions, cordaDB, cacheFactory)
+            _servicesForResolution = MigrationServicesForResolution(identityService, attachmentsService, cordaDB, cacheFactory)
         }
     }
 

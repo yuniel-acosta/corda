@@ -3,7 +3,6 @@ package net.corda.testing.internal.services
 import net.corda.core.contracts.Attachment
 import net.corda.core.node.services.AttachmentId
 import net.corda.core.node.services.AttachmentStorage
-import net.corda.core.node.services.vault.AttachmentQueryCriteria
 import net.corda.node.services.persistence.AttachmentStorageInternal
 import net.corda.testing.services.MockAttachmentStorage
 import java.io.InputStream
@@ -34,10 +33,10 @@ class InternalMockAttachmentStorage(storage: MockAttachmentStorage) : Attachment
         }
     }
 
-    override fun getAllAttachmentsByCriteria(criteria: AttachmentQueryCriteria): Stream<Pair<String?, Attachment>> {
-        return queryAttachments(criteria)
-            .map(this::openAttachment)
-            .map { null as String? to it!! }
-            .stream()
-    }
+//    override fun getAllAttachmentsByCriteria(criteria: AttachmentQueryCriteria): Stream<Pair<String?, Attachment>> {
+//        return queryAttachments(criteria)
+//            .map(this::openAttachment)
+//            .map { null as String? to it!! }
+//            .stream()
+//    }
 }

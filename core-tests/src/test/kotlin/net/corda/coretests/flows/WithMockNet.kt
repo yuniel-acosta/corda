@@ -1,14 +1,11 @@
 package net.corda.coretests.flows
 
 import com.natpryce.hamkrest.*
-import net.corda.core.contracts.ContractState
 import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.internal.FlowStateMachine
-import net.corda.core.transactions.SignedTransaction
-import net.corda.core.transactions.TransactionBuilder
 import net.corda.testing.core.makeUnique
 import net.corda.testing.node.internal.InternalMockNetwork
 import net.corda.testing.node.internal.TestStartedNode
@@ -33,17 +30,17 @@ interface WithMockNet {
     fun <T : Any> T.andRunNetwork(): T = apply { mockNet.runNetwork() }
 
     //region Operations
-    /**
-     * Sign an initial transaction
-     */
-    fun TestStartedNode.signInitialTransaction(build: TransactionBuilder.() -> TransactionBuilder) =
-            services.signInitialTransaction(TransactionBuilder(mockNet.defaultNotaryIdentity).build())
-
-    /**
-     * Retrieve the sole instance of a state of a particular class from the node's vault
-     */
-    fun <S : ContractState> TestStartedNode.getStateFromVault(stateClass: KClass<S>) =
-            services.vaultService.queryBy(stateClass.java).states.single()
+//    /**
+//     * Sign an initial transaction
+//     */
+//    fun TestStartedNode.signInitialTransaction(build: TransactionBuilder.() -> TransactionBuilder) =
+//            services.signInitialTransaction(TransactionBuilder(mockNet.defaultNotaryIdentity).build())
+//
+//    /**
+//     * Retrieve the sole instance of a state of a particular class from the node's vault
+//     */
+//    fun <S : ContractState> TestStartedNode.getStateFromVault(stateClass: KClass<S>) =
+//            services.vaultService.queryBy(stateClass.java).states.single()
 
     /**
      * Start a flow
@@ -67,19 +64,19 @@ interface WithMockNet {
     //endregion
 
     //region Matchers
-    /**
-     * The transaction has the required number of verified signatures
-     */
-    fun requiredSignatures(count: Int = 1) = object : Matcher<SignedTransaction> {
-        override val description: String = "A transaction with valid required signatures"
-
-        override fun invoke(actual: SignedTransaction): MatchResult = try {
-            actual.verifyRequiredSignatures()
-            has(SignedTransaction::sigs, hasSize(equalTo(count)))(actual)
-        } catch (e: Exception) {
-            MatchResult.Mismatch("$e")
-        }
-    }
+//    /**
+//     * The transaction has the required number of verified signatures
+//     */
+//    fun requiredSignatures(count: Int = 1) = object : Matcher<SignedTransaction> {
+//        override val description: String = "A transaction with valid required signatures"
+//
+//        override fun invoke(actual: SignedTransaction): MatchResult = try {
+//            actual.verifyRequiredSignatures()
+//            has(SignedTransaction::sigs, hasSize(equalTo(count)))(actual)
+//        } catch (e: Exception) {
+//            MatchResult.Mismatch("$e")
+//        }
+//    }
 
     /**
      * The exception has the expected error message

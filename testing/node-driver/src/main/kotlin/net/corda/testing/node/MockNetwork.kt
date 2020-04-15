@@ -316,22 +316,22 @@ open class MockNetwork(
     /** In a mock network, nodes have an incrementing integer ID. Real networks do not have this. Returns the next ID that will be used. */
     val nextNodeId get(): Int = internalMockNetwork.nextNodeId
 
-    /**
-     * Returns the single notary node on the network. Throws an exception if there are none or more than one.
-     * @see notaryNodes
-     */
-    val defaultNotaryNode get(): StartedMockNode = StartedMockNode.create(internalMockNetwork.defaultNotaryNode)
-
-    /**
-     * Return the identity of the default notary node.
-     * @see defaultNotaryNode
-     */
-    val defaultNotaryIdentity get(): Party = internalMockNetwork.defaultNotaryIdentity
-
-    /**
-     * Returns the list of notary nodes started by the network.
-     */
-    val notaryNodes get(): List<StartedMockNode> = internalMockNetwork.notaryNodes.map { StartedMockNode.create(it) }
+//    /**
+//     * Returns the single notary node on the network. Throws an exception if there are none or more than one.
+//     * @see notaryNodes
+//     */
+//    val defaultNotaryNode get(): StartedMockNode = StartedMockNode.create(internalMockNetwork.defaultNotaryNode)
+//
+//    /**
+//     * Return the identity of the default notary node.
+//     * @see defaultNotaryNode
+//     */
+//    val defaultNotaryIdentity get(): Party = internalMockNetwork.defaultNotaryIdentity
+//
+//    /**
+//     * Returns the list of notary nodes started by the network.
+//     */
+//    val notaryNodes get(): List<StartedMockNode> = internalMockNetwork.notaryNodes.map { StartedMockNode.create(it) }
 
     /** Create a started node with the given identity. **/
     fun createPartyNode(legalName: CordaX500Name? = null): StartedMockNode = StartedMockNode.create(internalMockNetwork.createPartyNode(legalName))

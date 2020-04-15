@@ -6,7 +6,6 @@ import net.corda.cliutils.CordaCliWrapper
 import net.corda.cliutils.ExitCodes
 import net.corda.cliutils.printError
 import net.corda.common.logging.CordaVersion
-import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.crypto.Crypto
 import net.corda.core.internal.*
 import net.corda.core.internal.concurrent.thenMatch
@@ -203,9 +202,9 @@ open class NodeStartup : NodeStartupLogging {
             logger.info("The Corda node is running in production mode. If this is a developer environment you can set 'devMode=true' in the node.conf file.")
         }
 
-        if (HashAttachmentConstraint.disableHashConstraints) {
-            Node.printWarning("Hash constraints checking has been disabled by the node operator.")
-        }
+//        if (HashAttachmentConstraint.disableHashConstraints) {
+//            Node.printWarning("Hash constraints checking has been disabled by the node operator.")
+//        }
 
         val nodeInfo = node.start()
         val loadedCodapps = node.services.cordappProvider.cordapps.filter { it.isLoaded }

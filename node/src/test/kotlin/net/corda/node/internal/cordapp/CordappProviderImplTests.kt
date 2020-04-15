@@ -93,16 +93,16 @@ class CordappProviderImplTests {
         assertEquals(expected, actual)
     }
 
-    @Test(timeout=300_000)
-	fun `test that we find an attachment for a cordapp contract class`() {
-        val provider = newCordappProvider(isolatedJAR)
-        val className = "net.corda.isolated.contracts.AnotherDummyContract"
-        val expected = provider.getAppContext(provider.cordapps.first()).attachmentId
-        val actual = provider.getContractAttachmentID(className)
-
-        assertNotNull(actual)
-        assertEquals(actual!!, expected)
-    }
+//    @Test(timeout=300_000)
+//	fun `test that we find an attachment for a cordapp contract class`() {
+//        val provider = newCordappProvider(isolatedJAR)
+//        val className = "net.corda.isolated.contracts.AnotherDummyContract"
+//        val expected = provider.getAppContext(provider.cordapps.first()).attachmentId
+//        val actual = provider.getContractAttachmentID(className)
+//
+//        assertNotNull(actual)
+//        assertEquals(actual!!, expected)
+//    }
 
     @Test(timeout=300_000)
 	fun `test cordapp configuration`() {

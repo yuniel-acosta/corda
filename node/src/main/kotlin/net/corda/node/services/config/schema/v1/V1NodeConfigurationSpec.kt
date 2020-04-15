@@ -24,7 +24,7 @@ internal object V1NodeConfigurationSpec : Configuration.Specification<NodeConfig
     private val certificateChainCheckPolicies by nested(CertChainPolicyConfigSpec).list().optional().withDefaultValue(Defaults.certificateChainCheckPolicies)
     private val verifierType by enum(VerifierType::class)
     private val flowTimeout by nested(FlowTimeoutConfigurationSpec)
-    private val notary by nested(NotaryConfigSpec).optional()
+//    private val notary by nested(NotaryConfigSpec).optional()
     private val additionalNodeInfoPollingFrequencyMsec by long().optional().withDefaultValue(Defaults.additionalNodeInfoPollingFrequencyMsec)
     private val p2pAddress by string().mapValid(::toNetworkHostAndPort)
     private val additionalP2PAddresses by string().mapValid(::toNetworkHostAndPort).list().optional().withDefaultValue(Defaults.additionalP2PAddresses)
@@ -90,7 +90,7 @@ internal object V1NodeConfigurationSpec : Configuration.Specification<NodeConfig
                     flowTimeout = configuration[flowTimeout],
                     rpcSettings = configuration[rpcSettings],
                     messagingServerAddress = configuration[messagingServerAddress],
-                    notary = configuration[notary],
+//                    notary = configuration[notary],
                     flowOverrides = configuration[flowOverrides],
                     additionalP2PAddresses = configuration[additionalP2PAddresses],
                     additionalNodeInfoPollingFrequencyMsec = configuration[additionalNodeInfoPollingFrequencyMsec],

@@ -2,7 +2,6 @@ package net.corda.node.internal.cordapp
 
 import com.google.common.collect.HashBiMap
 import net.corda.core.contracts.Attachment
-import net.corda.core.contracts.ContractClassName
 import net.corda.core.cordapp.Cordapp
 import net.corda.core.cordapp.CordappContext
 import net.corda.core.crypto.SecureHash
@@ -44,7 +43,7 @@ open class CordappProviderImpl(val cordappLoader: CordappLoader,
     override val cordapps: List<CordappImpl> get() = cordappLoader.cordapps
 
     fun start() {
-        cordappAttachments.putAll(loadContractsIntoAttachmentStore())
+//        cordappAttachments.putAll(loadContractsIntoAttachmentStore())
         verifyInstalledCordapps()
         // Load the fix-ups after uploading any new contracts into attachment storage.
         attachmentFixups.addAll(loadAttachmentFixups())
@@ -67,9 +66,9 @@ open class CordappProviderImpl(val cordappLoader: CordappLoader,
         throw IllegalStateException("Not in an app context")
     }
 
-    override fun getContractAttachmentID(contractClassName: ContractClassName): AttachmentId? {
-        return getCordappForClass(contractClassName)?.let(this::getCordappAttachmentId)
-    }
+//    override fun getContractAttachmentID(contractClassName: ContractClassName): AttachmentId? {
+//        return getCordappForClass(contractClassName)?.let(this::getCordappAttachmentId)
+//    }
 
     /**
      * Gets the attachment ID of this CorDapp. Only CorDapps with contracts have an attachment ID
@@ -79,31 +78,31 @@ open class CordappProviderImpl(val cordappLoader: CordappLoader,
      */
     fun getCordappAttachmentId(cordapp: Cordapp): SecureHash? = cordappAttachments.inverse()[cordapp.jarPath]
 
-    private fun loadContractsIntoAttachmentStore(): Map<SecureHash, URL> =
-            cordapps.filter { it.contractClassNames.isNotEmpty() }.map { cordapp ->
-                cordapp.jarPath.openStream().use { stream ->
-                    try {
-                        // This code can be reached by [MockNetwork] tests which uses [MockAttachmentStorage]
-                        // [MockAttachmentStorage] cannot implement [AttachmentStorageInternal] because
-                        // doing so results in internal functions being exposed in the public API.
-                        if (attachmentStorage is AttachmentStorageInternal) {
-                            attachmentStorage.privilegedImportAttachment(
-                                stream,
-                                DEPLOYED_CORDAPP_UPLOADER,
-                                cordapp.info.shortName
-                            )
-                        } else {
-                            attachmentStorage.importAttachment(
-                                stream,
-                                DEPLOYED_CORDAPP_UPLOADER,
-                                cordapp.info.shortName
-                            )
-                        }
-                    } catch (faee: java.nio.file.FileAlreadyExistsException) {
-                        AttachmentId.parse(faee.message!!)
-                    }
-                } to cordapp.jarPath
-            }.toMap()
+//    private fun loadContractsIntoAttachmentStore(): Map<SecureHash, URL> =
+//            cordapps.filter { it.contractClassNames.isNotEmpty() }.map { cordapp ->
+//                cordapp.jarPath.openStream().use { stream ->
+//                    try {
+//                        // This code can be reached by [MockNetwork] tests which uses [MockAttachmentStorage]
+//                        // [MockAttachmentStorage] cannot implement [AttachmentStorageInternal] because
+//                        // doing so results in internal functions being exposed in the public API.
+//                        if (attachmentStorage is AttachmentStorageInternal) {
+//                            attachmentStorage.privilegedImportAttachment(
+//                                stream,
+//                                DEPLOYED_CORDAPP_UPLOADER,
+//                                cordapp.info.shortName
+//                            )
+//                        } else {
+//                            attachmentStorage.importAttachment(
+//                                stream,
+//                                DEPLOYED_CORDAPP_UPLOADER,
+//                                cordapp.info.shortName
+//                            )
+//                        }
+//                    } catch (faee: java.nio.file.FileAlreadyExistsException) {
+//                        AttachmentId.parse(faee.message!!)
+//                    }
+//                } to cordapp.jarPath
+//            }.toMap()
 
     /**
      * Loads the "fixup" rules from all META-INF/Corda-Fixups files.
@@ -201,7 +200,7 @@ open class CordappProviderImpl(val cordappLoader: CordappLoader,
         return contextCache.computeIfAbsent(cordapp) {
             CordappContext.create(
                     cordapp,
-                    getCordappAttachmentId(cordapp),
+                    //getCordappAttachmentId(cordapp),
                     cordappLoader.appClassLoader,
                     TypesafeCordappConfig(cordappConfigProvider.getConfigByName(cordapp.name))
             )

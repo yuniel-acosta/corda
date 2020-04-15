@@ -58,7 +58,7 @@ class ActionExecutorImpl(
     override fun executeAction(fiber: FlowFiber, action: Action) {
         log.trace { "Flow ${fiber.id} executing $action" }
         return when (action) {
-            is Action.TrackTransaction -> executeTrackTransaction(fiber, action)
+//            is Action.TrackTransaction -> executeTrackTransaction(fiber, action)
             is Action.PersistCheckpoint -> executePersistCheckpoint(action)
             is Action.PersistDeduplicationFacts -> executePersistDeduplicationIds(action)
             is Action.AcknowledgeMessages -> executeAcknowledgeMessages(action)
@@ -76,27 +76,28 @@ class ActionExecutorImpl(
             is Action.RollbackTransaction -> executeRollbackTransaction()
             is Action.CommitTransaction -> executeCommitTransaction()
             is Action.ExecuteAsyncOperation -> executeAsyncOperation(fiber, action)
-            is Action.ReleaseSoftLocks -> executeReleaseSoftLocks(action)
+//            is Action.ReleaseSoftLocks -> executeReleaseSoftLocks(action)
             is Action.RetryFlowFromSafePoint -> executeRetryFlowFromSafePoint(action)
             is Action.ScheduleFlowTimeout -> scheduleFlowTimeout(action)
             is Action.CancelFlowTimeout -> cancelFlowTimeout(action)
         }
     }
-    private fun executeReleaseSoftLocks(action: Action.ReleaseSoftLocks) {
-        if (action.uuid != null) services.vaultService.softLockRelease(action.uuid)
-    }
 
-    @Suspendable
-    private fun executeTrackTransaction(fiber: FlowFiber, action: Action.TrackTransaction) {
-        services.validatedTransactions.trackTransactionWithNoWarning(action.hash).thenMatch(
-                success = { transaction ->
-                    fiber.scheduleEvent(Event.TransactionCommitted(transaction))
-                },
-                failure = { exception ->
-                    fiber.scheduleEvent(Event.Error(exception))
-                }
-        )
-    }
+//    private fun executeReleaseSoftLocks(action: Action.ReleaseSoftLocks) {
+//        if (action.uuid != null) services.vaultService.softLockRelease(action.uuid)
+//    }
+
+//    @Suspendable
+//    private fun executeTrackTransaction(fiber: FlowFiber, action: Action.TrackTransaction) {
+//        services.validatedTransactions.trackTransactionWithNoWarning(action.hash).thenMatch(
+//                success = { transaction ->
+//                    fiber.scheduleEvent(Event.TransactionCommitted(transaction))
+//                },
+//                failure = { exception ->
+//                    fiber.scheduleEvent(Event.Error(exception))
+//                }
+//        )
+//    }
 
     @Suspendable
     private fun executePersistCheckpoint(action: Action.PersistCheckpoint) {

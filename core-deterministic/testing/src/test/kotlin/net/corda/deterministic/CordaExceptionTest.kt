@@ -1,9 +1,9 @@
 package net.corda.deterministic
 
 import net.corda.core.CordaException
-import net.corda.core.contracts.AttachmentResolutionException
-import net.corda.core.contracts.TransactionResolutionException
-import net.corda.core.contracts.TransactionVerificationException.*
+//import net.corda.core.contracts.AttachmentResolutionException
+//import net.corda.core.contracts.TransactionResolutionException
+//import net.corda.core.contracts.TransactionVerificationException.*
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -41,30 +41,30 @@ class CordaExceptionTest {
         assertEquals("BAD THING", ex.message)
     }
 
-    @Test(timeout=300_000)
-	fun testAttachmentResolutionException() {
-        val ex = assertFailsWith<AttachmentResolutionException> { throw AttachmentResolutionException(TEST_HASH) }
-        assertEquals(TEST_HASH, ex.hash)
-    }
-
-    @Test(timeout=300_000)
-	fun testTransactionResolutionException() {
-        val ex = assertFailsWith<TransactionResolutionException> { throw TransactionResolutionException(TEST_HASH) }
-        assertEquals(TEST_HASH, ex.hash)
-    }
-
-    @Test(timeout=300_000)
-	fun testConflictingAttachmentsRejection() {
-        val ex = assertFailsWith<ConflictingAttachmentsRejection> { throw ConflictingAttachmentsRejection(TX_ID, CONTRACT_CLASS) }
-        assertEquals(TX_ID, ex.txId)
-        assertEquals(CONTRACT_CLASS, ex.contractClass)
-    }
-
-    @Test(timeout=300_000)
-	fun testNotaryChangeInWrongTransactionType() {
-        val ex = assertFailsWith<NotaryChangeInWrongTransactionType> { throw NotaryChangeInWrongTransactionType(TX_ID, ALICE, BOB) }
-        assertEquals(TX_ID, ex.txId)
-        assertEquals(ALICE, ex.txNotary)
-        assertEquals(BOB, ex.outputNotary)
-    }
+//    @Test(timeout=300_000)
+//	fun testAttachmentResolutionException() {
+//        val ex = assertFailsWith<AttachmentResolutionException> { throw AttachmentResolutionException(TEST_HASH) }
+//        assertEquals(TEST_HASH, ex.hash)
+//    }
+//
+//    @Test(timeout=300_000)
+//	fun testTransactionResolutionException() {
+//        val ex = assertFailsWith<TransactionResolutionException> { throw TransactionResolutionException(TEST_HASH) }
+//        assertEquals(TEST_HASH, ex.hash)
+//    }
+//
+//    @Test(timeout=300_000)
+//	fun testConflictingAttachmentsRejection() {
+//        val ex = assertFailsWith<ConflictingAttachmentsRejection> { throw ConflictingAttachmentsRejection(TX_ID, CONTRACT_CLASS) }
+//        assertEquals(TX_ID, ex.txId)
+//        assertEquals(CONTRACT_CLASS, ex.contractClass)
+//    }
+//
+//    @Test(timeout=300_000)
+//	fun testNotaryChangeInWrongTransactionType() {
+//        val ex = assertFailsWith<NotaryChangeInWrongTransactionType> { throw NotaryChangeInWrongTransactionType(TX_ID, ALICE, BOB) }
+//        assertEquals(TX_ID, ex.txId)
+//        assertEquals(ALICE, ex.txNotary)
+//        assertEquals(BOB, ex.outputNotary)
+//    }
 }

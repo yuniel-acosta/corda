@@ -1,7 +1,6 @@
 package net.corda.nodeapi.internal.persistence
 
 import net.corda.core.schemas.MappedSchema
-import net.corda.core.schemas.PersistentState
 import net.corda.node.internal.DataSourceFactory
 import net.corda.node.services.persistence.DBCheckpointStorage
 import net.corda.node.services.schema.NodeSchemaService
@@ -18,15 +17,15 @@ import javax.persistence.Entity
 import javax.sql.DataSource
 
 class MissingSchemaMigrationTest {
-    object TestSchemaFamily
-
-    object GoodSchema : MappedSchema(schemaFamily = TestSchemaFamily.javaClass, version = 1, mappedTypes = listOf(State::class.java)) {
-        @Entity
-        class State(
-                @Column
-                var id: String
-        ) : PersistentState()
-    }
+//    object TestSchemaFamily
+//
+//    object GoodSchema : MappedSchema(schemaFamily = TestSchemaFamily.javaClass, version = 1, mappedTypes = listOf(State::class.java)) {
+//        @Entity
+//        class State(
+//                @Column
+//                var id: String
+//        ) : PersistentState()
+//    }
 
     lateinit var hikariProperties: Properties
     lateinit var dataSource: DataSource
@@ -43,21 +42,21 @@ class MissingSchemaMigrationTest {
                 TestIdentity(ALICE_NAME, 70).name, forceThrowOnMissingMigration)
     }
 
-    @Test(timeout=300_000)
-	fun `test that an error is thrown when forceThrowOnMissingMigration is set and a mapped schema is missing a migration`() {
-        assertThatThrownBy {
-            createSchemaMigration(setOf(GoodSchema), true)
-                .nodeStartup(dataSource.connection.use { DBCheckpointStorage().getCheckpointCount(it) != 0L })
-        }.isInstanceOf(MissingMigrationException::class.java)
-    }
-
-    @Test(timeout=300_000)
-	fun `test that an error is not thrown when forceThrowOnMissingMigration is not set and a mapped schema is missing a migration`() {
-        assertDoesNotThrow {
-            createSchemaMigration(setOf(GoodSchema), false)
-                    .nodeStartup(dataSource.connection.use { DBCheckpointStorage().getCheckpointCount(it) != 0L })
-        }
-    }
+//    @Test(timeout=300_000)
+//	fun `test that an error is thrown when forceThrowOnMissingMigration is set and a mapped schema is missing a migration`() {
+//        assertThatThrownBy {
+//            createSchemaMigration(setOf(GoodSchema), true)
+//                .nodeStartup(dataSource.connection.use { DBCheckpointStorage().getCheckpointCount(it) != 0L })
+//        }.isInstanceOf(MissingMigrationException::class.java)
+//    }
+//
+//    @Test(timeout=300_000)
+//	fun `test that an error is not thrown when forceThrowOnMissingMigration is not set and a mapped schema is missing a migration`() {
+//        assertDoesNotThrow {
+//            createSchemaMigration(setOf(GoodSchema), false)
+//                    .nodeStartup(dataSource.connection.use { DBCheckpointStorage().getCheckpointCount(it) != 0L })
+//        }
+//    }
 
     @Test(timeout=300_000)
 	fun `test that there are no missing migrations for the node`() {

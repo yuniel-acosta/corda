@@ -15,9 +15,7 @@ import net.corda.core.internal.concurrent.flatMap
 import net.corda.core.messaging.MessageRecipients
 import net.corda.core.utilities.UntrustworthyData
 import net.corda.core.utilities.unwrap
-import net.corda.node.services.FinalityHandler
 import net.corda.node.services.messaging.Message
-import net.corda.node.services.persistence.DBTransactionStorage
 import net.corda.nodeapi.internal.persistence.contextTransaction
 import net.corda.testing.common.internal.eventually
 import net.corda.testing.core.TestIdentity
@@ -54,7 +52,6 @@ class RetryFlowMockTest {
         mockNet.startNodes()
         RetryFlow.count = 0
         SendAndRetryFlow.count = 0
-        RetryInsertFlow.count = 0
         KeepSendingFlow.count.set(0)
         StaffedFlowHospital.DatabaseEndocrinologist.customConditions.add { t -> t is LimitedRetryCausingError }
         StaffedFlowHospital.DatabaseEndocrinologist.customConditions.add { t -> t is RetryCausingError }
@@ -124,11 +121,11 @@ class RetryFlowMockTest {
         assertNull(messagesSent.last().senderUUID)
     }
 
-    @Test(timeout=300_000)
-	fun `Retry duplicate insert`() {
-        assertEquals(Unit, nodeA.startFlow(RetryInsertFlow(1)).get())
-        assertEquals(2, RetryInsertFlow.count)
-    }
+//    @Test(timeout=300_000)
+//	fun `Retry duplicate insert`() {
+//        assertEquals(Unit, nodeA.startFlow(RetryInsertFlow(1)).get())
+//        assertEquals(2, RetryInsertFlow.count)
+//    }
 
     @Test(timeout=300_000)
 	fun `Patient records do not leak in hospital`() {
@@ -139,52 +136,52 @@ class RetryFlowMockTest {
         assertEquals(2, RetryFlow.count)
     }
 
-    @Test(timeout=300_000)
-	fun `Patient records do not leak in hospital when using killFlow`() {
-        // Make sure we have seen an update from the hospital, and thus the flow went there.
-        val alice = TestIdentity(CordaX500Name.parse("L=London,O=Alice Ltd,OU=Trade,C=GB")).party
-        val records = nodeA.smm.flowHospital.track().updates.toBlocking().toIterable().iterator()
-        val flow: FlowStateMachine<Unit> = nodeA.services.startFlow(FinalityHandler(object : FlowSession() {
-            override val destination: Destination get() = alice
-            override val counterparty: Party get() = alice
-
-            override fun getCounterpartyFlowInfo(maySkipCheckpoint: Boolean): FlowInfo {
-                TODO("not implemented")
-            }
-
-            override fun getCounterpartyFlowInfo(): FlowInfo {
-                TODO("not implemented")
-            }
-
-            override fun <R : Any> sendAndReceive(receiveType: Class<R>, payload: Any, maySkipCheckpoint: Boolean): UntrustworthyData<R> {
-                TODO("not implemented")
-            }
-
-            override fun <R : Any> sendAndReceive(receiveType: Class<R>, payload: Any): UntrustworthyData<R> {
-                TODO("not implemented")
-            }
-
-            override fun <R : Any> receive(receiveType: Class<R>, maySkipCheckpoint: Boolean): UntrustworthyData<R> {
-                TODO("not implemented")
-            }
-
-            override fun <R : Any> receive(receiveType: Class<R>): UntrustworthyData<R> {
-                TODO("not implemented")
-            }
-
-            override fun send(payload: Any, maySkipCheckpoint: Boolean) {
-                TODO("not implemented")
-            }
-
-            override fun send(payload: Any) {
-                TODO("not implemented")
-            }
-        }), nodeA.services.newContext()).get()
-        records.next()
-        // Killing it should remove it.
-        nodeA.smm.killFlow(flow.id)
-        assertThat(nodeA.smm.flowHospital.track().snapshot).isEmpty()
-    }
+//    @Test(timeout=300_000)
+//	fun `Patient records do not leak in hospital when using killFlow`() {
+//        // Make sure we have seen an update from the hospital, and thus the flow went there.
+//        val alice = TestIdentity(CordaX500Name.parse("L=London,O=Alice Ltd,OU=Trade,C=GB")).party
+//        val records = nodeA.smm.flowHospital.track().updates.toBlocking().toIterable().iterator()
+//        val flow: FlowStateMachine<Unit> = nodeA.services.startFlow(FinalityHandler(object : FlowSession() {
+//            override val destination: Destination get() = alice
+//            override val counterparty: Party get() = alice
+//
+//            override fun getCounterpartyFlowInfo(maySkipCheckpoint: Boolean): FlowInfo {
+//                TODO("not implemented")
+//            }
+//
+//            override fun getCounterpartyFlowInfo(): FlowInfo {
+//                TODO("not implemented")
+//            }
+//
+//            override fun <R : Any> sendAndReceive(receiveType: Class<R>, payload: Any, maySkipCheckpoint: Boolean): UntrustworthyData<R> {
+//                TODO("not implemented")
+//            }
+//
+//            override fun <R : Any> sendAndReceive(receiveType: Class<R>, payload: Any): UntrustworthyData<R> {
+//                TODO("not implemented")
+//            }
+//
+//            override fun <R : Any> receive(receiveType: Class<R>, maySkipCheckpoint: Boolean): UntrustworthyData<R> {
+//                TODO("not implemented")
+//            }
+//
+//            override fun <R : Any> receive(receiveType: Class<R>): UntrustworthyData<R> {
+//                TODO("not implemented")
+//            }
+//
+//            override fun send(payload: Any, maySkipCheckpoint: Boolean) {
+//                TODO("not implemented")
+//            }
+//
+//            override fun send(payload: Any) {
+//                TODO("not implemented")
+//            }
+//        }), nodeA.services.newContext()).get()
+//        records.next()
+//        // Killing it should remove it.
+//        nodeA.smm.killFlow(flow.id)
+//        assertThat(nodeA.smm.flowHospital.track().snapshot).isEmpty()
+//    }
 
     class LimitedRetryCausingError : IllegalStateException("I am going to live forever")
 
@@ -267,27 +264,27 @@ class RetryFlowMockTest {
         }
     }
 
-    class RetryInsertFlow(private val i: Int) : FlowLogic<Unit>() {
-        companion object {
-            @Volatile
-            var count = 0
-        }
-
-        @Suspendable
-        override fun call() {
-            logger.info("Hello")
-            doInsert()
-            // Checkpoint so we roll back to here
-            FlowLogic.sleep(Duration.ofSeconds(0))
-            if (count++ < i) {
-                doInsert()
-            }
-        }
-
-        private fun doInsert() {
-            val tx = DBTransactionStorage.DBTransaction("Foo", null, Utils.EMPTY_BYTES,
-                    DBTransactionStorage.TransactionStatus.VERIFIED, Instant.now())
-            contextTransaction.session.save(tx)
-        }
-    }
+//    class RetryInsertFlow(private val i: Int) : FlowLogic<Unit>() {
+//        companion object {
+//            @Volatile
+//            var count = 0
+//        }
+//
+//        @Suspendable
+//        override fun call() {
+//            logger.info("Hello")
+//            doInsert()
+//            // Checkpoint so we roll back to here
+//            FlowLogic.sleep(Duration.ofSeconds(0))
+//            if (count++ < i) {
+//                doInsert()
+//            }
+//        }
+//
+//        private fun doInsert() {
+//            val tx = DBTransactionStorage.DBTransaction("Foo", null, Utils.EMPTY_BYTES,
+//                    DBTransactionStorage.TransactionStatus.VERIFIED, Instant.now())
+//            contextTransaction.session.save(tx)
+//        }
+//    }
 }

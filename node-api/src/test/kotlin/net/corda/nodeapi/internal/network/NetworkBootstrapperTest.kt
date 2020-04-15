@@ -64,7 +64,7 @@ class NetworkBootstrapperTest {
         }
     }
 
-    private val contractsJars = hashMapOf<Path, TestContractsJar>()
+//    private val contractsJars = hashMapOf<Path, TestContractsJar>()
 
     private val bootstrapper = NetworkBootstrapper(
             initSerEnv = false,
@@ -78,8 +78,8 @@ class NetworkBootstrapperTest {
                     }
                     file
                 }
-            },
-            contractsJarConverter = { contractsJars[it]!! }
+            }//,
+//            contractsJarConverter = { contractsJars[it]!! }
     )
 
     private val aliceConfig = FakeNodeConfig(ALICE_NAME)
@@ -351,7 +351,7 @@ class NetworkBootstrapperTest {
     private fun createFakeCordappJar(cordappName: String, contractClassNames: List<String>): ByteArray {
         val cordappJarFile = rootDir / "$cordappName.jar"
         val cordappBytes = fakeFileBytes(cordappJarFile)
-        contractsJars[cordappJarFile] = TestContractsJar(cordappBytes.sha256(), contractClassNames)
+//        contractsJars[cordappJarFile] = TestContractsJar(cordappBytes.sha256(), contractClassNames)
         return cordappBytes
     }
 

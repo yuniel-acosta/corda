@@ -308,7 +308,7 @@ class NodeConfigurationImplTest {
                 p2pAddress = NetworkHostAndPort("localhost", 0),
                 messagingServerAddress = null,
                 flowTimeout = FlowTimeoutConfiguration(5.seconds, 3, 1.0),
-                notary = null,
+//                notary = null,
                 devMode = true,
                 noLocalShell = false,
                 rpcSettings = rpcSettings,

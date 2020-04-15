@@ -6,7 +6,6 @@ import co.paralleluniverse.strands.Strand
 import co.paralleluniverse.strands.concurrent.Semaphore
 import net.corda.client.rpc.notUsed
 import net.corda.core.concurrent.CordaFuture
-import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.random63BitValue
 import net.corda.core.flows.*
@@ -15,22 +14,16 @@ import net.corda.core.internal.DeclaredField
 import net.corda.core.internal.concurrent.flatMap
 import net.corda.core.messaging.MessageRecipients
 import net.corda.core.node.services.PartyInfo
-import net.corda.core.node.services.queryBy
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 import net.corda.core.toFuture
-import net.corda.core.transactions.SignedTransaction
-import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.ProgressTracker.Change
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.unwrap
 import net.corda.node.services.persistence.checkpoints
-import net.corda.testing.contracts.DummyContract
-import net.corda.testing.contracts.DummyState
 import net.corda.testing.core.ALICE_NAME
 import net.corda.testing.core.BOB_NAME
-import net.corda.testing.core.dummyCommand
 import net.corda.testing.core.singleIdentity
 import net.corda.testing.flows.registerCordappFlowFactory
 import net.corda.testing.internal.LogHelper
@@ -82,7 +75,6 @@ class FlowFrameworkTests {
         // Extract identities
         alice = aliceNode.info.singleIdentity()
         bob = bobNode.info.singleIdentity()
-        notaryIdentity = mockNet.defaultNotaryIdentity
 
         receivedSessionMessagesObservable().forEach { receivedSessionMessages += it }
     }
@@ -343,45 +335,45 @@ class FlowFrameworkTests {
         }
     }
 
-    @Test(timeout=300_000)
-	fun waitForLedgerCommit() {
-        val ptx = TransactionBuilder(notary = notaryIdentity)
-            .addOutputState(DummyState(), DummyContract.PROGRAM_ID)
-            .addCommand(dummyCommand(alice.owningKey))
-        val stx = aliceNode.services.signInitialTransaction(ptx)
+//    @Test(timeout=300_000)
+//	fun waitForLedgerCommit() {
+//        val ptx = TransactionBuilder(notary = notaryIdentity)
+//            .addOutputState(DummyState(), DummyContract.PROGRAM_ID)
+//            .addCommand(dummyCommand(alice.owningKey))
+//        val stx = aliceNode.services.signInitialTransaction(ptx)
+//
+//        val committerStx = aliceNode.registerCordappFlowFactory(CommitterFlow::class) {
+//            CommitReceiverFlow(it, stx.id)
+//        }.flatMap { it.stateMachine.resultFuture }
+//        // The waitForLedgerCommit call has to occur on separate flow
+//        val waiterStx = bobNode.services.startFlow(WaitForLedgerCommitFlow(stx.id)).resultFuture
+//        val commitReceiverStx = bobNode.services.startFlow(CommitterFlow(stx, alice)).resultFuture
+//        mockNet.runNetwork()
+//        assertThat(committerStx.getOrThrow()).isEqualTo(waiterStx.getOrThrow()).isEqualTo(commitReceiverStx.getOrThrow())
+//    }
+//
+//    @Test(timeout=300_000)
+//	fun `waitForLedgerCommit throws exception if any active session ends in error`() {
+//        val ptx = TransactionBuilder(notary = notaryIdentity)
+//            .addOutputState(DummyState(), DummyContract.PROGRAM_ID)
+//            .addCommand(dummyCommand())
+//        val stx = aliceNode.services.signInitialTransaction(ptx)
+//
+//        aliceNode.registerCordappFlowFactory(WaitForLedgerCommitFlow::class) { ExceptionFlow { throw Exception("Error") } }
+//        val waiter = bobNode.services.startFlow(WaitForLedgerCommitFlow(stx.id, alice)).resultFuture
+//        mockNet.runNetwork()
+//        assertThatExceptionOfType(UnexpectedFlowEndException::class.java).isThrownBy {
+//            waiter.getOrThrow()
+//        }
+//    }
 
-        val committerStx = aliceNode.registerCordappFlowFactory(CommitterFlow::class) {
-            CommitReceiverFlow(it, stx.id)
-        }.flatMap { it.stateMachine.resultFuture }
-        // The waitForLedgerCommit call has to occur on separate flow
-        val waiterStx = bobNode.services.startFlow(WaitForLedgerCommitFlow(stx.id)).resultFuture
-        val commitReceiverStx = bobNode.services.startFlow(CommitterFlow(stx, alice)).resultFuture
-        mockNet.runNetwork()
-        assertThat(committerStx.getOrThrow()).isEqualTo(waiterStx.getOrThrow()).isEqualTo(commitReceiverStx.getOrThrow())
-    }
-
-    @Test(timeout=300_000)
-	fun `waitForLedgerCommit throws exception if any active session ends in error`() {
-        val ptx = TransactionBuilder(notary = notaryIdentity)
-            .addOutputState(DummyState(), DummyContract.PROGRAM_ID)
-            .addCommand(dummyCommand())
-        val stx = aliceNode.services.signInitialTransaction(ptx)
-
-        aliceNode.registerCordappFlowFactory(WaitForLedgerCommitFlow::class) { ExceptionFlow { throw Exception("Error") } }
-        val waiter = bobNode.services.startFlow(WaitForLedgerCommitFlow(stx.id, alice)).resultFuture
-        mockNet.runNetwork()
-        assertThatExceptionOfType(UnexpectedFlowEndException::class.java).isThrownBy {
-            waiter.getOrThrow()
-        }
-    }
-
-    @Test(timeout=300_000)
-	fun `verify vault query service is tokenizable by force checkpointing within a flow`() {
-        aliceNode.registerCordappFlowFactory(VaultQueryFlow::class) { InitiatedSendFlow("Hello", it) }
-        val result = bobNode.services.startFlow(VaultQueryFlow(alice)).resultFuture
-        mockNet.runNetwork()
-        result.getOrThrow()
-    }
+//    @Test(timeout=300_000)
+//	fun `verify vault query service is tokenizable by force checkpointing within a flow`() {
+//        aliceNode.registerCordappFlowFactory(VaultQueryFlow::class) { InitiatedSendFlow("Hello", it) }
+//        val result = bobNode.services.startFlow(VaultQueryFlow(alice)).resultFuture
+//        mockNet.runNetwork()
+//        result.getOrThrow()
+//    }
 
     @Test(timeout=300_000)
 	fun `customised client flow`() {
@@ -588,30 +580,30 @@ class FlowFrameworkTests {
         }
     }
 
-    @InitiatingFlow
-    class WaitForLedgerCommitFlow(private val txId: SecureHash, private val party: Party? = null) : FlowLogic<SignedTransaction>() {
-        @Suspendable
-        override fun call(): SignedTransaction {
-            if (party != null) {
-                initiateFlow(party).send(Unit)
-            }
-            return waitForLedgerCommit(txId)
-        }
-    }
-
-    @InitiatingFlow
-    class CommitterFlow(private val stx: SignedTransaction, private val otherParty: Party) : FlowLogic<SignedTransaction>() {
-        @Suspendable
-        override fun call(): SignedTransaction {
-            val session = initiateFlow(otherParty)
-            return subFlow(FinalityFlow(stx, session))
-        }
-    }
-
-    class CommitReceiverFlow(private val otherSide: FlowSession, private val txId: SecureHash) : FlowLogic<SignedTransaction>() {
-        @Suspendable
-        override fun call(): SignedTransaction = subFlow(ReceiveFinalityFlow(otherSide, expectedTxId = txId))
-    }
+//    @InitiatingFlow
+//    class WaitForLedgerCommitFlow(private val txId: SecureHash, private val party: Party? = null) : FlowLogic<SignedTransaction>() {
+//        @Suspendable
+//        override fun call(): SignedTransaction {
+//            if (party != null) {
+//                initiateFlow(party).send(Unit)
+//            }
+//            return waitForLedgerCommit(txId)
+//        }
+//    }
+//
+//    @InitiatingFlow
+//    class CommitterFlow(private val stx: SignedTransaction, private val otherParty: Party) : FlowLogic<SignedTransaction>() {
+//        @Suspendable
+//        override fun call(): SignedTransaction {
+//            val session = initiateFlow(otherParty)
+//            return subFlow(FinalityFlow(stx, session))
+//        }
+//    }
+//
+//    class CommitReceiverFlow(private val otherSide: FlowSession, private val txId: SecureHash) : FlowLogic<SignedTransaction>() {
+//        @Suspendable
+//        override fun call(): SignedTransaction = subFlow(ReceiveFinalityFlow(otherSide, expectedTxId = txId))
+//    }
 
     private class LazyServiceHubAccessFlow : FlowLogic<Unit>() {
         val lazyTime: Instant by lazy { serviceHub.clock.instant() }
@@ -626,18 +618,18 @@ class FlowFrameworkTests {
     @InitiatingFlow
     private class IncorrectCustomSendFlow(payload: String, otherParty: Party) : CustomInterface, SendFlow(payload, otherParty)
 
-    @InitiatingFlow
-    private class VaultQueryFlow(val otherParty: Party) : FlowLogic<Unit>() {
-        @Suspendable
-        override fun call() {
-            val otherPartySession = initiateFlow(otherParty)
-            // Hold onto reference here to force checkpoint of vaultService and thus
-            // prove it is registered as a tokenizableService in the node
-            val vaultQuerySvc = serviceHub.vaultService
-            otherPartySession.receive<Any>()
-            vaultQuerySvc.queryBy<ContractState>().states
-        }
-    }
+//    @InitiatingFlow
+//    private class VaultQueryFlow(val otherParty: Party) : FlowLogic<Unit>() {
+//        @Suspendable
+//        override fun call() {
+//            val otherPartySession = initiateFlow(otherParty)
+//            // Hold onto reference here to force checkpoint of vaultService and thus
+//            // prove it is registered as a tokenizableService in the node
+//            val vaultQuerySvc = serviceHub.vaultService
+//            otherPartySession.receive<Any>()
+//            vaultQuerySvc.queryBy<ContractState>().states
+//        }
+//    }
 
     @InitiatingFlow(version = 2)
     private class UpgradedFlow(val otherParty: Party, val otherPartySession: FlowSession? = null) : FlowLogic<Pair<Any, Int>>() {

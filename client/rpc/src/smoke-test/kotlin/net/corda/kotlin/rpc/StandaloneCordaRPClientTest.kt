@@ -10,7 +10,6 @@ import net.corda.core.identity.Party
 import net.corda.core.internal.InputStreamAndHash
 import net.corda.core.messaging.*
 import net.corda.core.node.NodeInfo
-import net.corda.core.node.services.Vault
 import net.corda.core.node.services.vault.*
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.contextLogger

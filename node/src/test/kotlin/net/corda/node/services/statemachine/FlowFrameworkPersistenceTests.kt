@@ -57,7 +57,6 @@ class FlowFrameworkPersistenceTests {
         // Extract identities
         alice = aliceNode.info.singleIdentity()
         bob = bobNode.info.singleIdentity()
-        notaryIdentity = mockNet.defaultNotaryIdentity
     }
 
     @After

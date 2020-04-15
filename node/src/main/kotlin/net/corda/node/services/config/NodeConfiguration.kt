@@ -7,7 +7,6 @@ import net.corda.common.validation.internal.Validated
 import net.corda.core.context.AuthServiceId
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.internal.TimedFlow
-import net.corda.core.internal.notary.NotaryServiceFlow
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.node.services.config.rpc.NodeRpcOptions
 import net.corda.node.services.config.schema.v1.V1NodeConfigurationSpec
@@ -15,8 +14,6 @@ import net.corda.nodeapi.internal.config.FileBasedCertificateStoreSupplier
 import net.corda.nodeapi.internal.config.MutualSslConfiguration
 import net.corda.nodeapi.internal.config.User
 import net.corda.nodeapi.internal.persistence.DatabaseConfig
-import net.corda.notary.experimental.bftsmart.BFTSmartConfig
-import net.corda.notary.experimental.raft.RaftConfig
 import net.corda.tools.shell.SSHDConfiguration
 import java.net.URL
 import java.nio.file.Path
@@ -42,7 +39,7 @@ interface NodeConfiguration : ConfigurationWithOptionsContainer {
     val certificateChainCheckPolicies: List<CertChainPolicyConfig>
     val verifierType: VerifierType
     val flowTimeout: FlowTimeoutConfiguration
-    val notary: NotaryConfig?
+//    val notary: NotaryConfig?
     val additionalNodeInfoPollingFrequencyMsec: Long
     val p2pAddress: NetworkHostAndPort
     val additionalP2PAddresses: List<NetworkHostAndPort>
@@ -157,11 +154,11 @@ data class NotaryConfig(
          * a wait time update to the client (implementation specific and dependent on the counter
          * party version).
          */
-        val etaMessageThresholdSeconds: Int = NotaryServiceFlow.defaultEstimatedWaitTime.seconds.toInt(),
+//        val etaMessageThresholdSeconds: Int = NotaryServiceFlow.defaultEstimatedWaitTime.seconds.toInt(),
         /** Notary implementation-specific configuration parameters. */
-        val extraConfig: Config? = null,
-        val raft: RaftConfig? = null,
-        val bftSMaRt: BFTSmartConfig? = null
+        val extraConfig: Config? = null//,
+//        val raft: RaftConfig? = null,
+//        val bftSMaRt: BFTSmartConfig? = null
 )
 
 /**

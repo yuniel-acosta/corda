@@ -3,14 +3,11 @@ package net.corda.node.internal
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.context.InvocationContext
 import net.corda.core.context.InvocationOrigin
-import net.corda.core.contracts.ContractState
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByService
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.CordaService
-import net.corda.core.node.services.Vault
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.ProgressTracker
@@ -55,15 +52,15 @@ class CordaServiceTest {
         service.thatWeCanAccessClassLoader()
     }
 
-    /**
-     * Reproduce CORDA-2296
-     * Querying the vault from a services constructor failed because the criteriaBuilder
-     * had not been initialized.
-     */
-    @Test(timeout=300_000)
-	fun `Can query vault service in constructor`() {
-        nodeA.services.cordaService(VaultQueryService::class.java)
-    }
+//    /**
+//     * Reproduce CORDA-2296
+//     * Querying the vault from a services constructor failed because the criteriaBuilder
+//     * had not been initialized.
+//     */
+//    @Test(timeout=300_000)
+//	fun `Can query vault service in constructor`() {
+//        nodeA.services.cordaService(VaultQueryService::class.java)
+//    }
 
     @Test(timeout=300_000)
 	fun `Can query using jdbc session in constructor`() {
@@ -87,13 +84,13 @@ class CordaServiceTest {
     @CordaService
     class LegacyCordaService(@Suppress("UNUSED_PARAMETER") simpleServiceHub: ServiceHub) : SingletonSerializeAsToken()
 
-    @CordaService
-    class VaultQueryService(val serviceHub: AppServiceHub): SingletonSerializeAsToken() {
-        init {
-            val criteria = QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED)
-            serviceHub.vaultService.trackBy(ContractState::class.java, criteria)
-        }
-    }
+//    @CordaService
+//    class VaultQueryService(val serviceHub: AppServiceHub): SingletonSerializeAsToken() {
+//        init {
+//            val criteria = QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED)
+//            serviceHub.vaultService.trackBy(ContractState::class.java, criteria)
+//        }
+//    }
 
     /**
      * See: CORDA-2653

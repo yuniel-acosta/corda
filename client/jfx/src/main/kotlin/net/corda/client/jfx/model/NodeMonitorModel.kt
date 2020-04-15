@@ -4,21 +4,21 @@ import javafx.beans.property.SimpleObjectProperty
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.client.rpc.CordaRPCConnection
 import net.corda.client.rpc.GracefulReconnect
-import net.corda.core.contracts.ContractState
+//import net.corda.core.contracts.ContractState
 import net.corda.core.flows.StateMachineRunId
 import net.corda.core.identity.Party
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.messaging.StateMachineInfo
 import net.corda.core.messaging.StateMachineTransactionMapping
 import net.corda.core.messaging.StateMachineUpdate
-import net.corda.core.messaging.vaultTrackBy
+//import net.corda.core.messaging.vaultTrackBy
 import net.corda.core.node.services.NetworkMapCache.MapChange
-import net.corda.core.node.services.Vault
-import net.corda.core.node.services.vault.DEFAULT_PAGE_NUM
-import net.corda.core.node.services.vault.MAX_PAGE_SIZE
-import net.corda.core.node.services.vault.PageSpecification
-import net.corda.core.node.services.vault.QueryCriteria
-import net.corda.core.transactions.SignedTransaction
+//import net.corda.core.node.services.Vault
+//import net.corda.core.node.services.vault.DEFAULT_PAGE_NUM
+//import net.corda.core.node.services.vault.MAX_PAGE_SIZE
+//import net.corda.core.node.services.vault.PageSpecification
+//import net.corda.core.node.services.vault.QueryCriteria
+//import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.contextLogger
 import rx.Observable
@@ -40,15 +40,15 @@ data class ProgressTrackingEvent(val stateMachineId: StateMachineRunId, val mess
 class NodeMonitorModel : AutoCloseable {
 
     private val stateMachineUpdatesSubject = PublishSubject.create<StateMachineUpdate>()
-    private val vaultUpdatesSubject = PublishSubject.create<Vault.Update<ContractState>>()
-    private val transactionsSubject = PublishSubject.create<SignedTransaction>()
+//    private val vaultUpdatesSubject = PublishSubject.create<Vault.Update<ContractState>>()
+//    private val transactionsSubject = PublishSubject.create<SignedTransaction>()
     private val stateMachineTransactionMappingSubject = PublishSubject.create<StateMachineTransactionMapping>()
     private val progressTrackingSubject = PublishSubject.create<ProgressTrackingEvent>()
     private val networkMapSubject = PublishSubject.create<MapChange>()
 
     val stateMachineUpdates: Observable<StateMachineUpdate> = stateMachineUpdatesSubject
-    val vaultUpdates: Observable<Vault.Update<ContractState>> = vaultUpdatesSubject
-    val transactions: Observable<SignedTransaction> = transactionsSubject
+//    val vaultUpdates: Observable<Vault.Update<ContractState>> = vaultUpdatesSubject
+//    val transactions: Observable<SignedTransaction> = transactionsSubject
     val stateMachineTransactionMapping: Observable<StateMachineTransactionMapping> = stateMachineTransactionMappingSubject
     val progressTracking: Observable<ProgressTrackingEvent> = progressTrackingSubject
     val networkMap: Observable<MapChange> = networkMapSubject
@@ -81,30 +81,30 @@ class NodeMonitorModel : AutoCloseable {
         proxyObservable.value = rpc.proxy
 
         // Vault snapshot (force single page load with MAX_PAGE_SIZE) + updates
-        val (
-                statesSnapshot,
-                vaultUpdates
-        ) = rpc.proxy.vaultTrackBy<ContractState>(
-                QueryCriteria.VaultQueryCriteria(Vault.StateStatus.ALL),
-                PageSpecification(DEFAULT_PAGE_NUM, MAX_PAGE_SIZE)
-        )
-        val unconsumedStates =
-                statesSnapshot.states.filterIndexed { index, _ ->
-                    statesSnapshot.statesMetadata[index].status == Vault.StateStatus.UNCONSUMED
-        }.toSet()
-        val consumedStates = statesSnapshot.states.toSet() - unconsumedStates
-        val initialVaultUpdate = Vault.Update(consumedStates, unconsumedStates, references = emptySet())
-        vaultUpdates.startWith(initialVaultUpdate).subscribe(vaultUpdatesSubject::onNext)
-
-        // Transactions
-        val (transactions, newTransactions) =
-                @Suppress("DEPRECATION") rpc.proxy.internalVerifiedTransactionsFeed()
-        newTransactions.startWith(transactions).subscribe(transactionsSubject::onNext)
-
-        // SM -> TX mapping
-        val (smTxMappings, futureSmTxMappings) =
-                rpc.proxy.stateMachineRecordedTransactionMappingFeed()
-        futureSmTxMappings.startWith(smTxMappings).subscribe(stateMachineTransactionMappingSubject::onNext)
+//        val (
+//                statesSnapshot,
+//                vaultUpdates
+//        ) = rpc.proxy.vaultTrackBy<ContractState>(
+//                QueryCriteria.VaultQueryCriteria(Vault.StateStatus.ALL),
+//                PageSpecification(DEFAULT_PAGE_NUM, MAX_PAGE_SIZE)
+//        )
+//        val unconsumedStates =
+//                statesSnapshot.states.filterIndexed { index, _ ->
+//                    statesSnapshot.statesMetadata[index].status == Vault.StateStatus.UNCONSUMED
+//        }.toSet()
+//        val consumedStates = statesSnapshot.states.toSet() - unconsumedStates
+//        val initialVaultUpdate = Vault.Update(consumedStates, unconsumedStates, references = emptySet())
+//        vaultUpdates.startWith(initialVaultUpdate).subscribe(vaultUpdatesSubject::onNext)
+//
+//        // Transactions
+//        val (transactions, newTransactions) =
+//                @Suppress("DEPRECATION") rpc.proxy.internalVerifiedTransactionsFeed()
+//        newTransactions.startWith(transactions).subscribe(transactionsSubject::onNext)
+//
+//        // SM -> TX mapping
+//        val (smTxMappings, futureSmTxMappings) =
+//                rpc.proxy.stateMachineRecordedTransactionMappingFeed()
+//        futureSmTxMappings.startWith(smTxMappings).subscribe(stateMachineTransactionMappingSubject::onNext)
 
         // Parties on network
         val (parties, futurePartyUpdate) = rpc.proxy.networkMapFeed()

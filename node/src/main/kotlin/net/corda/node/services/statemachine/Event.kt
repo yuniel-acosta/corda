@@ -5,7 +5,6 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.Party
 import net.corda.core.internal.FlowIORequest
 import net.corda.core.serialization.SerializedBytes
-import net.corda.core.transactions.SignedTransaction
 import net.corda.node.services.messaging.DeduplicationHandler
 import java.util.*
 
@@ -42,12 +41,12 @@ sealed class Event {
      */
     data class Error(val exception: Throwable) : Event()
 
-    /**
-     * Signal that a ledger transaction has committed. This is an event completing a [FlowIORequest.WaitForLedgerCommit]
-     * suspension.
-     * @param transaction the transaction that was committed.
-     */
-    data class TransactionCommitted(val transaction: SignedTransaction) : Event()
+//    /**
+//     * Signal that a ledger transaction has committed. This is an event completing a [FlowIORequest.WaitForLedgerCommit]
+//     * suspension.
+//     * @param transaction the transaction that was committed.
+//     */
+//    data class TransactionCommitted(val transaction: SignedTransaction) : Event()
 
     /**
      * Trigger a soft shutdown, removing the flow as soon as possible. This causes the flow to be removed as soon as

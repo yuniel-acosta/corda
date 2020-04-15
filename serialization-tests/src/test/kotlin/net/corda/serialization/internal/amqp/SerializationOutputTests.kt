@@ -16,14 +16,12 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.internal.AbstractAttachment
 import net.corda.core.serialization.*
-import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.node.serialization.amqp.AMQPServerSerializationScheme
 import net.corda.nodeapi.internal.crypto.ContentSignerBuilder
 import net.corda.serialization.internal.*
 import net.corda.serialization.internal.amqp.testutils.*
 import net.corda.serialization.internal.carpenter.ClassCarpenterImpl
-import net.corda.testing.contracts.DummyContract
 import net.corda.testing.core.BOB_NAME
 import net.corda.testing.core.SerializationEnvironmentRule
 import net.corda.testing.core.TestIdentity
@@ -661,58 +659,58 @@ class SerializationOutputTests(private val compression: CordaSerializationEncodi
         serdes(KotlinObject)
     }
 
-    object FooContract : Contract {
-        override fun verify(tx: LedgerTransaction) {
-        }
-    }
-
-    @Test(timeout=300_000)
-	fun `test custom object`() {
-        serdes(FooContract)
-    }
-
-    @Test(timeout=300_000)
-@Ignore("Cannot serialize due to known Kotlin/serialization limitation")
-    fun `test custom anonymous object`() {
-        val anonymous: Contract = object : Contract {
-            override fun verify(tx: LedgerTransaction) {
-            }
-        }
-        serdes(anonymous)
-    }
+//    object FooContract : Contract {
+//        override fun verify(tx: LedgerTransaction) {
+//        }
+//    }
+//
+//    @Test(timeout=300_000)
+//	fun `test custom object`() {
+//        serdes(FooContract)
+//    }
+//
+//    @Test(timeout=300_000)
+//@Ignore("Cannot serialize due to known Kotlin/serialization limitation")
+//    fun `test custom anonymous object`() {
+//        val anonymous: Contract = object : Contract {
+//            override fun verify(tx: LedgerTransaction) {
+//            }
+//        }
+//        serdes(anonymous)
+//    }
 
     private val FOO_PROGRAM_ID = "net.corda.serialization.internal.amqp.SerializationOutputTests.FooContract"
 
-    class FooState : ContractState {
-        override val participants: List<AbstractParty> = emptyList()
-    }
+//    class FooState : ContractState {
+//        override val participants: List<AbstractParty> = emptyList()
+//    }
 
-    @Test(timeout=300_000)
-	fun `test transaction state`() {
-        val state = TransactionState(FooState(), FOO_PROGRAM_ID, MEGA_CORP)
-
-        val scheme = AMQPServerSerializationScheme(emptyList())
-        val func = scheme::class.superclasses.single { it.simpleName == "AbstractAMQPSerializationScheme" }
-                .java.getDeclaredMethod("registerCustomSerializers",
-                SerializationContext::class.java,
-                SerializerFactory::class.java)
-        func.isAccessible = true
-
-        val factory = SerializerFactoryBuilder.build(AllWhitelist,
-                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
-        )
-        func.invoke(scheme, testSerializationContext, factory)
-
-        val factory2 = SerializerFactoryBuilder.build(AllWhitelist,
-                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
-        )
-        func.invoke(scheme, testSerializationContext, factory2)
-
-        val desState = serdes(state, factory, factory2, expectedEqual = false, expectDeserializedEqual = false)
-        assertTrue((desState as TransactionState<*>).data is FooState)
-        assertTrue(desState.notary == state.notary)
-        assertTrue(desState.encumbrance == state.encumbrance)
-    }
+//    @Test(timeout=300_000)
+//	fun `test transaction state`() {
+//        val state = TransactionState(FooState(), FOO_PROGRAM_ID, MEGA_CORP)
+//
+//        val scheme = AMQPServerSerializationScheme(emptyList())
+//        val func = scheme::class.superclasses.single { it.simpleName == "AbstractAMQPSerializationScheme" }
+//                .java.getDeclaredMethod("registerCustomSerializers",
+//                SerializationContext::class.java,
+//                SerializerFactory::class.java)
+//        func.isAccessible = true
+//
+//        val factory = SerializerFactoryBuilder.build(AllWhitelist,
+//                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
+//        )
+//        func.invoke(scheme, testSerializationContext, factory)
+//
+//        val factory2 = SerializerFactoryBuilder.build(AllWhitelist,
+//                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
+//        )
+//        func.invoke(scheme, testSerializationContext, factory2)
+//
+//        val desState = serdes(state, factory, factory2, expectedEqual = false, expectDeserializedEqual = false)
+//        assertTrue((desState as TransactionState<*>).data is FooState)
+//        assertTrue(desState.notary == state.notary)
+//        assertTrue(desState.encumbrance == state.encumbrance)
+//    }
 
     @Test(timeout=300_000)
 	fun `test currencies serialize`() {
@@ -1003,19 +1001,19 @@ class SerializationOutputTests(private val compression: CordaSerializationEncodi
         serdes(obj)
     }
 
-    @Test(timeout=300_000)
-	fun `test StateRef serialize`() {
-        val factory = SerializerFactoryBuilder.build(AllWhitelist,
-                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
-        )
-
-        val factory2 = SerializerFactoryBuilder.build(AllWhitelist,
-                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
-        )
-
-        val obj = StateRef(SecureHash.randomSHA256(), 0)
-        serdes(obj, factory, factory2)
-    }
+//    @Test(timeout=300_000)
+//	fun `test StateRef serialize`() {
+//        val factory = SerializerFactoryBuilder.build(AllWhitelist,
+//                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
+//        )
+//
+//        val factory2 = SerializerFactoryBuilder.build(AllWhitelist,
+//                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
+//        )
+//
+//        val obj = StateRef(SecureHash.randomSHA256(), 0)
+//        serdes(obj, factory, factory2)
+//    }
 
     interface Container
 
@@ -1290,46 +1288,46 @@ class SerializationOutputTests(private val compression: CordaSerializationEncodi
         serdes(obj)
     }
 
-    @Test(timeout=300_000)
-	fun `test contract attachment serialize`() {
-        val factory = SerializerFactoryBuilder.build(AllWhitelist,
-                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
-        )
-        factory.register(net.corda.serialization.internal.amqp.custom.ContractAttachmentSerializer(factory))
+//    @Test(timeout=300_000)
+//	fun `test contract attachment serialize`() {
+//        val factory = SerializerFactoryBuilder.build(AllWhitelist,
+//                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
+//        )
+//        factory.register(net.corda.serialization.internal.amqp.custom.ContractAttachmentSerializer(factory))
+//
+//        val factory2 = SerializerFactoryBuilder.build(AllWhitelist,
+//                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
+//        )
+//        factory2.register(net.corda.serialization.internal.amqp.custom.ContractAttachmentSerializer(factory2))
+//
+//        val obj = ContractAttachment(GeneratedAttachment("test".toByteArray(), "test"), DummyContract.PROGRAM_ID)
+//        val obj2 = serdes(obj, factory, factory2, expectedEqual = false, expectDeserializedEqual = false)
+//        assertEquals(obj.id, obj2.attachment.id)
+//        assertEquals(obj.contract, obj2.contract)
+//        assertEquals(obj.additionalContracts, obj2.additionalContracts)
+//        assertArrayEquals(obj.open().readBytes(), obj2.open().readBytes())
+//    }
 
-        val factory2 = SerializerFactoryBuilder.build(AllWhitelist,
-                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
-        )
-        factory2.register(net.corda.serialization.internal.amqp.custom.ContractAttachmentSerializer(factory2))
-
-        val obj = ContractAttachment(GeneratedAttachment("test".toByteArray(), "test"), DummyContract.PROGRAM_ID)
-        val obj2 = serdes(obj, factory, factory2, expectedEqual = false, expectDeserializedEqual = false)
-        assertEquals(obj.id, obj2.attachment.id)
-        assertEquals(obj.contract, obj2.contract)
-        assertEquals(obj.additionalContracts, obj2.additionalContracts)
-        assertArrayEquals(obj.open().readBytes(), obj2.open().readBytes())
-    }
-
-    @Test(timeout=300_000)
-	fun `test contract attachment throws if missing attachment`() {
-        val factory = SerializerFactoryBuilder.build(AllWhitelist,
-                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
-        )
-        factory.register(net.corda.serialization.internal.amqp.custom.ContractAttachmentSerializer(factory))
-
-        val factory2 = SerializerFactoryBuilder.build(AllWhitelist,
-                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
-        )
-        factory2.register(net.corda.serialization.internal.amqp.custom.ContractAttachmentSerializer(factory2))
-
-        val obj = ContractAttachment(object : AbstractAttachment({ throw Exception() }, "test") {
-            override val id = SecureHash.zeroHash
-        }, DummyContract.PROGRAM_ID)
-
-        assertThatThrownBy {
-            serdes(obj, factory, factory2, expectedEqual = false, expectDeserializedEqual = false)
-        }.isInstanceOf(MissingAttachmentsException::class.java)
-    }
+//    @Test(timeout=300_000)
+//	fun `test contract attachment throws if missing attachment`() {
+//        val factory = SerializerFactoryBuilder.build(AllWhitelist,
+//                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
+//        )
+//        factory.register(net.corda.serialization.internal.amqp.custom.ContractAttachmentSerializer(factory))
+//
+//        val factory2 = SerializerFactoryBuilder.build(AllWhitelist,
+//                ClassCarpenterImpl(AllWhitelist, ClassLoader.getSystemClassLoader())
+//        )
+//        factory2.register(net.corda.serialization.internal.amqp.custom.ContractAttachmentSerializer(factory2))
+//
+//        val obj = ContractAttachment(object : AbstractAttachment({ throw Exception() }, "test") {
+//            override val id = SecureHash.zeroHash
+//        }, DummyContract.PROGRAM_ID)
+//
+//        assertThatThrownBy {
+//            serdes(obj, factory, factory2, expectedEqual = false, expectDeserializedEqual = false)
+//        }.isInstanceOf(MissingAttachmentsException::class.java)
+//    }
 
     //
     // Example stacktrace that this test is trying to reproduce

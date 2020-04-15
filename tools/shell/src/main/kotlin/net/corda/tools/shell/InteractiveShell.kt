@@ -179,16 +179,16 @@ object InteractiveShell {
                 "An alias for 'flow start'",
                 StartShellCommand::class.java
         )
-        ExternalResolver.INSTANCE.addCommand(
-                "hashLookup",
-                "Checks if a transaction with matching Id hash exists.",
-                HashLookupShellCommand::class.java
-        )
-        ExternalResolver.INSTANCE.addCommand(
-                "attachments",
-                "Commands to extract information about attachments stored within the node",
-                AttachmentShellCommand::class.java
-        )
+//        ExternalResolver.INSTANCE.addCommand(
+//                "hashLookup",
+//                "Checks if a transaction with matching Id hash exists.",
+//                HashLookupShellCommand::class.java
+//        )
+//        ExternalResolver.INSTANCE.addCommand(
+//                "attachments",
+//                "Commands to extract information about attachments stored within the node",
+//                AttachmentShellCommand::class.java
+//        )
         ExternalResolver.INSTANCE.addCommand(
                 "checkpoints",
                 "Commands to extract information about checkpoints stored within the node",
@@ -568,13 +568,13 @@ object InteractiveShell {
         return result
     }
 
-    @JvmStatic
-    fun runAttachmentTrustInfoView(
-        out: RenderPrintWriter,
-        rpcOps: InternalCordaRPCOps
-    ): Any {
-        return AttachmentTrustTable(out, rpcOps.attachmentTrustInfos)
-    }
+//    @JvmStatic
+//    fun runAttachmentTrustInfoView(
+//        out: RenderPrintWriter,
+//        rpcOps: InternalCordaRPCOps
+//    ): Any {
+//        return AttachmentTrustTable(out, rpcOps.attachmentTrustInfos)
+//    }
 
     @JvmStatic
     fun runDumpCheckpoints(rpcOps: InternalCordaRPCOps) {

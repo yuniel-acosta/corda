@@ -11,11 +11,9 @@ import net.corda.core.identity.Party
 import net.corda.core.identity.PartyAndCertificate
 import net.corda.core.internal.NamedCacheFactory
 import net.corda.core.internal.cordapp.set
-import net.corda.core.internal.createComponentGroups
 import net.corda.core.node.NodeInfo
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.serialization.internal.effectiveSerializationEnv
-import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
 import net.corda.node.internal.createCordaPersistence
 import net.corda.node.internal.security.RPCSecurityManagerImpl
@@ -153,17 +151,17 @@ fun p2pSslOptions(path: Path, name: CordaX500Name = CordaX500Name("MegaCorp", "L
     return sslConfig
 }
 
-/** This is the same as the deprecated [WireTransaction] c'tor but avoids the deprecation warning. */
-fun createWireTransaction(inputs: List<StateRef>,
-                          attachments: List<SecureHash>,
-                          outputs: List<TransactionState<*>>,
-                          commands: List<Command<*>>,
-                          notary: Party?,
-                          timeWindow: TimeWindow?,
-                          privacySalt: PrivacySalt = PrivacySalt()): WireTransaction {
-    val componentGroups = createComponentGroups(inputs, outputs, commands, attachments, notary, timeWindow, emptyList(), null)
-    return WireTransaction(componentGroups, privacySalt)
-}
+///** This is the same as the deprecated [WireTransaction] c'tor but avoids the deprecation warning. */
+//fun createWireTransaction(inputs: List<StateRef>,
+//                          attachments: List<SecureHash>,
+//                          outputs: List<TransactionState<*>>,
+//                          commands: List<Command<*>>,
+//                          notary: Party?,
+//                          timeWindow: TimeWindow?,
+//                          privacySalt: PrivacySalt = PrivacySalt()): WireTransaction {
+//    val componentGroups = createComponentGroups(inputs, outputs, commands, attachments, notary, timeWindow, emptyList(), null)
+//    return WireTransaction(componentGroups, privacySalt)
+//}
 
 /**
  * Instantiate RPCSecurityManager initialised with users data from a list of [User]

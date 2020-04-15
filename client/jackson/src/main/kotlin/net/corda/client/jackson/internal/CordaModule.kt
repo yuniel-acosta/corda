@@ -37,13 +37,11 @@ import net.corda.core.crypto.PartialMerkleTree.PartialTree
 import net.corda.core.flows.StateMachineRunId
 import net.corda.core.identity.*
 import net.corda.core.internal.DigitalSignatureWithCert
-import net.corda.core.internal.createComponentGroups
 import net.corda.core.node.NodeInfo
 import net.corda.core.serialization.SerializeAsToken
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
-import net.corda.core.transactions.*
 import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.parseAsHex
@@ -86,11 +84,11 @@ class CordaModule : SimpleModule("corda-core") {
         context.setMixInAnnotations(DigitalSignature.WithKey::class.java, ByteSequenceWithPropertiesMixin::class.java)
         context.setMixInAnnotations(DigitalSignatureWithCert::class.java, ByteSequenceWithPropertiesMixin::class.java)
         context.setMixInAnnotations(TransactionSignature::class.java, ByteSequenceWithPropertiesMixin::class.java)
-        context.setMixInAnnotations(SignedTransaction::class.java, SignedTransactionMixin::class.java)
-        context.setMixInAnnotations(WireTransaction::class.java, WireTransactionMixin::class.java)
-        context.setMixInAnnotations(TransactionState::class.java, TransactionStateMixin::class.java)
-        context.setMixInAnnotations(Command::class.java, CommandMixin::class.java)
-        context.setMixInAnnotations(TimeWindow::class.java, TimeWindowMixin::class.java)
+//        context.setMixInAnnotations(SignedTransaction::class.java, SignedTransactionMixin::class.java)
+//        context.setMixInAnnotations(WireTransaction::class.java, WireTransactionMixin::class.java)
+//        context.setMixInAnnotations(TransactionState::class.java, TransactionStateMixin::class.java)
+//        context.setMixInAnnotations(Command::class.java, CommandMixin::class.java)
+//        context.setMixInAnnotations(TimeWindow::class.java, TimeWindowMixin::class.java)
         context.setMixInAnnotations(PrivacySalt::class.java, PrivacySaltMixin::class.java)
         context.setMixInAnnotations(SignatureScheme::class.java, SignatureSchemeMixin::class.java)
         context.setMixInAnnotations(SignatureMetadata::class.java, SignatureMetadataMixin::class.java)
@@ -160,126 +158,126 @@ private class PartyAndCertificateSerializer : JsonSerializer<PartyAndCertificate
 
 private class PartyAndCertificateJson(val name: CordaX500Name, val certPath: CertPath)
 
-@JsonSerialize(using = SignedTransactionSerializer::class)
-@JsonDeserialize(using = SignedTransactionDeserializer::class)
-private interface SignedTransactionMixin
+//@JsonSerialize(using = SignedTransactionSerializer::class)
+//@JsonDeserialize(using = SignedTransactionDeserializer::class)
+//private interface SignedTransactionMixin
 
-private class SignedTransactionSerializer : JsonSerializer<SignedTransaction>() {
-    override fun serialize(value: SignedTransaction, gen: JsonGenerator, serializers: SerializerProvider) {
-        val core = value.coreTransaction
-        val stxJson = when (core) {
-            is WireTransaction -> StxJson(wire = core, signatures = value.sigs)
-            is FilteredTransaction -> StxJson(filtered = core, signatures = value.sigs)
-            is NotaryChangeWireTransaction -> StxJson(notaryChangeWire = core, signatures = value.sigs)
-            is ContractUpgradeWireTransaction -> StxJson(contractUpgradeWire = core, signatures = value.sigs)
-            is ContractUpgradeFilteredTransaction -> StxJson(contractUpgradeFiltered = core, signatures = value.sigs)
-            else -> throw IllegalArgumentException("Don't know about ${core.javaClass}")
-        }
-        gen.writeObject(stxJson)
-    }
-}
-
-private class SignedTransactionDeserializer : JsonDeserializer<SignedTransaction>() {
-    override fun deserialize(parser: JsonParser, ctxt: DeserializationContext): SignedTransaction {
-        val wrapper = parser.readValueAs<StxJson>()
-        val core = wrapper.run { wire ?: filtered ?: notaryChangeWire ?: contractUpgradeWire ?: contractUpgradeFiltered!! }
-        return SignedTransaction(core, wrapper.signatures)
-    }
-}
-
-@JsonInclude(Include.NON_NULL)
-private data class StxJson(
-        val wire: WireTransaction? = null,
-        val filtered: FilteredTransaction? = null,
-        val notaryChangeWire: NotaryChangeWireTransaction? = null,
-        val contractUpgradeWire: ContractUpgradeWireTransaction? = null,
-        val contractUpgradeFiltered: ContractUpgradeFilteredTransaction? = null,
-        val signatures: List<TransactionSignature>
-) {
-    init {
-        val count = Booleans.countTrue(wire != null, filtered != null, notaryChangeWire != null, contractUpgradeWire != null, contractUpgradeFiltered != null)
-        require(count == 1) { this }
-    }
-}
-
-@JsonSerialize(using = WireTransactionSerializer::class)
-@JsonDeserialize(using = WireTransactionDeserializer::class)
-private interface WireTransactionMixin
-
-private class WireTransactionSerializer : JsonSerializer<WireTransaction>() {
-    override fun serialize(value: WireTransaction, gen: JsonGenerator, serializers: SerializerProvider) {
-        gen.writeObject(WireTransactionJson(
-                value.id,
-                value.notary,
-                value.inputs,
-                value.outputs,
-                value.commands,
-                value.timeWindow,
-                value.attachments,
-                value.references,
-                value.privacySalt,
-                value.networkParametersHash
-        ))
-    }
-}
-
-private class WireTransactionDeserializer : JsonDeserializer<WireTransaction>() {
-    override fun deserialize(parser: JsonParser, ctxt: DeserializationContext): WireTransaction {
-        val wrapper = parser.readValueAs<WireTransactionJson>()
-        val componentGroups = createComponentGroups(
-                wrapper.inputs,
-                wrapper.outputs,
-                wrapper.commands,
-                wrapper.attachments,
-                wrapper.notary,
-                wrapper.timeWindow,
-                wrapper.references,
-                wrapper.networkParametersHash
-        )
-        return WireTransaction(componentGroups, wrapper.privacySalt)
-    }
-}
-
-private class WireTransactionJson(val id: SecureHash,
-                                  val notary: Party?,
-                                  val inputs: List<StateRef>,
-                                  val outputs: List<TransactionState<*>>,
-                                  val commands: List<Command<*>>,
-                                  val timeWindow: TimeWindow?,
-                                  val attachments: List<SecureHash>,
-                                  val references: List<StateRef>,
-                                  val privacySalt: PrivacySalt,
-                                  val networkParametersHash: SecureHash?)
-
-private interface TransactionStateMixin {
-    @get:JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
-    val data: ContractState
-    @get:JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
-    val constraint: AttachmentConstraint
-}
-
-private interface CommandMixin {
-    @get:JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
-    val value: CommandData
-}
-
-@JsonDeserialize(using = TimeWindowDeserializer::class)
-private interface TimeWindowMixin
-
-private class TimeWindowDeserializer : JsonDeserializer<TimeWindow>() {
-    override fun deserialize(parser: JsonParser, ctxt: DeserializationContext): TimeWindow {
-        return parser.readValueAs<TimeWindowJson>().run {
-            when {
-                fromTime != null && untilTime != null -> TimeWindow.between(fromTime, untilTime)
-                fromTime != null -> TimeWindow.fromOnly(fromTime)
-                untilTime != null -> TimeWindow.untilOnly(untilTime)
-                else -> throw JsonParseException(parser, "Neither fromTime nor untilTime exists for TimeWindow")
-            }
-        }
-    }
-}
-
-private data class TimeWindowJson(val fromTime: Instant?, val untilTime: Instant?)
+//private class SignedTransactionSerializer : JsonSerializer<SignedTransaction>() {
+//    override fun serialize(value: SignedTransaction, gen: JsonGenerator, serializers: SerializerProvider) {
+//        val core = value.coreTransaction
+//        val stxJson = when (core) {
+//            is WireTransaction -> StxJson(wire = core, signatures = value.sigs)
+//            is FilteredTransaction -> StxJson(filtered = core, signatures = value.sigs)
+//            is NotaryChangeWireTransaction -> StxJson(notaryChangeWire = core, signatures = value.sigs)
+//            is ContractUpgradeWireTransaction -> StxJson(contractUpgradeWire = core, signatures = value.sigs)
+//            is ContractUpgradeFilteredTransaction -> StxJson(contractUpgradeFiltered = core, signatures = value.sigs)
+//            else -> throw IllegalArgumentException("Don't know about ${core.javaClass}")
+//        }
+//        gen.writeObject(stxJson)
+//    }
+//}
+//
+//private class SignedTransactionDeserializer : JsonDeserializer<SignedTransaction>() {
+//    override fun deserialize(parser: JsonParser, ctxt: DeserializationContext): SignedTransaction {
+//        val wrapper = parser.readValueAs<StxJson>()
+//        val core = wrapper.run { wire ?: filtered ?: notaryChangeWire ?: contractUpgradeWire ?: contractUpgradeFiltered!! }
+//        return SignedTransaction(core, wrapper.signatures)
+//    }
+//}
+//
+//@JsonInclude(Include.NON_NULL)
+//private data class StxJson(
+//        val wire: WireTransaction? = null,
+//        val filtered: FilteredTransaction? = null,
+//        val notaryChangeWire: NotaryChangeWireTransaction? = null,
+//        val contractUpgradeWire: ContractUpgradeWireTransaction? = null,
+//        val contractUpgradeFiltered: ContractUpgradeFilteredTransaction? = null,
+//        val signatures: List<TransactionSignature>
+//) {
+//    init {
+//        val count = Booleans.countTrue(wire != null, filtered != null, notaryChangeWire != null, contractUpgradeWire != null, contractUpgradeFiltered != null)
+//        require(count == 1) { this }
+//    }
+//}
+//
+//@JsonSerialize(using = WireTransactionSerializer::class)
+//@JsonDeserialize(using = WireTransactionDeserializer::class)
+//private interface WireTransactionMixin
+//
+//private class WireTransactionSerializer : JsonSerializer<WireTransaction>() {
+//    override fun serialize(value: WireTransaction, gen: JsonGenerator, serializers: SerializerProvider) {
+//        gen.writeObject(WireTransactionJson(
+//                value.id,
+//                value.notary,
+//                value.inputs,
+//                value.outputs,
+//                value.commands,
+//                value.timeWindow,
+//                value.attachments,
+//                value.references,
+//                value.privacySalt,
+//                value.networkParametersHash
+//        ))
+//    }
+//}
+//
+//private class WireTransactionDeserializer : JsonDeserializer<WireTransaction>() {
+//    override fun deserialize(parser: JsonParser, ctxt: DeserializationContext): WireTransaction {
+//        val wrapper = parser.readValueAs<WireTransactionJson>()
+//        val componentGroups = createComponentGroups(
+//                wrapper.inputs,
+//                wrapper.outputs,
+//                wrapper.commands,
+//                wrapper.attachments,
+//                wrapper.notary,
+//                wrapper.timeWindow,
+//                wrapper.references,
+//                wrapper.networkParametersHash
+//        )
+//        return WireTransaction(componentGroups, wrapper.privacySalt)
+//    }
+//}
+//
+//private class WireTransactionJson(val id: SecureHash,
+//                                  val notary: Party?,
+//                                  val inputs: List<StateRef>,
+//                                  val outputs: List<TransactionState<*>>,
+//                                  val commands: List<Command<*>>,
+//                                  val timeWindow: TimeWindow?,
+//                                  val attachments: List<SecureHash>,
+//                                  val references: List<StateRef>,
+//                                  val privacySalt: PrivacySalt,
+//                                  val networkParametersHash: SecureHash?)
+//
+//private interface TransactionStateMixin {
+//    @get:JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+//    val data: ContractState
+//    @get:JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+//    val constraint: AttachmentConstraint
+//}
+//
+//private interface CommandMixin {
+//    @get:JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+//    val value: CommandData
+//}
+//
+//@JsonDeserialize(using = TimeWindowDeserializer::class)
+//private interface TimeWindowMixin
+//
+//private class TimeWindowDeserializer : JsonDeserializer<TimeWindow>() {
+//    override fun deserialize(parser: JsonParser, ctxt: DeserializationContext): TimeWindow {
+//        return parser.readValueAs<TimeWindowJson>().run {
+//            when {
+//                fromTime != null && untilTime != null -> TimeWindow.between(fromTime, untilTime)
+//                fromTime != null -> TimeWindow.fromOnly(fromTime)
+//                untilTime != null -> TimeWindow.untilOnly(untilTime)
+//                else -> throw JsonParseException(parser, "Neither fromTime nor untilTime exists for TimeWindow")
+//            }
+//        }
+//    }
+//}
+//
+//private data class TimeWindowJson(val fromTime: Instant?, val untilTime: Instant?)
 
 @JsonSerialize(using = PrivacySaltSerializer::class)
 @JsonDeserialize(using = PrivacySaltDeserializer::class)
