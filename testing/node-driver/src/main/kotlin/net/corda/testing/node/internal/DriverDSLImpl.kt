@@ -15,6 +15,7 @@ import net.corda.core.concurrent.firstOf
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.internal.PLATFORM_VERSION
 import net.corda.core.internal.ThreadBox
+import net.corda.core.internal.concurrent.asCordaFuture
 import net.corda.core.internal.concurrent.doOnError
 import net.corda.core.internal.concurrent.doneFuture
 import net.corda.core.internal.concurrent.flatMap
@@ -106,6 +107,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.Collections.unmodifiableList
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -406,11 +408,12 @@ class DriverDSLImpl(
         if(callerPackage.firstOrNull()?.startsWith("net.corda.node") == true) callerPackage.add("net.corda.testing")
         extraCustomCordapps = cordappsForPackages(extraCordappPackagesToScan + callerPackage)
 
-//        val notaryInfosFuture = if (compatibilityZone == null) {
+        val notaryInfosFuture = if (compatibilityZone == null) {
 //            // If no CZ is specified then the driver does the generation of the network parameters and the copying of the
 //            // node info files.
 //            startNotaryIdentityGeneration().map { notaryInfos -> Pair(notaryInfos, LocalNetworkMap(notaryInfos)) }
-//        } else {
+            LocalNetworkMap()
+        } else {
 //            // Otherwise it's the CZ's job to distribute thse via the HTTP network map, as that is what the nodes will be expecting.
 //            val notaryInfosFuture = if (compatibilityZone.rootCert == null) {
 //                // No root cert specified so we use the dev root cert to generate the notary identities.
@@ -423,10 +426,11 @@ class DriverDSLImpl(
 //                compatibilityZone.publishNotaries(notaryInfos)
 //                Pair(notaryInfos, null)
 //            }
-//        }
-//
-//        networkMapAvailability = notaryInfosFuture.map { it.second }
-//
+            null
+        }
+
+        networkMapAvailability = CompletableFuture.completedFuture(notaryInfosFuture).asCordaFuture()
+
 //        _notaries = notaryInfosFuture.map { (notaryInfos, localNetworkMap) ->
 //            val listOfFutureNodeHandles = startNotaries(localNetworkMap, notaryCustomOverrides)
 //            notaryInfos.zip(listOfFutureNodeHandles) { (identity, validating), nodeHandlesFuture ->
@@ -470,76 +474,76 @@ class DriverDSLImpl(
         }
     }
 
-//    private fun startNotaryIdentityGeneration(): CordaFuture<List<NotaryInfo>> {
-//        return executorService.fork {
-//            notarySpecs.map { spec ->
-//                val identity = when (spec.cluster) {
-//                    null -> {
-//                        DevIdentityGenerator.installKeyStoreWithNodeIdentity(baseDirectory(spec.name), spec.name)
-//                    }
-//                    is ClusterSpec.Raft -> {
-//                        DevIdentityGenerator.generateDistributedNotarySingularIdentity(
-//                                dirs = generateNodeNames(spec).map { baseDirectory(it) },
-//                                notaryName = spec.name
-//                        )
-//                    }
-//                    is DummyClusterSpec -> {
-//                        if (spec.cluster.compositeServiceIdentity) {
-//                            DevIdentityGenerator.generateDistributedNotarySingularIdentity(
-//                                    dirs = generateNodeNames(spec).map { baseDirectory(it) },
-//                                    notaryName = spec.name
-//                            )
-//                        } else {
-//                            DevIdentityGenerator.generateDistributedNotaryCompositeIdentity(
-//                                    dirs = generateNodeNames(spec).map { baseDirectory(it) },
-//                                    notaryName = spec.name
-//                            )
-//                        }
-//                    }
-//                    else -> throw UnsupportedOperationException("Cluster spec ${spec.cluster} not supported by Driver")
-//                }
-//                NotaryInfo(identity, spec.validating)
-//            }
-//        }
-//    }
-//
-//    private fun startAllNotaryRegistrations(
-//            rootCert: X509Certificate,
-//            compatibilityZone: CompatibilityZoneParams): CordaFuture<List<NotaryInfo>> {
-//        // Start the registration process for all the notaries together then wait for their responses.
-//        return notarySpecs.map { spec ->
-//            require(spec.cluster == null) { "Registering distributed notaries not supported" }
-//            startNotaryRegistration(spec, rootCert, compatibilityZone)
-//        }.transpose()
-//    }
-//
-//    private fun startNotaryRegistration(
-//            spec: NotarySpec,
-//            rootCert: X509Certificate,
-//            compatibilityZone: CompatibilityZoneParams
-//    ): CordaFuture<NotaryInfo> {
-//        return startNodeRegistration(spec.name, rootCert, compatibilityZone.config()).flatMap { config ->
-//            // Node registration only gives us the node CA cert, not the identity cert. That is only created on first
-//            // startup or when the node is told to just generate its node info file. We do that here.
-//            if (startNodesInProcess) {
-//                executorService.fork {
-//                    val nodeInfo = Node(config.corda, MOCK_VERSION_INFO, initialiseSerialization = false).generateAndSaveNodeInfo()
-//                    NotaryInfo(nodeInfo.legalIdentities[0], spec.validating)
-//                }
-//            } else {
-//                // TODO The config we use here is uses a hardocded p2p port which changes when the node is run proper
-//                // This causes two node info files to be generated.
-//                startOutOfProcessMiniNode(config, arrayOf("generate-node-info")).map {
-//                    // Once done we have to read the signed node info file that's been generated
-//                    val nodeInfoFile = config.corda.baseDirectory.list { paths ->
-//                        paths.filter { it.fileName.toString().startsWith(NodeInfoFilesCopier.NODE_INFO_FILE_NAME_PREFIX) }.findFirst().get()
-//                    }
-//                    val nodeInfo = nodeInfoFile.readObject<SignedNodeInfo>().verified()
-//                    NotaryInfo(nodeInfo.legalIdentities[0], spec.validating)
-//                }
-//            }
-//        }
-//    }
+    private fun startNotaryIdentityGeneration(): CordaFuture<List<NotaryInfo>> {
+        return executorService.fork {
+            notarySpecs.map { spec ->
+                val identity = when (spec.cluster) {
+                    null -> {
+                        DevIdentityGenerator.installKeyStoreWithNodeIdentity(baseDirectory(spec.name), spec.name)
+                    }
+                    is ClusterSpec.Raft -> {
+                        DevIdentityGenerator.generateDistributedNotarySingularIdentity(
+                                dirs = generateNodeNames(spec).map { baseDirectory(it) },
+                                notaryName = spec.name
+                        )
+                    }
+                    is DummyClusterSpec -> {
+                        if (spec.cluster.compositeServiceIdentity) {
+                            DevIdentityGenerator.generateDistributedNotarySingularIdentity(
+                                    dirs = generateNodeNames(spec).map { baseDirectory(it) },
+                                    notaryName = spec.name
+                            )
+                        } else {
+                            DevIdentityGenerator.generateDistributedNotaryCompositeIdentity(
+                                    dirs = generateNodeNames(spec).map { baseDirectory(it) },
+                                    notaryName = spec.name
+                            )
+                        }
+                    }
+                    else -> throw UnsupportedOperationException("Cluster spec ${spec.cluster} not supported by Driver")
+                }
+                NotaryInfo(identity, spec.validating)
+            }
+        }
+    }
+
+    private fun startAllNotaryRegistrations(
+            rootCert: X509Certificate,
+            compatibilityZone: CompatibilityZoneParams): CordaFuture<List<NotaryInfo>> {
+        // Start the registration process for all the notaries together then wait for their responses.
+        return notarySpecs.map { spec ->
+            require(spec.cluster == null) { "Registering distributed notaries not supported" }
+            startNotaryRegistration(spec, rootCert, compatibilityZone)
+        }.transpose()
+    }
+
+    private fun startNotaryRegistration(
+            spec: NotarySpec,
+            rootCert: X509Certificate,
+            compatibilityZone: CompatibilityZoneParams
+    ): CordaFuture<NotaryInfo> {
+        return startNodeRegistration(spec.name, rootCert, compatibilityZone.config()).flatMap { config ->
+            // Node registration only gives us the node CA cert, not the identity cert. That is only created on first
+            // startup or when the node is told to just generate its node info file. We do that here.
+            if (startNodesInProcess) {
+                executorService.fork {
+                    val nodeInfo = Node(config.corda, MOCK_VERSION_INFO, initialiseSerialization = false).generateAndSaveNodeInfo()
+                    NotaryInfo(nodeInfo.legalIdentities[0], spec.validating)
+                }
+            } else {
+                // TODO The config we use here is uses a hardocded p2p port which changes when the node is run proper
+                // This causes two node info files to be generated.
+                startOutOfProcessMiniNode(config, arrayOf("generate-node-info")).map {
+                    // Once done we have to read the signed node info file that's been generated
+                    val nodeInfoFile = config.corda.baseDirectory.list { paths ->
+                        paths.filter { it.fileName.toString().startsWith(NodeInfoFilesCopier.NODE_INFO_FILE_NAME_PREFIX) }.findFirst().get()
+                    }
+                    val nodeInfo = nodeInfoFile.readObject<SignedNodeInfo>().verified()
+                    NotaryInfo(nodeInfo.legalIdentities[0], spec.validating)
+                }
+            }
+        }
+    }
 
     private fun generateNodeNames(spec: NotarySpec): List<CordaX500Name> {
         return (0 until spec.cluster!!.clusterSize).map { spec.name.copy(organisation = "${spec.name.organisation}-$it") }
@@ -566,7 +570,7 @@ class DriverDSLImpl(
 //                NodeParameters(rpcUsers = spec.rpcUsers, verifierType = spec.verifierType, customOverrides = notaryConfig + customOverrides, maximumHeapSize = spec.maximumHeapSize)
 //        ).map { listOf(it) }
 //    }
-
+//
 //    private fun startRaftNotaryCluster(spec: NotarySpec, localNetworkMap: LocalNetworkMap?): CordaFuture<List<NodeHandle>> {
 //        fun notaryConfig(nodeAddress: NetworkHostAndPort, clusterAddress: NetworkHostAndPort? = null): Map<String, Any> {
 //            val clusterAddresses = if (clusterAddress != null) listOf(clusterAddress) else emptyList()
@@ -761,8 +765,8 @@ class DriverDSLImpl(
     /**
      * The local version of the network map, which is a bunch of classes that copy the relevant files to the node directories.
      */
-    inner class LocalNetworkMap(notaryInfos: List<NotaryInfo>) {
-        val networkParametersCopier = NetworkParametersCopier(networkParameters.copy(notaries = notaryInfos))
+    inner class LocalNetworkMap() {
+        val networkParametersCopier = NetworkParametersCopier(networkParameters)
         // TODO: this object will copy NodeInfo files from started nodes to other nodes additional-node-infos/
         // This uses the FileSystem and adds a delay (~5 seconds) given by the time we wait before polling the file system.
         // Investigate whether we can avoid that.
