@@ -95,10 +95,10 @@ class AMQPTypeIdentifierParserTests {
         verify("java.util.Map<java.lang.String, java.lang.Integer> ")
     }
 
-    @Test(timeout=300_000)
-	fun `test list of commands`() {
-        verify("java.util.List<net.corda.core.contracts.Command<net.corda.core.contracts.Command<net.corda.core.contracts.CommandData>>>")
-    }
+//    @Test(timeout=300_000)
+//	fun `test list of commands`() {
+//        verify("java.util.List<net.corda.core.contracts.Command<net.corda.core.contracts.Command<net.corda.core.contracts.CommandData>>>")
+//    }
 
     @Test(expected = NotSerializableException::class, timeout = 300_000)
     fun `test trailing text`() {

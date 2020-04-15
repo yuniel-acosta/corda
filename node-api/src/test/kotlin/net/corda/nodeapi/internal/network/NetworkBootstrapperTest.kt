@@ -159,14 +159,14 @@ class NetworkBootstrapperTest {
         assertThat(nodeCordaJar).hasBinaryContent(fakeCordaJar)  // Make sure the corda.jar is left untouched
     }
 
-    @Test(timeout=300_000)
-	fun `two node conf files, one of which is a notary`() {
-        createNodeConfFile("alice", aliceConfig)
-        createNodeConfFile("notary", notaryConfig)
-        bootstrap()
-        val networkParameters = assertBootstrappedNetwork(fakeEmbeddedCorda, "alice" to aliceConfig, "notary" to notaryConfig)
-        networkParameters.assertContainsNotary("notary")
-    }
+//    @Test(timeout=300_000)
+//	fun `two node conf files, one of which is a notary`() {
+//        createNodeConfFile("alice", aliceConfig)
+//        createNodeConfFile("notary", notaryConfig)
+//        bootstrap()
+//        val networkParameters = assertBootstrappedNetwork(fakeEmbeddedCorda, "alice" to aliceConfig, "notary" to notaryConfig)
+//        networkParameters.assertContainsNotary("notary")
+//    }
 
     @Test(timeout=300_000)
 	fun `two node conf files with the same legal name`() {
@@ -185,29 +185,29 @@ class NetworkBootstrapperTest {
         assertBootstrappedNetwork(fakeEmbeddedCorda, "alice" to aliceConfig, "bob" to bobConfig)
     }
 
-    @Test(timeout=300_000)
-	fun `node conf file and CorDapp jar`() {
-        createNodeConfFile("alice", aliceConfig)
-        val cordappBytes = createFakeCordappJar("sample-app", listOf("contract.class"))
-        bootstrap()
-        val networkParameters = assertBootstrappedNetwork(fakeEmbeddedCorda, "alice" to aliceConfig)
-        assertThat(rootDir / "alice" / "cordapps" / "sample-app.jar").hasBinaryContent(cordappBytes)
-        assertThat(networkParameters.whitelistedContractImplementations).isEqualTo(mapOf(
-                "contract.class" to listOf(cordappBytes.sha256())
-        ))
-    }
+//    @Test(timeout=300_000)
+//	fun `node conf file and CorDapp jar`() {
+//        createNodeConfFile("alice", aliceConfig)
+//        val cordappBytes = createFakeCordappJar("sample-app", listOf("contract.class"))
+//        bootstrap()
+//        val networkParameters = assertBootstrappedNetwork(fakeEmbeddedCorda, "alice" to aliceConfig)
+//        assertThat(rootDir / "alice" / "cordapps" / "sample-app.jar").hasBinaryContent(cordappBytes)
+//        assertThat(networkParameters.whitelistedContractImplementations).isEqualTo(mapOf(
+//                "contract.class" to listOf(cordappBytes.sha256())
+//        ))
+//    }
 
-    @Test(timeout=300_000)
-	fun `no copy CorDapps`() {
-        createNodeConfFile("alice", aliceConfig)
-        val cordappBytes = createFakeCordappJar("sample-app", listOf("contract.class"))
-        bootstrap(copyCordapps = CopyCordapps.No)
-        val networkParameters = assertBootstrappedNetwork(fakeEmbeddedCorda, "alice" to aliceConfig)
-        assertThat(rootDir / "alice" / "cordapps" / "sample-app.jar").doesNotExist()
-        assertThat(networkParameters.whitelistedContractImplementations).isEqualTo(mapOf(
-                "contract.class" to listOf(cordappBytes.sha256())
-        ))
-    }
+//    @Test(timeout=300_000)
+//	fun `no copy CorDapps`() {
+//        createNodeConfFile("alice", aliceConfig)
+//        val cordappBytes = createFakeCordappJar("sample-app", listOf("contract.class"))
+//        bootstrap(copyCordapps = CopyCordapps.No)
+//        val networkParameters = assertBootstrappedNetwork(fakeEmbeddedCorda, "alice" to aliceConfig)
+//        assertThat(rootDir / "alice" / "cordapps" / "sample-app.jar").doesNotExist()
+//        assertThat(networkParameters.whitelistedContractImplementations).isEqualTo(mapOf(
+//                "contract.class" to listOf(cordappBytes.sha256())
+//        ))
+//    }
 
     @Test(timeout=300_000)
 	fun `add node to existing network`() {
@@ -220,16 +220,16 @@ class NetworkBootstrapperTest {
         assertThat(networkParameters1).isEqualTo(networkParameters2)
     }
 
-    @Test(timeout=300_000)
-	fun `add notary to existing network`() {
-        createNodeConfFile("alice", aliceConfig)
-        bootstrap()
-        createNodeConfFile("notary", notaryConfig)
-        bootstrap()
-        val networkParameters = assertBootstrappedNetwork(fakeEmbeddedCorda, "alice" to aliceConfig, "notary" to notaryConfig)
-        networkParameters.assertContainsNotary("notary")
-        assertThat(networkParameters.epoch).isEqualTo(2)
-    }
+//    @Test(timeout=300_000)
+//	fun `add notary to existing network`() {
+//        createNodeConfFile("alice", aliceConfig)
+//        bootstrap()
+//        createNodeConfFile("notary", notaryConfig)
+//        bootstrap()
+//        val networkParameters = assertBootstrappedNetwork(fakeEmbeddedCorda, "alice" to aliceConfig, "notary" to notaryConfig)
+//        networkParameters.assertContainsNotary("notary")
+//        assertThat(networkParameters.epoch).isEqualTo(2)
+//    }
 
     @Test(timeout=300_000)
 	fun `network parameters overrides`() {
