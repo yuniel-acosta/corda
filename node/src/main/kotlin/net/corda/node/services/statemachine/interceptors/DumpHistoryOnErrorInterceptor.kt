@@ -19,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap
  * This interceptor records a trace of all of the flows' states and transitions. If the flow dirties it dumps the trace
  * transition to the logger.
  */
-@Suppress("MaxLineLength") // detekt confusing the whole if statement for a line
 class DumpHistoryOnErrorInterceptor(val delegate: TransitionExecutor) : TransitionExecutor {
     companion object {
         private val log = contextLogger()

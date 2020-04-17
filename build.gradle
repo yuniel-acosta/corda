@@ -125,7 +125,6 @@ buildscript {
     ext.commons_lang_version = '3.9'
     ext.commons_io_version = '2.6'
     ext.controlsfx_version = '8.40.15'
-    ext.detekt_version = constants.getProperty('detektVersion')
     if (JavaVersion.current() == JavaVersion.VERSION_11) {
         // has been compiled by a more recent version of the Java Runtime (class file version 55.0)
         ext.fontawesomefx_commons_version = '11.0'
@@ -413,10 +412,6 @@ allprojects {
 if (!JavaVersion.current().java8Compatible)
     throw new GradleException("Corda requires Java 8, please upgrade to at least 1.8.0_$java8_minUpdateVersion")
 
-configurations {
-    detekt
-}
-
 // Required for building out the fat JAR.
 dependencies {
     compile project(':node')
@@ -433,7 +428,6 @@ dependencies {
     runtime project(':finance:workflows')
     runtime project(':testing:testserver')
     testCompile project(':test-utils')
-    detekt 'io.gitlab.arturbosch.detekt:detekt-cli:1.0.1'
 }
 
 jar {
@@ -460,29 +454,6 @@ task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
             it.exists()
         })
     }
-}
-
-tasks.register('detekt', JavaExec) {
-    def input = "$projectDir"
-    def config = "$projectDir/detekt-config.yml"
-    def baseline = "$projectDir/detekt-baseline.xml"
-    def detektPluginsJar = project(':detekt-plugins').tasks.jar
-    def plugins = detektPluginsJar.outputs.files.singleFile
-    def params = ['-i', input, '-c', config, '-b', baseline, '--plugins', plugins]
-    inputs.files(detektPluginsJar, config, baseline)
-    main = "io.gitlab.arturbosch.detekt.cli.Main"
-    classpath = configurations.detekt
-    args(params)
-}
-
-tasks.register('detektBaseline', JavaExec) {
-    main = "io.gitlab.arturbosch.detekt.cli.Main"
-    classpath = configurations.detekt
-    def input = "$projectDir"
-    def config = "$projectDir/detekt-config.yml, $projectDir/detekt-baseline-config.yml"
-    def baseline = "$projectDir/detekt-baseline.xml"
-    def params = ['-i', input, '-c', config, '-b', baseline, '--create-baseline']
-    args(params)
 }
 
 tasks.withType(Test) {
