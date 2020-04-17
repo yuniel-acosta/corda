@@ -46,63 +46,63 @@ class H2SecurityTests {
         }
     }
 
-    @Test(timeout=300_000)
-	fun `h2 server on the host name requires non-default database password`() {
-        driver(DriverParameters(
-                inMemoryDB = false,
-                startNodesInProcess = isQuasarAgentSpecified(),
-                notarySpecs = emptyList(),
-                cordappsForAllNodes = emptyList()
-        )) {
-            assertFailsWith(CouldNotCreateDataSourceException::class) {
-                startNode(customOverrides = mapOf(h2AddressKey to "${InetAddress.getLocalHost().hostName}:${getFreePort()}")).getOrThrow()
-            }
-        }
-    }
-
-    @Test(timeout=300_000)
-	fun `h2 server on the external host IP requires non-default database password`() {
-        driver(DriverParameters(
-                inMemoryDB = false,
-                startNodesInProcess = isQuasarAgentSpecified(),
-                notarySpecs = emptyList(),
-                cordappsForAllNodes = emptyList()
-        )) {
-            assertFailsWith(CouldNotCreateDataSourceException::class) {
-                startNode(customOverrides = mapOf(h2AddressKey to "${InetAddress.getLocalHost().hostAddress}:${getFreePort()}")).getOrThrow()
-            }
-        }
-    }
-
-    @Test(timeout=300_000)
-	fun `h2 server on host name requires non-blank database password`() {
-        driver(DriverParameters(
-                inMemoryDB = false,
-                startNodesInProcess = isQuasarAgentSpecified(),
-                notarySpecs = emptyList(),
-                cordappsForAllNodes = emptyList()
-        )) {
-            assertFailsWith(CouldNotCreateDataSourceException::class) {
-                startNode(customOverrides = mapOf(h2AddressKey to "${InetAddress.getLocalHost().hostName}:${getFreePort()}",
-                        dbPasswordKey to " ")).getOrThrow()
-            }
-        }
-    }
-
-    @Test(timeout=300_000)
-	fun `h2 server on external host IP requires non-blank database password`() {
-        driver(DriverParameters(
-                inMemoryDB = false,
-                startNodesInProcess = isQuasarAgentSpecified(),
-                notarySpecs = emptyList(),
-                cordappsForAllNodes = emptyList()
-        )) {
-            assertFailsWith(CouldNotCreateDataSourceException::class) {
-                startNode(customOverrides = mapOf(h2AddressKey to "${InetAddress.getLocalHost().hostAddress}:${getFreePort()}",
-                        dbPasswordKey to " ")).getOrThrow()
-            }
-        }
-    }
+//    @Test(timeout=300_000)
+//	fun `h2 server on the host name requires non-default database password`() {
+//        driver(DriverParameters(
+//                inMemoryDB = false,
+//                startNodesInProcess = isQuasarAgentSpecified(),
+//                notarySpecs = emptyList(),
+//                cordappsForAllNodes = emptyList()
+//        )) {
+//            assertFailsWith(CouldNotCreateDataSourceException::class) {
+//                startNode(customOverrides = mapOf(h2AddressKey to "${InetAddress.getLocalHost().hostName}:${getFreePort()}")).getOrThrow()
+//            }
+//        }
+//    }
+//
+//    @Test(timeout=300_000)
+//	fun `h2 server on the external host IP requires non-default database password`() {
+//        driver(DriverParameters(
+//                inMemoryDB = false,
+//                startNodesInProcess = isQuasarAgentSpecified(),
+//                notarySpecs = emptyList(),
+//                cordappsForAllNodes = emptyList()
+//        )) {
+//            assertFailsWith(CouldNotCreateDataSourceException::class) {
+//                startNode(customOverrides = mapOf(h2AddressKey to "${InetAddress.getLocalHost().hostAddress}:${getFreePort()}")).getOrThrow()
+//            }
+//        }
+//    }
+//
+//    @Test(timeout=300_000)
+//	fun `h2 server on host name requires non-blank database password`() {
+//        driver(DriverParameters(
+//                inMemoryDB = false,
+//                startNodesInProcess = isQuasarAgentSpecified(),
+//                notarySpecs = emptyList(),
+//                cordappsForAllNodes = emptyList()
+//        )) {
+//            assertFailsWith(CouldNotCreateDataSourceException::class) {
+//                startNode(customOverrides = mapOf(h2AddressKey to "${InetAddress.getLocalHost().hostName}:${getFreePort()}",
+//                        dbPasswordKey to " ")).getOrThrow()
+//            }
+//        }
+//    }
+//
+//    @Test(timeout=300_000)
+//	fun `h2 server on external host IP requires non-blank database password`() {
+//        driver(DriverParameters(
+//                inMemoryDB = false,
+//                startNodesInProcess = isQuasarAgentSpecified(),
+//                notarySpecs = emptyList(),
+//                cordappsForAllNodes = emptyList()
+//        )) {
+//            assertFailsWith(CouldNotCreateDataSourceException::class) {
+//                startNode(customOverrides = mapOf(h2AddressKey to "${InetAddress.getLocalHost().hostAddress}:${getFreePort()}",
+//                        dbPasswordKey to " ")).getOrThrow()
+//            }
+//        }
+//    }
 
     @Test(timeout=300_000)
 	fun `h2 server on localhost runs with the default database password`() {

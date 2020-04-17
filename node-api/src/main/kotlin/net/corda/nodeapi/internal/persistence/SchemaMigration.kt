@@ -115,8 +115,6 @@ class SchemaMigration(
                 val resource = getMigrationResource(mappedSchema, classLoader)
                 when {
                     resource != null -> resource
-                    // Corda OS FinanceApp in v3 has no Liquibase script, so no error is raised
-                    (mappedSchema::class.qualifiedName == "net.corda.finance.schemas.CashSchemaV1" || mappedSchema::class.qualifiedName == "net.corda.finance.schemas.CommercialPaperSchemaV1") && mappedSchema.migrationResource == null -> null
                     else -> logOrThrowMigrationError(mappedSchema)
                 }
             }

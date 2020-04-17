@@ -98,7 +98,7 @@ class FlowHospitalTest {
         driver(
             DriverParameters(
                 startNodesInProcess = true,
-                cordappsForAllNodes = listOf(enclosedCordapp(), findCordapp("net.corda.testing.contracts"))
+                cordappsForAllNodes = listOf(enclosedCordapp())
             )
         ) {
             val alice = startNode(providedName = ALICE_NAME, rpcUsers = listOf(rpcUser)).getOrThrow()
@@ -120,7 +120,7 @@ class FlowHospitalTest {
         driver(
             DriverParameters(
                 startNodesInProcess = true,
-                cordappsForAllNodes = listOf(enclosedCordapp(), findCordapp("net.corda.testing.contracts"))
+                cordappsForAllNodes = listOf(enclosedCordapp())
             )
         ) {
             val alice = startNode(providedName = ALICE_NAME, rpcUsers = listOf(rpcUser)).getOrThrow()
@@ -142,7 +142,7 @@ class FlowHospitalTest {
         driver(
             DriverParameters(
                 startNodesInProcess = true,
-                cordappsForAllNodes = listOf(enclosedCordapp(), findCordapp("net.corda.testing.contracts"))
+                cordappsForAllNodes = listOf(enclosedCordapp())
             )
         ) {
             // one node will be enough for this testing
@@ -169,7 +169,7 @@ class FlowHospitalTest {
         driver(
             DriverParameters(
                 startNodesInProcess = true,
-                cordappsForAllNodes = listOf(enclosedCordapp(), findCordapp("net.corda.testing.contracts"))
+                cordappsForAllNodes = listOf(enclosedCordapp())
             )
         ) {
             val alice = startNode(providedName = ALICE_NAME, rpcUsers = listOf(rpcUser)).getOrThrow()

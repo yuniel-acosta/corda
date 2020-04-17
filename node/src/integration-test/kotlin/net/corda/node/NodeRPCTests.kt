@@ -13,7 +13,7 @@ class NodeRPCTests {
     private val CORDA_VERSION_REGEX = "\\d+(\\.\\d+)?(-\\w+)?".toRegex()
     private val CORDA_VENDOR = "Corda Open Source"
     private val CORDAPPS = listOf(FINANCE_WORKFLOWS_CORDAPP)
-    private val CORDAPP_TYPES = setOf("Contract CorDapp", "Workflow CorDapp")
+    private val CORDAPP_TYPES = setOf("Workflow CorDapp")
     private val CORDAPP_WORKFLOWS_NAME_REGEX = "corda-finance-workflows-$CORDA_VERSION_REGEX".toRegex()
     private val CORDAPP_SHORT_NAME = "Corda Finance Demo"
     private val CORDAPP_VENDOR = "R3"
