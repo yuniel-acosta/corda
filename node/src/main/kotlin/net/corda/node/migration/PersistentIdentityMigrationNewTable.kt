@@ -11,7 +11,6 @@ import net.corda.core.utilities.contextLogger
 import net.corda.node.internal.DBNetworkParametersStorage
 import net.corda.node.services.identity.PersistentIdentityService
 import net.corda.node.services.keys.BasicHSMKeyManagementService
-import net.corda.node.services.persistence.NodeAttachmentService
 import net.corda.nodeapi.internal.crypto.X509CertificateFactory
 import java.security.PublicKey
 
@@ -105,12 +104,10 @@ object PersistentIdentitiesMigrationSchemaBuilder {
     fun getMappedSchema() =
             MappedSchema(schemaFamily = PersistentIdentitiesMigrationSchema.javaClass, version = 1,
                     mappedTypes = listOf(
-//                            DBTransactionStorage.DBTransaction::class.java,
                             PersistentIdentityService.PersistentPublicKeyHashToCertificate::class.java,
                             PersistentIdentityService.PersistentPartyToPublicKeyHash::class.java,
                             PersistentIdentityService.PersistentPublicKeyHashToParty::class.java,
                             PersistentIdentityService.PersistentHashToPublicKey::class.java,
-                            NodeAttachmentService.DBAttachment::class.java,
                             DBNetworkParametersStorage.PersistentNetworkParameters::class.java
                     ))
 }

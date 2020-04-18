@@ -53,10 +53,6 @@ open class PersistentNetworkMapCache(cacheFactory: NamedCacheFactory,
 
     override val nodeReady: OpenFuture<Void?> = openFuture()
 
-    private lateinit var notaries: List<NotaryInfo>
-
-    override val notaryIdentities: List<Party> get() = notaries.map { it.identity }
-
     override val allNodeHashes: List<SecureHash>
         get() {
             return database.transaction {
@@ -69,10 +65,6 @@ open class PersistentNetworkMapCache(cacheFactory: NamedCacheFactory,
                 session.createQuery(query).resultList.map { SecureHash.parse(it) }
             }
         }
-
-    fun start(notaries: List<NotaryInfo>) {
-        this.notaries = notaries
-    }
 
     override fun getNodeByLegalIdentity(party: AbstractParty): NodeInfo? {
         return database.transaction {
@@ -94,8 +86,6 @@ open class PersistentNetworkMapCache(cacheFactory: NamedCacheFactory,
             session.createQuery(query).resultList.singleOrNull()?.toNodeInfo()
         }
     }
-
-    override fun isValidatingNotary(party: Party): Boolean = notaries.any { it.validating && it.identity == party }
 
     override fun getPartyInfo(party: Party): PartyInfo? {
         val nodes = getNodesByLegalIdentityKey(party.owningKey)

@@ -1,7 +1,5 @@
 package net.corda.webserver.api
 
-//import net.corda.core.contracts.ContractState
-//import net.corda.core.contracts.StateAndRef
 import net.corda.core.identity.Party
 import net.corda.core.utilities.NetworkHostAndPort
 import java.time.LocalDateTime
@@ -69,26 +67,10 @@ interface APIServer {
     fun peers(): List<Party>
 
     /**
-     * Report the notaries on the network.
-     */
-    @GET
-    @Path("notaries")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun notaries(): List<Party>
-
-    /**
      * Report this node's registered flows.
      */
     @GET
     @Path("flows")
     @Produces(MediaType.APPLICATION_JSON)
     fun flows(): List<String>
-
-//    /**
-//     * Report this node's vault states.
-//     */
-//    @GET
-//    @Path("states")
-//    @Produces(MediaType.APPLICATION_JSON)
-//    fun states(): List<StateAndRef<ContractState>>
 }

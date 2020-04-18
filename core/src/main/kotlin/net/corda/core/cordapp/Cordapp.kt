@@ -21,11 +21,9 @@ import java.net.URL
  *
  * @property name Cordapp name - derived from the base name of the Cordapp JAR (therefore may not be unique). This is different to
  * [Cordapp.Info.shortName] which should be used instead.
- * @property contractClassNames List of contracts
  * @property initiatedFlows List of initiatable flow classes
  * @property rpcFlows List of RPC initiable flows classes
  * @property serviceFlows List of [net.corda.core.node.services.CordaService] initiable flows classes
- * @property schedulableFlows List of flows startable by the scheduler
  * @property services List of RPC services
  * @property serializationWhitelists List of Corda plugin registries
  * @property serializationCustomSerializers List of serializers
@@ -41,11 +39,9 @@ import java.net.URL
 @DeleteForDJVM
 interface Cordapp {
     val name: String
-//    val contractClassNames: List<String>
     val initiatedFlows: List<Class<out FlowLogic<*>>>
     val rpcFlows: List<Class<out FlowLogic<*>>>
     val serviceFlows: List<Class<out FlowLogic<*>>>
-//    val schedulableFlows: List<Class<out FlowLogic<*>>>
     val services: List<Class<out SerializeAsToken>>
     val serializationWhitelists: List<SerializationWhitelist>
     val serializationCustomSerializers: List<SerializationCustomSerializer<*, *>>

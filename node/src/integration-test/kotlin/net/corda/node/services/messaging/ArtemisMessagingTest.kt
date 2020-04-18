@@ -88,7 +88,7 @@ class ArtemisMessagingTest {
             doReturn(FlowTimeoutConfiguration(5.seconds, 3, backoffBase = 1.0)).whenever(it).flowTimeout
         }
         database = configureDatabase(makeTestDataSourceProperties(), DatabaseConfig(), { null }, { null })
-        networkMapCache = PersistentNetworkMapCache(TestingNamedCacheFactory(), database, rigorousMock()).apply { start(emptyList()) }
+        networkMapCache = PersistentNetworkMapCache(TestingNamedCacheFactory(), database, rigorousMock())
     }
 
     @After

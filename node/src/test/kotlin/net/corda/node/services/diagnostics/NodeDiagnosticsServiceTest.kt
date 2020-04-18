@@ -6,7 +6,6 @@ import net.corda.core.cordapp.CordappContext
 import net.corda.core.cordapp.CordappInfo
 import net.corda.core.flows.FlowLogic
 import net.corda.core.internal.cordapp.CordappImpl
-import net.corda.core.node.services.AttachmentId
 import net.corda.node.internal.cordapp.CordappProviderInternal
 import org.junit.Test
 import kotlin.test.assertEquals

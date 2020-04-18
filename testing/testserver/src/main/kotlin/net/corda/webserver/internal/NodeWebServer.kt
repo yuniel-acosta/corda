@@ -131,7 +131,6 @@ class NodeWebServer(val config: WebServerConfig) {
             }
             setAttribute("rpc", localRpc)
             addServlet(DataUploadServlet::class.java, "/upload/*")
-            addServlet(AttachmentDownloadServlet::class.java, "/attachments/*")
 
             val rpcObjectMapper = pluginRegistries.fold(JacksonSupport.createDefaultMapper(localRpc)) { om, plugin ->
                 plugin.customizeJSONSerialization(om)

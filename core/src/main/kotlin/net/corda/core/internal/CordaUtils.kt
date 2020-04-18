@@ -1,19 +1,10 @@
 @file:Suppress("TooManyFunctions")
 package net.corda.core.internal
 
-import net.corda.core.DeleteForDJVM
-import net.corda.core.contracts.Attachment
-import net.corda.core.cordapp.CordappProvider
 import net.corda.core.flows.FlowLogic
-import net.corda.core.node.NetworkParameters
 import net.corda.core.node.ServicesForResolution
 import net.corda.core.node.ZoneVersionTooLowException
-import net.corda.core.node.services.AttachmentId
-import net.corda.core.node.services.AttachmentStorage
 import net.corda.core.serialization.CordaSerializable
-import net.corda.core.serialization.SerializationContext
-import org.slf4j.MDC
-import java.security.PublicKey
 import java.util.jar.JarInputStream
 
 // *Internal* Corda-specific utilities.
@@ -92,44 +83,10 @@ object RetrieveAnyTransactionPayload : ArrayList<Any>()
  */
 private fun owns(packageName: String, fullClassName: String): Boolean = fullClassName.startsWith("$packageName.", ignoreCase = true)
 
-///** Returns the public key of the package owner of the [contractClassName], or null if not owned. */
-//fun NetworkParameters.getPackageOwnerOf(contractClassName: ContractClassName): PublicKey? {
-//    return packageOwnership.entries.singleOrNull { owns(it.key, contractClassName) }?.value
-//}
-
 // Make sure that packages don't overlap so that ownership is clear.
 fun noPackageOverlap(packages: Collection<String>): Boolean {
     return packages.all { outer -> packages.none { inner -> inner != outer && inner.startsWith("$outer.") } }
 }
-
-/**
- * @return The set of [AttachmentId]s after the node's fix-up rules have been applied to [attachmentIds].
- */
-fun CordappProvider.internalFixupAttachmentIds(attachmentIds: Collection<AttachmentId>): Set<AttachmentId> {
-    return (this as CordappFixupInternal).fixupAttachmentIds(attachmentIds)
-}
-
-///**
-// * Scans trusted (installed locally) attachments to find all that contain the [className].
-// * This is required as a workaround until explicit cordapp dependencies are implemented.
-// * DO NOT USE IN CLIENT code.
-// *
-// * @return the attachments with the highest version.
-// *
-// * TODO: Should throw when the class is found in multiple contract attachments (not different versions).
-// */
-//fun AttachmentStorage.internalFindTrustedAttachmentForClass(className: String): Attachment? {
-//    val allTrusted = queryAttachments(
-//            AttachmentQueryCriteria.AttachmentsQueryCriteria().withUploader(Builder.`in`(TRUSTED_UPLOADERS)),
-//            AttachmentSort(listOf(AttachmentSort.AttachmentSortColumn(AttachmentSort.AttachmentSortAttribute.VERSION, Sort.Direction.DESC))))
-//
-//    // TODO - add caching if performance is affected.
-//    for (attId in allTrusted) {
-//        val attch = openAttachment(attId)!!
-//        if (attch.openAsJAR().use { hasFile(it, "$className.class") }) return attch
-//    }
-//    return null
-//}
 
 private fun hasFile(jarStream: JarInputStream, className: String): Boolean {
     while (true) {

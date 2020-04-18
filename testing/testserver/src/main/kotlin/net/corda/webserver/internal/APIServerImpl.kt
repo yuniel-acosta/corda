@@ -26,9 +26,5 @@ class APIServerImpl(val rpcOps: CordaRPCOps) : APIServer {
 
     override fun peers() = rpcOps.networkMapSnapshot().flatMap { it.legalIdentities }
 
-    override fun notaries() = rpcOps.notaryIdentities()
-
     override fun flows() = rpcOps.registeredFlows()
-
-//    override fun states() = rpcOps.vaultQueryBy<ContractState>().states
 }

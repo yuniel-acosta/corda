@@ -19,12 +19,4 @@ interface CordappProvider {
      * @throws IllegalStateException When called from a non-app context
      */
     fun getAppContext(): CordappContext
-
-//    /**
-//     * Resolve an attachment ID for a given contract name
-//     *
-//     * @param contractClassName The contract to find the attachment for
-//     * @return An attachment ID if it exists
-//     */
-//    fun getContractAttachmentID(contractClassName: ContractClassName): AttachmentId?
 }

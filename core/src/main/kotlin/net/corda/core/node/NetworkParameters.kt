@@ -2,15 +2,8 @@ package net.corda.core.node
 
 import net.corda.core.CordaRuntimeException
 import net.corda.core.KeepForDJVM
-import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.Party
-import net.corda.core.internal.noPackageOverlap
-import net.corda.core.internal.requirePackageValid
-import net.corda.core.node.services.AttachmentId
 import net.corda.core.serialization.CordaSerializable
-import net.corda.core.serialization.DeprecatedConstructorForDeserialization
-import net.corda.core.utilities.days
-import java.security.PublicKey
 import java.time.Duration
 import java.time.Instant
 
@@ -38,130 +31,18 @@ import java.time.Instant
 @CordaSerializable
 data class NetworkParameters(
         val minimumPlatformVersion: Int,
-        val notaries: List<NotaryInfo>,
         val maxMessageSize: Int,
         val maxTransactionSize: Int,
         @AutoAcceptable val modifiedTime: Instant,
         @AutoAcceptable val epoch: Int,
-        @AutoAcceptable val whitelistedContractImplementations: Map<String, List<AttachmentId>>,
-        val eventHorizon: Duration,
-        @AutoAcceptable val packageOwnership: Map<String, PublicKey>
+        val eventHorizon: Duration
 ) {
-    // DOCEND 1
-    @DeprecatedConstructorForDeserialization(1)
-    constructor(minimumPlatformVersion: Int,
-                notaries: List<NotaryInfo>,
-                maxMessageSize: Int,
-                maxTransactionSize: Int,
-                modifiedTime: Instant,
-                epoch: Int,
-                whitelistedContractImplementations: Map<String, List<AttachmentId>>
-    ) : this(minimumPlatformVersion,
-            notaries,
-            maxMessageSize,
-            maxTransactionSize,
-            modifiedTime,
-            epoch,
-            whitelistedContractImplementations,
-            Int.MAX_VALUE.days,
-            emptyMap()
-    )
-
-    @DeprecatedConstructorForDeserialization(2)
-    constructor(minimumPlatformVersion: Int,
-                notaries: List<NotaryInfo>,
-                maxMessageSize: Int,
-                maxTransactionSize: Int,
-                modifiedTime: Instant,
-                epoch: Int,
-                whitelistedContractImplementations: Map<String, List<AttachmentId>>,
-                eventHorizon: Duration
-    ) : this(minimumPlatformVersion,
-            notaries,
-            maxMessageSize,
-            maxTransactionSize,
-            modifiedTime,
-            epoch,
-            whitelistedContractImplementations,
-            eventHorizon,
-            emptyMap()
-    )
-
-    init {
-        require(minimumPlatformVersion > 0) { "Minimum platform level must be at least 1" }
-        require(notaries.distinctBy { it.identity } == notaries) { "Duplicate notary identities" }
-        require(epoch > 0) { "Epoch must be at least 1" }
-        require(maxMessageSize > 0) { "Maximum message size must be at least 1" }
-        require(maxTransactionSize > 0) { "Maximum transaction size must be at least 1" }
-        require(!eventHorizon.isNegative) { "Event Horizon must be a positive value" }
-        packageOwnership.keys.forEach(::requirePackageValid)
-        require(noPackageOverlap(packageOwnership.keys)) { "Multiple packages added to the packageOwnership overlap." }
-    }
-
-    /**
-     * This is to address backwards compatibility of the API, invariant to package ownership
-     * addresses bug CORDA-2769
-     */
-    fun copy(minimumPlatformVersion: Int = this.minimumPlatformVersion,
-             notaries: List<NotaryInfo> = this.notaries,
-             maxMessageSize: Int = this.maxMessageSize,
-             maxTransactionSize: Int = this.maxTransactionSize,
-             modifiedTime: Instant = this.modifiedTime,
-             epoch: Int = this.epoch,
-             whitelistedContractImplementations: Map<String, List<AttachmentId>> = this.whitelistedContractImplementations,
-             eventHorizon: Duration = this.eventHorizon
-    ): NetworkParameters {
-        return NetworkParameters(
-                minimumPlatformVersion = minimumPlatformVersion,
-                notaries = notaries,
-                maxMessageSize = maxMessageSize,
-                maxTransactionSize = maxTransactionSize,
-                modifiedTime = modifiedTime,
-                epoch = epoch,
-                whitelistedContractImplementations = whitelistedContractImplementations,
-                eventHorizon = eventHorizon,
-                packageOwnership = packageOwnership
-        )
-    }
-
-    /**
-     * This is to address backwards compatibility of the API, invariant to package ownership
-     * addresses bug CORDA-2769
-     */
-    fun copy(minimumPlatformVersion: Int = this.minimumPlatformVersion,
-             notaries: List<NotaryInfo> = this.notaries,
-             maxMessageSize: Int = this.maxMessageSize,
-             maxTransactionSize: Int = this.maxTransactionSize,
-             modifiedTime: Instant = this.modifiedTime,
-             epoch: Int = this.epoch,
-             whitelistedContractImplementations: Map<String, List<AttachmentId>> = this.whitelistedContractImplementations
-    ): NetworkParameters {
-        return NetworkParameters(
-                minimumPlatformVersion = minimumPlatformVersion,
-                notaries = notaries,
-                maxMessageSize = maxMessageSize,
-                maxTransactionSize = maxTransactionSize,
-                modifiedTime = modifiedTime,
-                epoch = epoch,
-                whitelistedContractImplementations = whitelistedContractImplementations,
-                eventHorizon = eventHorizon,
-                packageOwnership = packageOwnership
-        )
-    }
-
     override fun toString(): String {
         return """NetworkParameters {
       minimumPlatformVersion=$minimumPlatformVersion
-      notaries=$notaries
       maxMessageSize=$maxMessageSize
       maxTransactionSize=$maxTransactionSize
-      whitelistedContractImplementations {
-        ${whitelistedContractImplementations.entries.joinToString("\n    ")}
-      }
       eventHorizon=$eventHorizon
-      packageOwnership {
-        ${packageOwnership.entries.joinToString("\n    ") { "$it.key -> ${it.value.toStringShort()}" }}
-      }
       modifiedTime=$modifiedTime
       epoch=$epoch
   }"""

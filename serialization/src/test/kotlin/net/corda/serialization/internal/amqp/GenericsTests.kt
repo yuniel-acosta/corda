@@ -1,6 +1,5 @@
 package net.corda.serialization.internal.amqp
 
-import net.corda.core.contracts.Attachment
 import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.CordaX500Name
@@ -15,14 +14,6 @@ import java.math.BigInteger
 import java.net.URI
 import java.util.*
 import kotlin.test.assertEquals
-
-//data class TestContractState(
-//        override val participants: List<AbstractParty>
-//) : ContractState
-//
-//class TestAttachmentConstraint : AttachmentConstraint {
-//    override fun isSatisfiedBy(attachment: Attachment) = true
-//}
 
 class GenericsTests {
     companion object {

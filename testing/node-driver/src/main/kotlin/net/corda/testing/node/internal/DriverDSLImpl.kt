@@ -400,7 +400,6 @@ class DriverDSLImpl(
         if (startNodesInProcess) {
             Schedulers.reset()
         }
-        require(networkParameters.notaries.isEmpty()) { "Define notaries using notarySpecs" }
         _executorService = Executors.newScheduledThreadPool(2, ThreadFactoryBuilder().setNameFormat("driver-pool-thread-%d").build())
         _shutdownManager = ShutdownManager(executorService)
 
@@ -409,48 +408,12 @@ class DriverDSLImpl(
         extraCustomCordapps = cordappsForPackages(extraCordappPackagesToScan + callerPackage)
 
         val notaryInfosFuture = if (compatibilityZone == null) {
-//            // If no CZ is specified then the driver does the generation of the network parameters and the copying of the
-//            // node info files.
-//            startNotaryIdentityGeneration().map { notaryInfos -> Pair(notaryInfos, LocalNetworkMap(notaryInfos)) }
             LocalNetworkMap()
         } else {
-//            // Otherwise it's the CZ's job to distribute thse via the HTTP network map, as that is what the nodes will be expecting.
-//            val notaryInfosFuture = if (compatibilityZone.rootCert == null) {
-//                // No root cert specified so we use the dev root cert to generate the notary identities.
-//                startNotaryIdentityGeneration()
-//            } else {
-//                // With a root cert specified we delegate generation of the notary identities to the CZ.
-//                startAllNotaryRegistrations(compatibilityZone.rootCert, compatibilityZone)
-//            }
-//            notaryInfosFuture.map { notaryInfos ->
-//                compatibilityZone.publishNotaries(notaryInfos)
-//                Pair(notaryInfos, null)
-//            }
             null
         }
 
         networkMapAvailability = CompletableFuture.completedFuture(notaryInfosFuture).asCordaFuture()
-
-//        _notaries = notaryInfosFuture.map { (notaryInfos, localNetworkMap) ->
-//            val listOfFutureNodeHandles = startNotaries(localNetworkMap, notaryCustomOverrides)
-//            notaryInfos.zip(listOfFutureNodeHandles) { (identity, validating), nodeHandlesFuture ->
-//                NotaryHandle(identity, validating, nodeHandlesFuture)
-//            }
-//        }
-//        try {
-//            _notaries.map { notary -> notary.map { handle -> handle.nodeHandles } }.getOrThrow(notaryHandleTimeout).forEach { future -> future.getOrThrow(notaryHandleTimeout) }
-//        } catch(e: NodeListenProcessDeathException) {
-//            val message = if (e.causeFromStdError.isNotBlank()) {
-//                "Unable to start notaries. Failed with the following error: ${e.causeFromStdError}"
-//            } else {
-//                "Unable to start notaries. A required port might be bound already."
-//            }
-//            throw IllegalStateException(message)
-//        } catch (e: ListenProcessDeathException) {
-//            throw IllegalStateException("Unable to start notaries. A required port might be bound already.", e)
-//        } catch (e: TimeoutException) {
-//            throw IllegalStateException("Unable to start notaries. A required port might be bound already.", e)
-//        }
     }
 
     /**
@@ -799,12 +762,8 @@ class DriverDSLImpl(
                 Permissions.invokeRpc(CordaRPCOps::nodeInfo),
                 Permissions.invokeRpc(CordaRPCOps::networkMapFeed),
                 Permissions.invokeRpc(CordaRPCOps::networkMapSnapshot),
-                Permissions.invokeRpc(CordaRPCOps::notaryIdentities),
                 Permissions.invokeRpc(CordaRPCOps::stateMachinesFeed),
-//                Permissions.invokeRpc(CordaRPCOps::stateMachineRecordedTransactionMappingFeed),
                 Permissions.invokeRpc(CordaRPCOps::nodeInfoFromParty),
-//                Permissions.invokeRpc(CordaRPCOps::internalVerifiedTransactionsFeed),
-//                Permissions.invokeRpc(CordaRPCOps::internalFindVerifiedTransaction),
                 Permissions.invokeRpc("vaultQueryBy"),
                 Permissions.invokeRpc("vaultTrackBy"),
                 Permissions.invokeRpc(CordaRPCOps::registeredFlows),
@@ -1270,7 +1229,6 @@ fun <DI : DriverDSL, D : InternalDriverDSL, A> genericDriver(
  * @see SplitCompatibilityZoneParams
  */
 sealed class CompatibilityZoneParams(
-        val publishNotaries: (List<NotaryInfo>) -> Unit,
         val rootCert: X509Certificate? = null
 ) {
     abstract fun networkMapURL(): URL
@@ -1284,9 +1242,8 @@ sealed class CompatibilityZoneParams(
 class SharedCompatibilityZoneParams(
         private val url: URL,
         private val pnm : UUID?,
-        publishNotaries: (List<NotaryInfo>) -> Unit,
         rootCert: X509Certificate? = null
-) : CompatibilityZoneParams(publishNotaries, rootCert) {
+) : CompatibilityZoneParams(rootCert) {
 
     val config : NetworkServicesConfig by lazy {
         NetworkServicesConfig(url, url, pnm, false)
@@ -1304,9 +1261,8 @@ class SplitCompatibilityZoneParams(
         private val doormanURL: URL,
         private val networkMapURL: URL,
         private val pnm : UUID?,
-        publishNotaries: (List<NotaryInfo>) -> Unit,
         rootCert: X509Certificate? = null
-) : CompatibilityZoneParams(publishNotaries, rootCert) {
+) : CompatibilityZoneParams(rootCert) {
     val config : NetworkServicesConfig by lazy {
         NetworkServicesConfig(doormanURL, networkMapURL, pnm, false)
     }
@@ -1331,7 +1287,6 @@ fun <A> internalDriver(
         jmxPolicy: JmxPolicy = DriverParameters().jmxPolicy,
         networkParameters: NetworkParameters = DriverParameters().networkParameters,
         compatibilityZone: CompatibilityZoneParams? = null,
-        notaryCustomOverrides: Map<String, Any?> = DriverParameters().notaryCustomOverrides,
         inMemoryDB: Boolean = DriverParameters().inMemoryDB,
         cordappsForAllNodes: Collection<TestCordappInternal>? = null,
         djvmBootstrapSource: Path? = null,

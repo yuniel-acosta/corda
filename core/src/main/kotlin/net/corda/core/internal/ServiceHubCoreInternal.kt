@@ -10,15 +10,4 @@ import java.util.concurrent.ExecutorService
 interface ServiceHubCoreInternal : ServiceHub {
 
     val externalOperationExecutor: ExecutorService
-
-//    val attachmentTrustCalculator: AttachmentTrustCalculator
-//
-//    fun createTransactionsResolver(flow: ResolveTransactionsFlow): TransactionsResolver
 }
-
-//interface TransactionsResolver {
-//    @Suspendable
-//    fun downloadDependencies(batchMode: Boolean)
-//
-//    fun recordDependencies(usedStatesToRecord: StatesToRecord)
-//}

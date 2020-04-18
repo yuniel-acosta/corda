@@ -38,7 +38,6 @@ import net.corda.node.services.keys.BasicHSMKeyManagementService
 import net.corda.node.services.keys.KeyManagementServiceInternal
 import net.corda.node.services.messaging.Message
 import net.corda.node.services.messaging.MessagingService
-import net.corda.node.services.persistence.NodeAttachmentService
 import net.corda.node.services.statemachine.FlowState
 import net.corda.node.services.statemachine.StateMachineManager
 import net.corda.node.utilities.AffinityExecutor.ServiceAffinityExecutor
@@ -106,7 +105,6 @@ interface TestStartedNode {
     val info: NodeInfo
     val services: StartedNodeServices
     val smm: StateMachineManager
-    val attachments: NodeAttachmentService
     val rpcOps: CordaRPCOps
     val network: MockNodeMessagingService
     val database: CordaPersistence
@@ -156,7 +154,6 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
         // This SFTP support loads BouncyCastle, which we want to avoid.
         // Please see https://issues.apache.org/jira/browse/SSHD-736 - it's easier then to create our own fork of SSHD
         SecurityUtils.setAPrioriDisabledProvider("BC", true) // XXX: Why isn't this static?
-        require(initialNetworkParameters.notaries.isEmpty()) { "Define notaries using notarySpecs" }
     }
 
     var nextNodeId = 0
@@ -282,7 +279,6 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
         /** The actual [TestStartedNode] implementation created by this node */
         private class TestStartedNodeImpl(
                 override val internals: MockNode,
-                override val attachments: NodeAttachmentService,
                 override val network: MockNodeMessagingService,
                 override val services: StartedNodeServices,
                 override val info: NodeInfo,
@@ -331,7 +327,6 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
         override fun createStartedNode(nodeInfo: NodeInfo, rpcOps: CordaRPCOps): TestStartedNode {
             return TestStartedNodeImpl(
                     this,
-                    attachments,
                     network as MockNodeMessagingService,
                     object : StartedNodeServices, ServiceHubInternal by services, FlowStarter by flowStarter {},
                     nodeInfo,

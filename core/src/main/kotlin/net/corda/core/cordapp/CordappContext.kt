@@ -21,7 +21,6 @@ import java.lang.UnsupportedOperationException
 @DeleteForDJVM
 class CordappContext private constructor(
         val cordapp: Cordapp,
-//        val attachmentId: SecureHash?,
         val classLoader: ClassLoader,
         val config: CordappConfig
 ) {

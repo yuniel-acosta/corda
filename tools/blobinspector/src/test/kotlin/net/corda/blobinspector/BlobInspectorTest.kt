@@ -6,6 +6,7 @@ import net.corda.core.node.NetworkParameters
 import net.corda.testing.common.internal.checkNotOnClasspath
 import org.apache.commons.io.output.WriterOutputStream
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.Ignore
 import org.junit.Test
 import java.io.PrintStream
 import java.io.StringWriter
@@ -14,6 +15,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 class BlobInspectorTest {
     private val blobInspector = BlobInspector()
 
+    @Ignore("Net parms format changed")
     @Test(timeout=300_000)
 	fun `network-parameters file`() {
         val output = run("network-parameters")
@@ -31,24 +33,6 @@ class BlobInspectorTest {
                 .startsWith("net.corda.nodeapi.internal.SignedNodeInfo")
                 .contains(CordaX500Name("BankOfCorda", "New York", "US").toString())
     }
-
-//    @Test(timeout=300_000)
-//	fun `WireTransaction with Cash state`() {
-//        checkNotOnClassPath("net.corda.finance.contracts.asset.Cash\$State")
-//        val output = run("cash-wtx.blob")
-//        assertThat(output)
-//                .startsWith(WireTransaction::class.java.name)
-//                .contains("net.corda.finance.contracts.asset.Cash\$State")
-//    }
-//
-//    @Test(timeout=300_000)
-//	fun `SignedTransaction with Cash state taken from node db`() {
-//        checkNotOnClassPath("net.corda.finance.contracts.asset.Cash\$State")
-//        val output = run("cash-stx-db.blob")
-//        assertThat(output)
-//                .startsWith(SignedTransaction::class.java.name)
-//                .contains("net.corda.finance.contracts.asset.Cash\$State")
-//    }
 
     private fun run(resourceName: String): String {
         blobInspector.source = javaClass.getResource(resourceName)

@@ -3,7 +3,6 @@ package net.corda.core.internal
 import io.github.classgraph.ClassGraph
 import io.github.classgraph.ClassInfo
 import net.corda.core.StubOutForDJVM
-import net.corda.core.serialization.internal.AttachmentURLStreamHandlerFactory.attachmentScheme
 
 /**
  * Creates instances of all the classes in the classpath of the provided classloader, which implement the interface of the provided class.
@@ -34,7 +33,6 @@ fun <T: Any> createInstancesOfClassesImplementing(classloader: ClassLoader, claz
 @StubOutForDJVM
 fun <T: Any> getNamesOfClassesImplementing(classloader: ClassLoader, clazz: Class<T>): Set<String> {
     return ClassGraph().overrideClassLoaders(classloader)
-        .enableURLScheme(attachmentScheme)
         .ignoreParentClassLoaders()
         .enableClassInfo()
         .pooledScan()
@@ -53,5 +51,4 @@ fun <T: Any?> executeWithThreadContextClassLoader(classloader: ClassLoader, fn: 
     } finally {
         Thread.currentThread().contextClassLoader = threadClassLoader
     }
-
 }

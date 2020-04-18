@@ -47,12 +47,6 @@ class DataUploadServlet : HttpServlet() {
                 reportError("Got a file upload request for an unknown data type $dataType")
                 continue
             }
-            try {
-                messages += rpc.uploadAttachment(item.openStream()).toString()
-            } catch (e: RuntimeException) {
-                reportError(e.toString())
-                continue
-            }
             log.info("${item.name} successfully accepted: ${messages.last()}")
         }
 

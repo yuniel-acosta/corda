@@ -17,7 +17,6 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.internal.FlowStateMachine
-import net.corda.core.internal.RPC_UPLOADER
 import net.corda.core.internal.STRUCTURAL_STEP_PREFIX
 import net.corda.core.internal.messaging.InternalCordaRPCOps
 import net.corda.core.internal.sign
@@ -35,7 +34,6 @@ import net.corda.core.messaging.pendingFlowsCount
 import net.corda.core.node.NetworkParameters
 import net.corda.core.node.NodeDiagnosticInfo
 import net.corda.core.node.NodeInfo
-import net.corda.core.node.services.AttachmentId
 import net.corda.core.node.services.NetworkMapCache
 import net.corda.core.serialization.serialize
 import net.corda.core.utilities.getOrThrow
@@ -112,45 +110,7 @@ internal class CordaRPCOpsImpl(
         return services.networkMapCache.track()
     }
 
-//    override fun <T : ContractState> vaultQueryBy(criteria: QueryCriteria,
-//                                                  paging: PageSpecification,
-//                                                  sorting: Sort,
-//                                                  contractStateType: Class<out T>): Vault.Page<T> {
-//        contractStateType.checkIsA<ContractState>()
-//        return services.vaultService._queryBy(criteria, paging, sorting, contractStateType)
-//    }
-//
-//    @RPCReturnsObservables
-//    override fun <T : ContractState> vaultTrackBy(criteria: QueryCriteria,
-//                                                  paging: PageSpecification,
-//                                                  sorting: Sort,
-//                                                  contractStateType: Class<out T>): DataFeed<Vault.Page<T>, Vault.Update<T>> {
-//        contractStateType.checkIsA<ContractState>()
-//        return services.vaultService._trackBy(criteria, paging, sorting, contractStateType)
-//    }
-
-//    @Suppress("OverridingDeprecatedMember", "DEPRECATION")
-//    override fun internalVerifiedTransactionsSnapshot(): List<SignedTransaction> {
-//        val (snapshot, updates) = internalVerifiedTransactionsFeed()
-//        updates.notUsed()
-//        return snapshot
-//    }
-//
-//    @Suppress("OverridingDeprecatedMember")
-//    override fun internalFindVerifiedTransaction(txnId: SecureHash): SignedTransaction? =
-//            services.validatedTransactions.getTransaction(txnId)
-//
-//    @Suppress("OverridingDeprecatedMember")
-//    override fun internalVerifiedTransactionsFeed(): DataFeed<List<SignedTransaction>, SignedTransaction> {
-//        return services.validatedTransactions.track()
-//    }
-
     override fun dumpCheckpoints() = checkpointDumper.dumpCheckpoints()
-
-//    override val attachmentTrustInfos: List<AttachmentTrustInfo>
-//        get() {
-//            return services.attachmentTrustCalculator.calculateAllTrustInfo()
-//        }
 
     override fun stateMachinesSnapshot(): List<StateMachineInfo> {
         val (snapshot, updates) = stateMachinesFeed()
@@ -168,17 +128,6 @@ internal class CordaRPCOpsImpl(
                 changes.map { stateMachineUpdateFromStateMachineChange(it) }
         )
     }
-
-//    override fun stateMachineRecordedTransactionMappingSnapshot(): List<StateMachineTransactionMapping> {
-//        val (snapshot, updates) = stateMachineRecordedTransactionMappingFeed()
-//        updates.notUsed()
-//        return snapshot
-//    }
-
-//    override fun stateMachineRecordedTransactionMappingFeed():
-//            DataFeed<List<StateMachineTransactionMapping>, StateMachineTransactionMapping> {
-//        return services.stateMachineRecordedTransactionMapping.track()
-//    }
 
     override fun nodeInfo(): NodeInfo {
         return services.myInfo
@@ -213,18 +162,6 @@ internal class CordaRPCOpsImpl(
         )
     }
 
-    override fun notaryIdentities(): List<Party> {
-        return services.networkMapCache.notaryIdentities
-    }
-
-//    override fun addVaultTransactionNote(txnId: SecureHash, txnNote: String) {
-//        services.vaultService.addNoteToTransaction(txnId, txnNote)
-//    }
-//
-//    override fun getVaultTransactionNotes(txnId: SecureHash): Iterable<String> {
-//        return services.vaultService.getTransactionNotes(txnId)
-//    }
-
     override fun <T> startTrackedFlowDynamic(logicType: Class<out FlowLogic<T>>, vararg args: Any?): FlowProgressHandle<T> {
         val stateMachine = startFlow(logicType, args)
         return FlowProgressHandleImpl(
@@ -249,26 +186,6 @@ internal class CordaRPCOpsImpl(
         return flowStarter.invokeFlowAsync(logicType, context(), *args).getOrThrow()
     }
 
-    override fun attachmentExists(id: SecureHash): Boolean {
-        return services.attachments.openAttachment(id) != null
-    }
-
-    override fun openAttachment(id: SecureHash): InputStream {
-        return services.attachments.openAttachment(id)!!.open()
-    }
-
-    override fun uploadAttachment(jar: InputStream): SecureHash {
-        return services.attachments.privilegedImportAttachment(jar, RPC_UPLOADER, null)
-    }
-
-    override fun uploadAttachmentWithMetadata(jar: InputStream, uploader: String, filename: String): SecureHash {
-        return services.attachments.privilegedImportAttachment(jar, uploader, filename)
-    }
-
-//    override fun queryAttachments(query: AttachmentQueryCriteria, sorting: AttachmentSort?): List<AttachmentId> {
-//        return services.attachments.queryAttachments(query, sorting)
-//    }
-
     override fun currentNodeTime(): Instant = Instant.now(services.clock)
 
     override fun waitUntilNetworkReady(): CordaFuture<Void?> = services.networkMapCache.nodeReady
@@ -284,8 +201,6 @@ internal class CordaRPCOpsImpl(
     override fun wellKnownPartyFromX500Name(x500Name: CordaX500Name): Party? {
         return services.identityService.wellKnownPartyFromX500Name(x500Name)
     }
-
-    override fun notaryPartyFromX500Name(x500Name: CordaX500Name): Party? = services.networkMapCache.getNotary(x500Name)
 
     override fun partiesFromName(query: String, exactMatch: Boolean): Set<Party> {
         return services.identityService.partiesFromName(query, exactMatch)
@@ -312,60 +227,6 @@ internal class CordaRPCOpsImpl(
             }
         }
     }
-
-//    override fun <T : ContractState> vaultQuery(contractStateType: Class<out T>): Vault.Page<T> {
-//        return vaultQueryBy(QueryCriteria.VaultQueryCriteria(), PageSpecification(), Sort(emptySet()), contractStateType)
-//    }
-//
-//    override fun <T : ContractState> vaultQueryByCriteria(
-//            criteria: QueryCriteria,
-//            contractStateType: Class<out T>
-//    ): Vault.Page<T> {
-//        return vaultQueryBy(criteria, PageSpecification(), Sort(emptySet()), contractStateType)
-//    }
-//
-//    override fun <T : ContractState> vaultQueryByWithPagingSpec(
-//            contractStateType: Class<out T>,
-//            criteria: QueryCriteria,
-//            paging: PageSpecification
-//    ): Vault.Page<T> {
-//        return vaultQueryBy(criteria, paging, Sort(emptySet()), contractStateType)
-//    }
-//
-//    override fun <T : ContractState> vaultQueryByWithSorting(
-//            contractStateType: Class<out T>,
-//            criteria: QueryCriteria,
-//            sorting: Sort
-//    ): Vault.Page<T> {
-//        return vaultQueryBy(criteria, PageSpecification(), sorting, contractStateType)
-//    }
-//
-//    override fun <T : ContractState> vaultTrack(contractStateType: Class<out T>): DataFeed<Vault.Page<T>, Vault.Update<T>> {
-//        return vaultTrackBy(QueryCriteria.VaultQueryCriteria(), PageSpecification(), Sort(emptySet()), contractStateType)
-//    }
-//
-//    override fun <T : ContractState> vaultTrackByCriteria(
-//            contractStateType: Class<out T>,
-//            criteria: QueryCriteria
-//    ): DataFeed<Vault.Page<T>, Vault.Update<T>> {
-//        return vaultTrackBy(criteria, PageSpecification(), Sort(emptySet()), contractStateType)
-//    }
-//
-//    override fun <T : ContractState> vaultTrackByWithPagingSpec(
-//            contractStateType: Class<out T>,
-//            criteria: QueryCriteria,
-//            paging: PageSpecification
-//    ): DataFeed<Vault.Page<T>, Vault.Update<T>> {
-//        return vaultTrackBy(criteria, paging, Sort(emptySet()), contractStateType)
-//    }
-//
-//    override fun <T : ContractState> vaultTrackByWithSorting(
-//            contractStateType: Class<out T>,
-//            criteria: QueryCriteria,
-//            sorting: Sort
-//    ): DataFeed<Vault.Page<T>, Vault.Update<T>> {
-//        return vaultTrackBy(criteria, PageSpecification(), sorting, contractStateType)
-//    }
 
     override fun setFlowsDrainingModeEnabled(enabled: Boolean) = setPersistentDrainingModeProperty(enabled, propagateChange = true)
 
@@ -442,7 +303,6 @@ internal class CordaRPCOpsImpl(
             }
             is InvocationOrigin.Service -> FlowInitiator.Service(principal)
             InvocationOrigin.Shell -> FlowInitiator.Shell
-//            is InvocationOrigin.Scheduled -> FlowInitiator.Scheduled((origin as InvocationOrigin.Scheduled).scheduledState)
         }
     }
 

@@ -39,7 +39,6 @@ interface NodeConfiguration : ConfigurationWithOptionsContainer {
     val certificateChainCheckPolicies: List<CertChainPolicyConfig>
     val verifierType: VerifierType
     val flowTimeout: FlowTimeoutConfiguration
-//    val notary: NotaryConfig?
     val additionalNodeInfoPollingFrequencyMsec: Long
     val p2pAddress: NetworkHostAndPort
     val additionalP2PAddresses: List<NetworkHostAndPort>

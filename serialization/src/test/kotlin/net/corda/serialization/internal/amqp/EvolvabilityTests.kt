@@ -12,6 +12,7 @@ import net.corda.core.serialization.ConstructorForDeserialization
 import net.corda.core.serialization.DeprecatedConstructorForDeserialization
 import net.corda.core.serialization.SerializableCalculatedProperty
 import net.corda.core.serialization.SerializedBytes
+import net.corda.core.utilities.days
 import net.corda.serialization.internal.amqp.custom.InstantSerializer
 import net.corda.serialization.internal.amqp.testutils.ProjectStructure.projectRootDir
 import net.corda.serialization.internal.amqp.testutils.TestSerializationOutput
@@ -630,8 +631,6 @@ class EvolvabilityTests {
         assertEquals(1000, networkParams.maxMessageSize)
         assertEquals(1000, networkParams.maxTransactionSize)
         assertEquals(3, networkParams.minimumPlatformVersion)
-        assertEquals(1, networkParams.notaries.size)
-        assertEquals(DUMMY_NOTARY_PARTY, networkParams.notaries.firstOrNull()?.identity)
     }
 
     //
@@ -639,12 +638,11 @@ class EvolvabilityTests {
     // can still deserialize them
     //
     @Test(timeout=300_000)
-@Ignore("This test simply regenerates the test file used for readBrokenNetworkParameters")
+    @Ignore("This test simply regenerates the test file used for readBrokenNetworkParameters")
     fun `regenerate broken network parameters`() {
         // note: 6a6b6f256 is the sha that generates the file
         val resource = "networkParams.<corda version>.<commit sha>"
-        val networkParameters = NetworkParameters(
-                3, listOf(NotaryInfo(DUMMY_NOTARY_PARTY, false)), 1000, 1000, Instant.EPOCH, 1, emptyMap())
+        val networkParameters = NetworkParameters(3, 1000, 1000, Instant.EPOCH, 1, Int.MAX_VALUE.days)
 
         val sf = testDefaultFactory()
         sf.register(net.corda.serialization.internal.amqp.custom.InstantSerializer(sf))

@@ -10,25 +10,6 @@ import javax.persistence.Embeddable
 import javax.persistence.EmbeddedId
 import javax.persistence.MappedSuperclass
 
-////DOCSTART QueryableState
-///**
-// * A contract state that may be mapped to database schemas configured for this node to support querying for,
-// * or filtering of, states.
-// */
-//@KeepForDJVM
-//interface QueryableState : ContractState {
-//    /**
-//     * Enumerate the schemas this state can export representations of itself as.
-//     */
-//    fun supportedSchemas(): Iterable<MappedSchema>
-//
-//    /**
-//     * Export a representation for the given schema.
-//     */
-//    fun generateMappedObject(schema: MappedSchema): PersistentState
-//}
-////DOCEND QueryableState
-
 //DOCSTART MappedSchema
 /**
  * A database schema that might be configured for this node.  As well as a name and version for identifying the schema,
@@ -72,54 +53,6 @@ open class MappedSchema(schemaFamily: Class<*>,
     }
 }
 //DOCEND MappedSchema
-
-///**
-// * A super class for all mapped states exported to a schema that ensures the [StateRef] appears on the database row.  The
-// * [StateRef] will be set to the correct value by the framework (there's no need to set during mapping generation by the state itself).
-// */
-//@KeepForDJVM
-//@MappedSuperclass
-//@CordaSerializable
-//class PersistentState(@EmbeddedId override var stateRef: PersistentStateRef? = null) : DirectStatePersistable
-
-///**
-// * Embedded [StateRef] representation used in state mapping.
-// */
-//@KeepForDJVM
-//@Embeddable
-//@Immutable
-//
-//data class PersistentStateRef(
-//        @Suppress("MagicNumber") // column width
-//        @Column(name = "transaction_id", length = 64, nullable = false)
-//        var txId: String,
-//
-//        @Column(name = "output_index", nullable = false)
-//        var index: Int
-//) : Serializable {
-//    constructor(stateRef: StateRef) : this(stateRef.txhash.bytes.toHexString(), stateRef.index)
-//}
-//
-///**
-// * Marker interface to denote a persistable Corda state entity that will always have a transaction id and index
-// */
-//@KeepForDJVM
-//interface StatePersistable
-//
-///**
-// * Marker interface to denote a persistable Corda state entity that exposes the transaction id and index as composite key called [stateRef].
-// */
-//interface DirectStatePersistable : StatePersistable {
-//    val stateRef: PersistentStateRef?
-//}
-//
-///**
-// * Marker interface to denote a persistable Corda state entity that exposes the transaction id and index as a nested composite key called [compositeKey]
-// * that is itself a [DirectStatePersistable].  i.e. exposes a [stateRef].
-// */
-//interface IndirectStatePersistable<T : DirectStatePersistable> : StatePersistable {
-//    val compositeKey: T
-//}
 
 object MappedSchemaValidator {
     fun fieldsFromOtherMappedSchema(schema: MappedSchema) : List<SchemaCrossReferenceReport> =

@@ -419,35 +419,6 @@ abstract class FlowLogic<out T> {
         }
     }
 
-//    /**
-//     * Suspends the flow until the transaction with the specified ID is received, successfully verified and
-//     * sent to the vault for processing. Note that this call suspends until the transaction is considered
-//     * valid by the local node, but that doesn't imply the vault will consider it relevant.
-//     */
-//    @Suspendable
-//    @JvmOverloads
-//    fun waitForLedgerCommit(hash: SecureHash, maySkipCheckpoint: Boolean = false): SignedTransaction {
-//        val request = FlowIORequest.WaitForLedgerCommit(hash)
-//        return stateMachine.suspend(request, maySkipCheckpoint = maySkipCheckpoint)
-//    }
-//
-//    /**
-//     * Suspends the current flow until all the provided [StateRef]s have been consumed.
-//     *
-//     * WARNING! Remember that the flow which uses this async operation will _NOT_ wake-up until all the supplied StateRefs
-//     * have been consumed. If the node isn't aware of the supplied StateRefs or if the StateRefs are never consumed, then
-//     * the calling flow will remain suspended FOREVER!!
-//     *
-//     * @param stateRefs the StateRefs which will be consumed in the future.
-//     */
-//    @Suspendable
-//    fun waitForStateConsumption(stateRefs: Set<StateRef>) {
-//        // Manually call the equivalent of [await] to remove extra wrapping of objects
-//        // Makes serializing of object easier for [CheckpointDumper] as well
-//        val request = FlowIORequest.ExecuteAsyncOperation(WaitForStateConsumption(stateRefs, serviceHub))
-//        return stateMachine.suspend(request, false)
-//    }
-
     /**
      * Returns a shallow copy of the Quasar stack frames at the time of call to [flowStackSnapshot]. Use this to inspect
      * what objects would be serialised at the time of call to a suspending action (e.g. send/receive).

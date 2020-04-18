@@ -13,7 +13,6 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.flows.StateMachineRunId
 import net.corda.core.identity.Party
-import net.corda.core.internal.RPC_UPLOADER
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.messaging.*
 import net.corda.core.utilities.NonEmptySet
@@ -100,103 +99,6 @@ class CordaRPCOpsImplTest {
             mockNet.stopNodes()
         }
     }
-
-    @Test(timeout=300_000)
-	fun `can upload an attachment`() {
-        CURRENT_RPC_CONTEXT.set(RpcAuthContext(InvocationContext.rpc(testActor()), buildSubject("TEST_USER", emptySet())))
-        withPermissions(invokeRpc(CordaRPCOps::uploadAttachment), invokeRpc(CordaRPCOps::attachmentExists)) {
-            val inputJar = Thread.currentThread().contextClassLoader.getResourceAsStream(testJar)
-            val secureHash = rpc.uploadAttachment(inputJar)
-            assertTrue(rpc.attachmentExists(secureHash))
-        }
-    }
-
-    @Test(timeout=300_000)
-	fun `cannot upload the same attachment`() {
-        CURRENT_RPC_CONTEXT.set(RpcAuthContext(InvocationContext.rpc(testActor()), buildSubject("TEST_USER", emptySet())))
-        withPermissions(invokeRpc(CordaRPCOps::uploadAttachment), invokeRpc(CordaRPCOps::attachmentExists)) {
-            val inputJar1 = Thread.currentThread().contextClassLoader.getResourceAsStream(testJar)
-            val inputJar2 = Thread.currentThread().contextClassLoader.getResourceAsStream(testJar)
-            rpc.uploadAttachment(inputJar1)
-            assertThatExceptionOfType(java.nio.file.FileAlreadyExistsException::class.java).isThrownBy {
-                rpc.uploadAttachment(inputJar2)
-            }
-        }
-    }
-
-    @Test(timeout=300_000)
-	fun `can download an uploaded attachment`() {
-        CURRENT_RPC_CONTEXT.set(RpcAuthContext(InvocationContext.rpc(testActor()), buildSubject("TEST_USER", emptySet())))
-        withPermissions(invokeRpc(CordaRPCOps::uploadAttachment), invokeRpc(CordaRPCOps::openAttachment)) {
-            val inputJar = Thread.currentThread().contextClassLoader.getResourceAsStream(testJar)
-            val secureHash = rpc.uploadAttachment(inputJar)
-            val bufferFile = ByteArrayOutputStream()
-            val bufferRpc = ByteArrayOutputStream()
-
-            IOUtils.copy(Thread.currentThread().contextClassLoader.getResourceAsStream(testJar), bufferFile)
-            IOUtils.copy(rpc.openAttachment(secureHash), bufferRpc)
-
-            assertArrayEquals(bufferFile.toByteArray(), bufferRpc.toByteArray())
-        }
-    }
-
-    @Test(timeout=300_000)
-	fun `can upload attachment with metadata`() {
-        CURRENT_RPC_CONTEXT.set(RpcAuthContext(InvocationContext.rpc(testActor()), buildSubject("TEST_USER", emptySet())))
-        withPermissions(invokeRpc(CordaRPCOps::uploadAttachmentWithMetadata), invokeRpc(CordaRPCOps::attachmentExists)) {
-            val inputJar = Thread.currentThread().contextClassLoader.getResourceAsStream(testJar)
-            val secureHash = rpc.uploadAttachmentWithMetadata(inputJar, "Iron Fist", "Season 2")
-            assertTrue(rpc.attachmentExists(secureHash))
-        }
-    }
-
-//    @Test(timeout=300_000)
-//	fun `attachment uploaded with metadata has specified filename`() {
-//        CURRENT_RPC_CONTEXT.set(RpcAuthContext(InvocationContext.rpc(testActor()), buildSubject("TEST_USER", emptySet())))
-//        withPermissions(invokeRpc(CordaRPCOps::uploadAttachmentWithMetadata), invokeRpc(CordaRPCOps::queryAttachments)) {
-//            val inputJar = Thread.currentThread().contextClassLoader.getResourceAsStream(testJar)
-//            rpc.uploadAttachmentWithMetadata(inputJar, "The Punisher", "Season 1")
-//            assertEquals(
-//                rpc.queryAttachments(
-//                    AttachmentQueryCriteria.AttachmentsQueryCriteria(
-//                        filenameCondition = ColumnPredicate.EqualityComparison(
-//                            EqualityComparisonOperator.EQUAL,
-//                            "Season 1"
-//                        )
-//                    ), null
-//                ).size, 1
-//            )
-//        }
-//    }
-
-    @Test(timeout=300_000)
-	fun `attachment uploaded with metadata can be from a privileged user`() {
-        CURRENT_RPC_CONTEXT.set(RpcAuthContext(InvocationContext.rpc(testActor()), buildSubject("TEST_USER", emptySet())))
-        withPermissions(invokeRpc(CordaRPCOps::uploadAttachmentWithMetadata), invokeRpc(CordaRPCOps::attachmentExists)) {
-            val inputJar = Thread.currentThread().contextClassLoader.getResourceAsStream(testJar)
-            val secureHash = rpc.uploadAttachmentWithMetadata(inputJar, RPC_UPLOADER, "Season 1")
-            assertTrue(rpc.attachmentExists(secureHash))
-        }
-    }
-
-//    @Test(timeout=300_000)
-//	fun `attachment uploaded with metadata has specified uploader`() {
-//        CURRENT_RPC_CONTEXT.set(RpcAuthContext(InvocationContext.rpc(testActor()), buildSubject("TEST_USER", emptySet())))
-//        withPermissions(invokeRpc(CordaRPCOps::uploadAttachmentWithMetadata), invokeRpc(CordaRPCOps::queryAttachments)) {
-//            val inputJar = Thread.currentThread().contextClassLoader.getResourceAsStream(testJar)
-//            rpc.uploadAttachmentWithMetadata(inputJar, "Daredevil", "Season 3")
-//            assertEquals(
-//                rpc.queryAttachments(
-//                    AttachmentQueryCriteria.AttachmentsQueryCriteria(
-//                        uploaderCondition = ColumnPredicate.EqualityComparison(
-//                            EqualityComparisonOperator.EQUAL,
-//                            "Daredevil"
-//                        )
-//                    ), null
-//                ).size, 1
-//            )
-//        }
-//    }
 
     @Test(timeout=300_000)
 	fun `attempt to start non-RPC flow`() {

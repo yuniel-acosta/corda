@@ -26,11 +26,6 @@ interface NetworkParametersStorage : NetworkParametersService {
     fun hasParameters(hash: SecureHash): Boolean
 
     /**
-     * Returns the [NotaryInfo] for a notary [party] in the current or any historic network parameter whitelist, or null if not found.
-     */
-    fun getHistoricNotary(party: Party): NotaryInfo?
-
-    /**
      * Save signed network parameters data. Internally network parameters bytes should be stored with the signature.
      * It's because of ability of older nodes to function in network where parameters were extended with new fields.
      * Hash should always be calculated over the serialized bytes.

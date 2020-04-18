@@ -15,7 +15,6 @@ import net.corda.core.contracts.PrivacySalt
 import net.corda.core.crypto.CompositeKey
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.PartyAndCertificate
-import net.corda.core.internal.AbstractAttachment
 import net.corda.core.internal.readFully
 import net.corda.core.serialization.MissingAttachmentsException
 import net.corda.core.serialization.SerializationWhitelist
@@ -24,7 +23,6 @@ import net.corda.core.serialization.SerializedBytes
 import net.corda.core.utilities.NonEmptySet
 import net.corda.core.utilities.toNonEmptySet
 import net.corda.serialization.internal.DefaultWhitelist
-import net.corda.serialization.internal.GeneratedAttachment
 import net.corda.serialization.internal.MutableClassWhitelist
 import net.i2p.crypto.eddsa.EdDSAPrivateKey
 import net.i2p.crypto.eddsa.EdDSAPublicKey

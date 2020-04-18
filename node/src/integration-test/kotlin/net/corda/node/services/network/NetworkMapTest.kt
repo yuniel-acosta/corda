@@ -48,15 +48,12 @@ class NetworkMapTest(var initFunc: (URL, NetworkMapServer) -> CompatibilityZoneP
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
-        fun runParams() = listOf(
+        fun runParams() = listOf<(URL, NetworkMapServer) -> CompatibilityZoneParams>(
                 {
                     addr: URL,
                     nms: NetworkMapServer -> SharedCompatibilityZoneParams(
                             addr,
-                            pnm = null,
-                            publishNotaries = {
-                                nms.networkParameters = testNetworkParameters(it, modifiedTime = Instant.ofEpochMilli(random63BitValue()), epoch = 2)
-                            }
+                            pnm = null
                     )
                 },
                 {
@@ -64,10 +61,7 @@ class NetworkMapTest(var initFunc: (URL, NetworkMapServer) -> CompatibilityZoneP
                     nms: NetworkMapServer -> SplitCompatibilityZoneParams (
                             doormanURL = URL("http://I/Don't/Exist"),
                             networkMapURL = addr,
-                            pnm = null,
-                            publishNotaries = {
-                                nms.networkParameters = testNetworkParameters(it, modifiedTime = Instant.ofEpochMilli(random63BitValue()), epoch = 2)
-                            }
+                            pnm = null
                     )
                 }
 

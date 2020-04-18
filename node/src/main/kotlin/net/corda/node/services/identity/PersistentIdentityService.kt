@@ -196,9 +196,6 @@ class PersistentIdentityService(cacheFactory: NamedCacheFactory) : SingletonSeri
     private lateinit var _trustAnchor: TrustAnchor
     override val trustAnchor: TrustAnchor get() = _trustAnchor
 
-    /** Stores notary identities obtained from the network parameters, for which we don't need to perform a database lookup. */
-    private val notaryIdentityCache = HashSet<Party>()
-
     // CordaPersistence is not a c'tor parameter to work around the cyclic dependency
     lateinit var database: CordaPersistence
 
@@ -212,14 +209,12 @@ class PersistentIdentityService(cacheFactory: NamedCacheFactory) : SingletonSeri
     fun start(
             trustRoot: X509Certificate,
             caCertificates: List<X509Certificate> = emptyList(),
-            notaryIdentities: List<Party> = emptyList(),
             pkToIdCache: WritablePublicKeyToOwningIdentityCache
     ) {
         _trustRoot = trustRoot
         _trustAnchor = TrustAnchor(trustRoot, null)
         _caCertStore = CertStore.getInstance("Collection", CollectionCertStoreParameters(caCertificates.toSet() + trustRoot))
         _pkToIdCache = pkToIdCache
-        notaryIdentityCache.addAll(notaryIdentities)
     }
 
     fun loadIdentities(identities: Collection<PartyAndCertificate> = emptySet(), confidentialIdentities: Collection<PartyAndCertificate> =
@@ -335,28 +330,24 @@ class PersistentIdentityService(cacheFactory: NamedCacheFactory) : SingletonSeri
         // Skip database lookup if the party is a notary identity.
         // This also prevents an issue where the notary identity can't be resolved if it's not in the network map cache. The node obtains
         // a trusted list of notary identities from the network parameters automatically.
-        return if (party is Party && party in notaryIdentityCache) {
-            party
-        } else {
-            database.transaction {
-                // Try and resolve the party from the table to public keys to party and certificates
-                // If we cannot find it then we perform a lookup on the public key to X500 name table
-                val legalIdentity = super.wellKnownPartyFromAnonymous(party)
-                if (legalIdentity == null) {
-                    // If there is no entry in the legal keyToPartyAndCert table then the party must be a confidential identity so we
-                    // perform a lookup in the keyToName table. If an entry for that public key exists, then we attempt look up the
-                    // associated node's PartyAndCertificate.
-                    val name = keyToName[party.owningKey.toStringShort()]
-                    if (name != null) {
-                        // This should never return null as this node would not be able to communicate with the node providing a
-                        // confidential identity unless its NodeInfo/PartyAndCertificate were available.
-                        wellKnownPartyFromX500Name(name)
-                    } else {
-                        null
-                    }
+        return database.transaction {
+            // Try and resolve the party from the table to public keys to party and certificates
+            // If we cannot find it then we perform a lookup on the public key to X500 name table
+            val legalIdentity = super.wellKnownPartyFromAnonymous(party)
+            if (legalIdentity == null) {
+                // If there is no entry in the legal keyToPartyAndCert table then the party must be a confidential identity so we
+                // perform a lookup in the keyToName table. If an entry for that public key exists, then we attempt look up the
+                // associated node's PartyAndCertificate.
+                val name = keyToName[party.owningKey.toStringShort()]
+                if (name != null) {
+                    // This should never return null as this node would not be able to communicate with the node providing a
+                    // confidential identity unless its NodeInfo/PartyAndCertificate were available.
+                    wellKnownPartyFromX500Name(name)
                 } else {
-                    legalIdentity
+                    null
                 }
+            } else {
+                legalIdentity
             }
         }
     }

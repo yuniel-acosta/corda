@@ -13,7 +13,6 @@ import net.corda.core.identity.Party
 import net.corda.core.node.NetworkParameters
 import net.corda.core.node.NodeDiagnosticInfo
 import net.corda.core.node.NodeInfo
-import net.corda.core.node.services.AttachmentId
 import net.corda.core.node.services.NetworkMapCache
 import net.corda.core.node.services.vault.*
 import net.corda.core.serialization.CordaSerializable
@@ -106,117 +105,6 @@ interface CordaRPCOps : RPCOps {
     @RPCReturnsObservables
     fun stateMachinesFeed(): DataFeed<List<StateMachineInfo>, StateMachineUpdate>
 
-//    /**
-//     * Returns a snapshot of vault states for a given query criteria (and optional order and paging specification)
-//     *
-//     * Generic vault query function which takes a [QueryCriteria] object to define filters,
-//     * optional [PageSpecification] and optional [Sort] modification criteria (default unsorted),
-//     * and returns a [Vault.Page] object containing the following:
-//     *  1. states as a List of <StateAndRef> (page number and size defined by [PageSpecification])
-//     *  2. states metadata as a List of [Vault.StateMetadata] held in the Vault States table.
-//     *  3. total number of results available if [PageSpecification] supplied (otherwise returns -1)
-//     *  4. status types used in this query: UNCONSUMED, CONSUMED, ALL
-//     *  5. other results (aggregate functions with/without using value groups)
-//     *
-//     * @throws VaultQueryException if the query cannot be executed for any reason
-//     *        (missing criteria or parsing error, paging errors, unsupported query, underlying database error)
-//     *
-//     * Notes
-//     *   If no [PageSpecification] is provided, a maximum of [DEFAULT_PAGE_SIZE] results will be returned.
-//     *   API users must specify a [PageSpecification] if they are expecting more than [DEFAULT_PAGE_SIZE] results,
-//     *   otherwise a [VaultQueryException] will be thrown alerting to this condition.
-//     *   It is the responsibility of the API user to request further pages and/or specify a more suitable [PageSpecification].
-//     */
-//    // DOCSTART VaultQueryByAPI
-//    @RPCReturnsObservables
-//    fun <T : ContractState> vaultQueryBy(criteria: QueryCriteria,
-//                                         paging: PageSpecification,
-//                                         sorting: Sort,
-//                                         contractStateType: Class<out T>): Vault.Page<T>
-//    // DOCEND VaultQueryByAPI
-//
-//    // Note: cannot apply @JvmOverloads to interfaces nor interface implementations
-//    // Java Helpers
-//
-//    // DOCSTART VaultQueryAPIHelpers
-//    fun <T : ContractState> vaultQuery(contractStateType: Class<out T>): Vault.Page<T>
-//
-//    fun <T : ContractState> vaultQueryByCriteria(criteria: QueryCriteria, contractStateType: Class<out T>): Vault.Page<T>
-//
-//    fun <T : ContractState> vaultQueryByWithPagingSpec(contractStateType: Class<out T>, criteria: QueryCriteria, paging: PageSpecification): Vault.Page<T>
-//
-//    fun <T : ContractState> vaultQueryByWithSorting(contractStateType: Class<out T>, criteria: QueryCriteria, sorting: Sort): Vault.Page<T>
-//    // DOCEND VaultQueryAPIHelpers
-//
-//    /**
-//     * Returns a snapshot (as per queryBy) and an observable of future updates to the vault for the given query criteria.
-//     *
-//     * Generic vault query function which takes a [QueryCriteria] object to define filters,
-//     * optional [PageSpecification] and optional [Sort] modification criteria (default unsorted),
-//     * and returns a [DataFeed] object containing
-//     * 1) a snapshot as a [Vault.Page] (described previously in [CordaRPCOps.vaultQueryBy])
-//     * 2) an [Observable] of [Vault.Update]
-//     *
-//     * Notes: the snapshot part of the query adheres to the same behaviour as the [CordaRPCOps.vaultQueryBy] function.
-//     *        the [QueryCriteria] applies to both snapshot and deltas (streaming updates).
-//     */
-//    // DOCSTART VaultTrackByAPI
-//    @RPCReturnsObservables
-//    fun <T : ContractState> vaultTrackBy(criteria: QueryCriteria,
-//                                         paging: PageSpecification,
-//                                         sorting: Sort,
-//                                         contractStateType: Class<out T>): DataFeed<Vault.Page<T>, Vault.Update<T>>
-//    // DOCEND VaultTrackByAPI
-//
-//    // Note: cannot apply @JvmOverloads to interfaces nor interface implementations
-//    // Java Helpers
-//
-//    // DOCSTART VaultTrackAPIHelpers
-//    fun <T : ContractState> vaultTrack(contractStateType: Class<out T>): DataFeed<Vault.Page<T>, Vault.Update<T>>
-//
-//    fun <T : ContractState> vaultTrackByCriteria(contractStateType: Class<out T>, criteria: QueryCriteria): DataFeed<Vault.Page<T>, Vault.Update<T>>
-//
-//    fun <T : ContractState> vaultTrackByWithPagingSpec(contractStateType: Class<out T>, criteria: QueryCriteria, paging: PageSpecification): DataFeed<Vault.Page<T>, Vault.Update<T>>
-//
-//    fun <T : ContractState> vaultTrackByWithSorting(contractStateType: Class<out T>, criteria: QueryCriteria, sorting: Sort): DataFeed<Vault.Page<T>, Vault.Update<T>>
-//    // DOCEND VaultTrackAPIHelpers
-//
-//    /**
-//     * @suppress Returns a list of all recorded transactions.
-//     *
-//     * TODO This method should be removed once SGX work is finalised and the design of the corresponding API using [FilteredTransaction] can be started
-//     */
-//    @Deprecated("This method is intended only for internal use and will be removed from the public API soon.")
-//    fun internalVerifiedTransactionsSnapshot(): List<SignedTransaction>
-//
-//    /**
-//     * @suppress Returns the full transaction for the provided ID
-//     *
-//     * TODO This method should be removed once SGX work is finalised and the design of the corresponding API using [FilteredTransaction] can be started
-//     */
-//    @CordaInternal
-//    @Deprecated("This method is intended only for internal use and will be removed from the public API soon.")
-//    fun internalFindVerifiedTransaction(txnId: SecureHash): SignedTransaction?
-//
-//    /**
-//     * @suppress Returns a data feed of all recorded transactions and an observable of future recorded ones.
-//     *
-//     * TODO This method should be removed once SGX work is finalised and the design of the corresponding API using [FilteredTransaction] can be started
-//     */
-//    @Deprecated("This method is intended only for internal use and will be removed from the public API soon.")
-//    @RPCReturnsObservables
-//    fun internalVerifiedTransactionsFeed(): DataFeed<List<SignedTransaction>, SignedTransaction>
-//
-//    /** Returns a snapshot list of existing state machine id - recorded transaction hash mappings. */
-//    fun stateMachineRecordedTransactionMappingSnapshot(): List<StateMachineTransactionMapping>
-//
-//    /**
-//     * Returns a snapshot list of existing state machine id - recorded transaction hash mappings, and a stream of future
-//     * such mappings as well.
-//     */
-//    @RPCReturnsObservables
-//    fun stateMachineRecordedTransactionMappingFeed(): DataFeed<List<StateMachineTransactionMapping>, StateMachineTransactionMapping>
-
     /** Returns all parties currently visible on the network with their advertised services. */
     fun networkMapSnapshot(): List<NodeInfo>
 
@@ -282,36 +170,6 @@ interface CordaRPCOps : RPCOps {
      */
     fun nodeDiagnosticInfo(): NodeDiagnosticInfo
 
-    /**
-     * Returns network's notary identities, assuming this will not change while the node is running.
-     *
-     * Note that the identities are sorted based on legal name, and the ordering might change once new notaries are introduced.
-     */
-    fun notaryIdentities(): List<Party>
-
-//    /** Add note(s) to an existing Vault transaction. */
-//    fun addVaultTransactionNote(txnId: SecureHash, txnNote: String)
-//
-//    /** Retrieve existing note(s) for a given Vault transaction. */
-//    fun getVaultTransactionNotes(txnId: SecureHash): Iterable<String>
-
-    /** Checks whether an attachment with the given hash is stored on the node. */
-    fun attachmentExists(id: SecureHash): Boolean
-
-    /** Download an attachment JAR by ID. */
-    fun openAttachment(id: SecureHash): InputStream
-
-    /** Uploads a jar to the node, returns it's hash. */
-    @Throws(java.nio.file.FileAlreadyExistsException::class)
-    fun uploadAttachment(jar: InputStream): SecureHash
-
-    /** Uploads a jar including metadata to the node, returns it's hash. */
-    @Throws(java.nio.file.FileAlreadyExistsException::class)
-    fun uploadAttachmentWithMetadata(jar: InputStream, uploader: String, filename: String): SecureHash
-
-//    /** Queries attachments metadata */
-//    fun queryAttachments(query: AttachmentQueryCriteria, sorting: AttachmentSort?): List<AttachmentId>
-
     /** Returns the node's current time. */
     fun currentNodeTime(): Instant
 
@@ -339,14 +197,6 @@ interface CordaRPCOps : RPCOps {
 
     /** Returns the [Party] with the X.500 principal as it's [Party.name]. */
     fun wellKnownPartyFromX500Name(x500Name: CordaX500Name): Party?
-
-    /**
-     * Get a notary identity by name.
-     *
-     * @return the notary identity, or null if there is no notary by that name. Note that this will return null if there
-     * is a peer with that name but they are not a recognised notary service.
-     */
-    fun notaryPartyFromX500Name(x500Name: CordaX500Name): Party?
 
     /**
      * Returns a list of candidate matches for a given string, with optional fuzzy(ish) matching. Fuzzy matching may
@@ -455,18 +305,6 @@ fun CordaRPCOps.pendingFlowsCount(): DataFeed<Int, Pair<Int, Int>> {
     }
     return DataFeed(initialPendingFlowsCount, updates)
 }
-
-//inline fun <reified T : ContractState> CordaRPCOps.vaultQueryBy(criteria: QueryCriteria = QueryCriteria.VaultQueryCriteria(),
-//                                                                paging: PageSpecification = PageSpecification(),
-//                                                                sorting: Sort = Sort(emptySet())): Vault.Page<T> {
-//    return vaultQueryBy(criteria, paging, sorting, T::class.java)
-//}
-//
-//inline fun <reified T : ContractState> CordaRPCOps.vaultTrackBy(criteria: QueryCriteria = QueryCriteria.VaultQueryCriteria(),
-//                                                                paging: PageSpecification = PageSpecification(),
-//                                                                sorting: Sort = Sort(emptySet())): DataFeed<Vault.Page<T>, Vault.Update<T>> {
-//    return vaultTrackBy(criteria, paging, sorting, T::class.java)
-//}
 
 // Note that the passed in constructor function is only used for unification of other type parameters and reification of
 // the Class instance of the flow. This could be changed to use the constructor function directly.

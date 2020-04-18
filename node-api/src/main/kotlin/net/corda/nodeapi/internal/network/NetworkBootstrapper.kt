@@ -12,7 +12,6 @@ import net.corda.core.internal.concurrent.transpose
 import net.corda.core.node.NetworkParameters
 import net.corda.core.node.NodeInfo
 import net.corda.core.node.NotaryInfo
-import net.corda.core.node.services.AttachmentId
 import net.corda.core.serialization.SerializationContext
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.deserialize
@@ -410,12 +409,9 @@ internal constructor(private val initSerEnv: Boolean,
     ): NetworkParameters {
         return NetworkParameters(
                 minimumPlatformVersion = PLATFORM_VERSION,
-                notaries = emptyList(),
                 modifiedTime = Instant.now(),
                 maxMessageSize = DEFAULT_MAX_MESSAGE_SIZE,
                 maxTransactionSize = DEFAULT_MAX_TRANSACTION_SIZE,
-                whitelistedContractImplementations = emptyMap(),
-                packageOwnership = emptyMap(),
                 epoch = 1,
                 eventHorizon = 30.days
         )
@@ -490,9 +486,7 @@ fun NetworkParameters.overrideWith(override: NetworkParametersOverrides): Networ
             minimumPlatformVersion = override.minimumPlatformVersion ?: this.minimumPlatformVersion,
             maxMessageSize = override.maxMessageSize ?: this.maxMessageSize,
             maxTransactionSize = override.maxTransactionSize ?: this.maxTransactionSize,
-            eventHorizon = override.eventHorizon ?: this.eventHorizon,
-            packageOwnership = override.packageOwnership?.map { it.javaPackageName to it.publicKey }?.toMap()
-                    ?: this.packageOwnership
+            eventHorizon = override.eventHorizon ?: this.eventHorizon
     )
 }
 

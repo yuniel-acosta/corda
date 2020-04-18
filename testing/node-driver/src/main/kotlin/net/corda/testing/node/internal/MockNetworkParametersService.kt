@@ -55,18 +55,6 @@ class MockNetworkParametersStorage(private var currentParameters: NetworkParamet
         hashToSignedParametersMap[hash] = signedNetworkParameters
     }
 
-    override fun getHistoricNotary(party: Party): NotaryInfo? {
-        val inCurrentParams = currentParameters.notaries.singleOrNull { it.identity == party }
-        return if (inCurrentParams == null) {
-            val inOldParams = hashToParametersMap.flatMap { (_, parameters) ->
-                parameters.notaries
-            }.firstOrNull { it.identity == party }
-            inOldParams
-        } else {
-            inCurrentParams
-        }
-    }
-
     private fun storeCurrentParameters() {
         hashToParametersMap[currentHash] = currentParameters
         val testIdentity = TestIdentity(ALICE_NAME, 20)

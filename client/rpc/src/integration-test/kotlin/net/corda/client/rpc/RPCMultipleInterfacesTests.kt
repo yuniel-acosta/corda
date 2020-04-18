@@ -79,9 +79,6 @@ class RPCMultipleInterfacesTests {
             assertTrue(stringList.toString(), stringList.all { it.matches("[0-7]*".toRegex()) })
             assertEquals(testPhrase, clientString.stringTestMethod())
 
-            val rpcOpsClient = startRpcClient<CordaRPCOps>(server.broker.hostAndPort!!).get()
-            assertFalse(rpcOpsClient.attachmentExists(SecureHash.zeroHash))
-
             Assertions.assertThatThrownBy { startRpcClient<ImaginaryFriend>(server.broker.hostAndPort!!).get() }
                     .hasCauseInstanceOf(RPCException::class.java).hasMessageContaining("possible client/server version skew")
 

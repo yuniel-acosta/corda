@@ -23,7 +23,6 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerModifier
 import net.corda.client.jackson.JacksonSupport
 import net.corda.client.jackson.internal.jsonObject
 import net.corda.core.context.InvocationOrigin
-import net.corda.core.contracts.Attachment
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowInfo
 import net.corda.core.flows.FlowLogic
@@ -117,7 +116,6 @@ class CheckpointDumperImpl(private val checkpointStorage: CheckpointStorage, pri
                     setSerializerModifier(CheckpointDumperBeanModifier)
                     addSerializer(FlowSessionImplSerializer)
                     addSerializer(MapSerializer)
-                    addSerializer(AttachmentSerializer)
                     setMixInAnnotation(FlowAsyncOperation::class.java, FlowAsyncOperationMixin::class.java)
                     setMixInAnnotation(FlowLogic::class.java, FlowLogicMixin::class.java)
                     setMixInAnnotation(SessionId::class.java, SessionIdMixin::class.java)
@@ -428,11 +426,6 @@ class CheckpointDumperImpl(private val checkpointStorage: CheckpointStorage, pri
         }
 
         override fun handledType(): Class<FlowSessionImpl> = FlowSessionImpl::class.java
-    }
-
-    private object AttachmentSerializer : JsonSerializer<Attachment>() {
-        override fun serialize(value: Attachment, gen: JsonGenerator, serializers: SerializerProvider) = gen.writeObject(value.id)
-        override fun handledType(): Class<Attachment> = Attachment::class.java
     }
 
     private object MapSerializer : JsonSerializer<Map<Any, Any>>() {

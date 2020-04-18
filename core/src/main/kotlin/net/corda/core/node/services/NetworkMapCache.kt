@@ -47,15 +47,6 @@ interface NetworkMapCache : NetworkMapCacheBase {
 /** Subset of [NetworkMapCache] that doesn't depend on an [IdentityService]. */
 @DoNotImplement
 interface NetworkMapCacheBase {
-    // DOCSTART 1
-    /**
-     * A list of notary services available on the network.
-     *
-     * Note that the identities are sorted based on legal name, and the ordering might change once new notaries are introduced.
-     */
-    val notaryIdentities: List<Party>
-    // DOCEND 1
-
     /** Tracks changes to the network map cache. */
     val changed: Observable<NetworkMapCache.MapChange>
     /** Future to track completion of the NetworkMapService registration. */
@@ -113,21 +104,6 @@ interface NetworkMapCacheBase {
 
     /** Returns information about the party, which may be a specific node or a service */
     fun getPartyInfo(party: Party): PartyInfo?
-
-    // DOCSTART 2
-    /** Look up a well known identity of notary by legal name. */
-    fun getNotary(name: CordaX500Name): Party? = notaryIdentities.firstOrNull { it.name == name }
-    // DOCEND 2
-
-    /** Returns true if and only if the given [Party] is a notary, which is defined by the network parameters. */
-    fun isNotary(party: Party): Boolean = party in notaryIdentities
-
-    /**
-     * Returns true if and only if the given [Party] is validating notary. For every party that is a validating notary,
-     * [isNotary] is also true.
-     * @see isNotary
-     */
-    fun isValidatingNotary(party: Party): Boolean
 
     /** Clear all network map data from local node cache. */
     fun clearNetworkMapCache()

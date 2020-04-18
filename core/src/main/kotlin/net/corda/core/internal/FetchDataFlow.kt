@@ -1,7 +1,6 @@
 package net.corda.core.internal
 
 import co.paralleluniverse.fibers.Suspendable
-import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.NamedByHash
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.sha256
@@ -212,77 +211,6 @@ sealed class FetchDataFlow<T : NamedByHash, in W : Any>(
         }
     }
 }
-
-/**
- * Given a set of hashes either loads from local storage or requests them from the other peer. Downloaded
- * attachments are saved to local storage automatically.
- */
-class FetchAttachmentsFlow(requests: Set<SecureHash>,
-                           otherSide: FlowSession) : FetchDataFlow<Attachment, ByteArray>(requests, otherSide, DataType.ATTACHMENT) {
-
-    private val uploader = "$P2P_UPLOADER:${otherSideSession.counterparty.name}"
-
-    override fun load(txid: SecureHash): Attachment? = serviceHub.attachments.openAttachment(txid)
-
-    override fun convert(wire: ByteArray): Attachment = FetchedAttachment({ wire }, uploader)
-
-    override fun maybeWriteToDisk(downloaded: List<Attachment>) {
-        for (attachment in downloaded) {
-            with(serviceHub.attachments) {
-                if (!hasAttachment(attachment.id)) {
-                    try {
-                        importAttachment(attachment.open(), uploader, null)
-                    } catch (e: FileAlreadyExistsException) {
-                        // This can happen when another transaction will insert the same attachment during this transaction.
-                        // The outcome is the same (the attachment is imported), so we can ignore this exception.
-                        logger.debug { "Attachment ${attachment.id} already inserted." }
-                    }
-                } else {
-                    logger.debug { "Attachment ${attachment.id} already exists, skipping." }
-                }
-            }
-        }
-    }
-
-    private class FetchedAttachment(dataLoader: () -> ByteArray, uploader: String?) : AbstractAttachment(dataLoader, uploader), SerializeAsToken {
-        override val id: SecureHash by lazy { attachmentData.sha256() }
-
-        private class Token(private val id: SecureHash, private val uploader: String?) : SerializationToken {
-            override fun fromToken(context: SerializeAsTokenContext) = FetchedAttachment(context.attachmentDataLoader(id), uploader)
-        }
-
-        override fun toToken(context: SerializeAsTokenContext) = Token(id, uploader)
-    }
-}
-
-///**
-// * Given a set of tx hashes (IDs), either loads them from local disk or asks the remote peer to provide them.
-// *
-// * A malicious response in which the data provided by the remote peer does not hash to the requested hash results in
-// * [FetchDataFlow.DownloadedVsRequestedDataMismatch] being thrown.
-// * If the remote peer doesn't have an entry, it results in a [FetchDataFlow.HashNotFound] exception.
-// * If the remote peer is not authorized to request this transaction, it results in a [FetchDataFlow.IllegalTransactionRequest] exception.
-// * Authorisation is accorded only on valid ancestors of the root transaction.
-// * Note that returned transactions are not inserted into the database, because it's up to the caller to actually verify the transactions are valid.
-// */
-//class FetchTransactionsFlow(requests: Set<SecureHash>, otherSide: FlowSession) :
-//        FetchDataFlow<SignedTransaction, SignedTransaction>(requests, otherSide, DataType.TRANSACTION) {
-//
-//    override fun load(txid: SecureHash): SignedTransaction? = serviceHub.validatedTransactions.getTransaction(txid)
-//}
-
-//class FetchBatchTransactionsFlow(requests: Set<SecureHash>, otherSide: FlowSession) :
-//        FetchDataFlow<MaybeSerializedSignedTransaction, MaybeSerializedSignedTransaction>(requests, otherSide, DataType.BATCH_TRANSACTION) {
-//
-//    override fun load(txid: SecureHash): MaybeSerializedSignedTransaction? {
-//        val tran = serviceHub.validatedTransactions.getTransaction(txid)
-//        return if (tran == null) {
-//            null
-//        } else {
-//            MaybeSerializedSignedTransaction(txid, null, tran)
-//        }
-//    }
-//}
 
 /**
  * Given a set of hashes either loads from local network parameters storage or requests them from the other peer. Downloaded

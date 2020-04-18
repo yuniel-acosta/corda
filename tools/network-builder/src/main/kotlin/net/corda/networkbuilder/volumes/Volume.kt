@@ -13,6 +13,7 @@ import net.corda.nodeapi.internal.config.getBooleanCaseInsensitive
 import net.corda.nodeapi.internal.createDevNetworkMapCa
 import java.io.File
 import java.security.cert.X509Certificate
+import java.time.Duration
 import java.time.Instant
 
 interface Volume {
@@ -42,12 +43,11 @@ interface Volume {
         return notaryInfos.let {
             NetworkParameters(
                     minimumPlatformVersion = 1,
-                    notaries = it,
                     maxMessageSize = 10485760,
                     maxTransactionSize = 10485760,
                     modifiedTime = Instant.now(),
                     epoch = 10,
-                    whitelistedContractImplementations = emptyMap())
+                    eventHorizon = Duration.ofDays(1))
         }
     }
 }

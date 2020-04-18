@@ -10,7 +10,6 @@ import net.corda.node.services.identity.PersistentIdentityService
 import net.corda.node.services.keys.BasicHSMKeyManagementService
 import net.corda.node.services.messaging.P2PMessageDeduplicator
 import net.corda.node.services.persistence.DBCheckpointStorage
-import net.corda.node.services.persistence.NodeAttachmentService
 import net.corda.node.services.persistence.PublicKeyHashToExternalId
 
 /**
@@ -26,16 +25,12 @@ class NodeSchemaService(private val extraSchemas: Set<MappedSchema> = emptySet()
 
     object NodeCoreV1 : MappedSchema(schemaFamily = NodeCore.javaClass, version = 1,
             mappedTypes = listOf(DBCheckpointStorage.DBCheckpoint::class.java,
-//                    DBTransactionStorage.DBTransaction::class.java,
                     BasicHSMKeyManagementService.PersistentKey::class.java,
-//                    NodeSchedulerService.PersistentScheduledState::class.java,
-                    NodeAttachmentService.DBAttachment::class.java,
                     P2PMessageDeduplicator.ProcessedMessage::class.java,
                     PersistentIdentityService.PersistentPublicKeyHashToCertificate::class.java,
                     PersistentIdentityService.PersistentPartyToPublicKeyHash::class.java,
                     PersistentIdentityService.PersistentPublicKeyHashToParty::class.java,
                     PersistentIdentityService.PersistentHashToPublicKey::class.java,
-//                    ContractUpgradeServiceImpl.DBContractUpgrade::class.java,
                     DBNetworkParametersStorage.PersistentNetworkParameters::class.java,
                     PublicKeyHashToExternalId::class.java
             )) {
@@ -45,8 +40,6 @@ class NodeSchemaService(private val extraSchemas: Set<MappedSchema> = emptySet()
     // Required schemas are those used by internal Corda services
     private val requiredSchemas: Set<MappedSchema> =
             setOf(
-//                    CommonSchemaV1,
-//                    VaultSchemaV1,
                     NodeInfoSchemaV1,
                     NodeCoreV1
             )
@@ -54,32 +47,6 @@ class NodeSchemaService(private val extraSchemas: Set<MappedSchema> = emptySet()
     fun internalSchemas() = requiredSchemas + extraSchemas
 
     override val schemas: Set<MappedSchema> = requiredSchemas + extraSchemas
-
-//    // Currently returns all schemas supported by the state, with no filtering or enrichment.
-//    override fun selectSchemas(state: ContractState): Iterable<MappedSchema> {
-//        val schemas = mutableSetOf<MappedSchema>()
-//        if (state is QueryableState)
-//            schemas += state.supportedSchemas()
-//        if (state is LinearState)
-//            schemas += VaultSchemaV1   // VaultLinearStates
-//        if (state is FungibleAsset<*>)
-//            schemas += VaultSchemaV1   // VaultFungibleAssets
-//        if (state is FungibleState<*>)
-//            schemas += VaultSchemaV1   // VaultFungibleStates
-//
-//        return schemas
-//    }
-//
-//    // Because schema is always one supported by the state, just delegate.
-//    override fun generateMappedObject(state: ContractState, schema: MappedSchema): PersistentState {
-//        if ((schema === VaultSchemaV1) && (state is LinearState))
-//            return VaultSchemaV1.VaultLinearStates(state.linearId)
-//        if ((schema === VaultSchemaV1) && (state is FungibleAsset<*>))
-//            return VaultSchemaV1.VaultFungibleStates(state.owner, state.amount.quantity, state.amount.token.issuer.party, state.amount.token.issuer.reference)
-//        if ((schema === VaultSchemaV1) && (state is FungibleState<*>))
-//            return VaultSchemaV1.VaultFungibleStates(owner = null, quantity = state.amount.quantity, issuer = null, issuerRef = null)
-//        return (state as QueryableState).generateMappedObject(schema)
-//    }
 
     /** Returns list of [MappedSchemaValidator.SchemaCrossReferenceReport] violations. */
     fun mappedSchemasWarnings(): List<MappedSchemaValidator.SchemaCrossReferenceReport> =

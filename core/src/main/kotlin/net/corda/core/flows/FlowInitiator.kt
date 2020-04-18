@@ -34,11 +34,6 @@ sealed class FlowInitiator : Principal {
         override fun getName(): String = serviceClassName
     }
 
-//    /** Started as scheduled activity. */
-//    data class Scheduled(val scheduledState: ScheduledStateRef) : FlowInitiator() {
-//        override fun getName(): String = "Scheduler"
-//    }
-
     // TODO When proper ssh access enabled, add username/use RPC?
     object Shell : FlowInitiator() {
         override fun getName(): String = "Shell User"
@@ -62,7 +57,6 @@ sealed class FlowInitiator : Principal {
                 is FlowInitiator.Peer -> origin = InvocationOrigin.Peer(this.party.name)
                 is FlowInitiator.Service -> origin = InvocationOrigin.Service(this.serviceClassName, unknownName)
                 FlowInitiator.Shell -> origin = InvocationOrigin.Shell
-//                is FlowInitiator.Scheduled -> origin = InvocationOrigin.Scheduled(this.scheduledState)
             }
             return InvocationContext.newInstance(origin = origin, actor = actor)
         }

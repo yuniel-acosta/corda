@@ -14,7 +14,6 @@ import net.corda.core.internal.concurrent.openFuture
 import net.corda.core.messaging.ParametersUpdateInfo
 import net.corda.core.node.NetworkParameters
 import net.corda.core.node.NodeInfo
-import net.corda.core.node.services.AttachmentId
 import net.corda.core.serialization.serialize
 import net.corda.core.utilities.millis
 import net.corda.node.VersionInfo
@@ -261,9 +260,7 @@ class NetworkMapUpdaterTest {
     @Test(timeout=300_000)
 	fun `network parameters auto-accepted when update only changes whitelist`() {
         setUpdater()
-        val newParameters = testNetworkParameters(
-                epoch = 314,
-                whitelistedContractImplementations = mapOf("key" to listOf(SecureHash.randomSHA256())))
+        val newParameters = testNetworkParameters(epoch = 314)
         server.scheduleParametersUpdate(newParameters, "Test update", Instant.MIN)
         startUpdater()
         //TODO: Remove sleep in unit test.
@@ -279,11 +276,8 @@ class NetworkMapUpdaterTest {
     @Test(timeout=300_000)
 	fun `network parameters not auto-accepted when update only changes whitelist but parameter included in exclusion`() {
         setUpdater()
-        val newParameters = testNetworkParameters(
-                epoch = 314,
-                whitelistedContractImplementations = mapOf("key" to listOf(SecureHash.randomSHA256())))
+        val newParameters = testNetworkParameters(epoch = 314)
         server.scheduleParametersUpdate(newParameters, "Test update", Instant.MIN)
-        startUpdater(excludedAutoAcceptNetworkParameters = setOf("whitelistedContractImplementations"))
         //TODO: Remove sleep in unit test.
         Thread.sleep(2L * cacheExpiryMs)
         val updateFile = baseDir / NETWORK_PARAMS_UPDATE_FILE_NAME
@@ -293,9 +287,7 @@ class NetworkMapUpdaterTest {
     @Test(timeout=300_000)
 	fun `network parameters not auto-accepted when update only changes whitelist but auto accept configured to be false`() {
         setUpdater()
-        val newParameters = testNetworkParameters(
-                epoch = 314,
-                whitelistedContractImplementations = mapOf("key" to listOf(SecureHash.randomSHA256())))
+        val newParameters = testNetworkParameters(epoch = 314)
         server.scheduleParametersUpdate(newParameters, "Test update", Instant.MIN)
         startUpdater(autoAcceptNetworkParameters = false)
         //TODO: Remove sleep in unit test.
@@ -423,20 +415,8 @@ class NetworkMapUpdaterTest {
 
     @Test(timeout=300_000)
 	fun `auto acceptance checks are correct`() {
-        val packageOwnership = mapOf(
-                "com.example1" to generateKeyPair().public,
-                "com.example2" to generateKeyPair().public
-        )
-        val whitelistedContractImplementations = mapOf(
-                "example1" to listOf(AttachmentId.randomSHA256()),
-                "example2" to listOf(AttachmentId.randomSHA256())
-        )
-
         val netParams = testNetworkParameters()
-        val netParamsAutoAcceptable = netParams.copy(
-                packageOwnership = packageOwnership,
-                whitelistedContractImplementations = whitelistedContractImplementations
-        )
+        val netParamsAutoAcceptable = netParams
         val netParamsNotAutoAcceptable = netParamsAutoAcceptable.copy(maxMessageSize = netParams.maxMessageSize + 1)
 
         assertTrue(netParams.canAutoAccept(netParams, emptySet()), "auto-acceptable if identical")
@@ -444,7 +424,6 @@ class NetworkMapUpdaterTest {
         assertTrue(netParams.canAutoAccept(netParamsAutoAcceptable, emptySet()), "auto-acceptable if only AutoAcceptable params have changed")
         assertTrue(netParams.canAutoAccept(netParamsAutoAcceptable, setOf("modifiedTime")), "auto-acceptable if only AutoAcceptable params have changed and excluded param has not changed")
         assertFalse(netParams.canAutoAccept(netParamsNotAutoAcceptable, emptySet()), "not auto-acceptable if non-AutoAcceptable param has changed")
-        assertFalse(netParams.canAutoAccept(netParamsAutoAcceptable, setOf("whitelistedContractImplementations")), "not auto-acceptable if only AutoAcceptable params have changed but one has been added to the exclusion set")
     }
 
     private fun createMockNetworkMapCache(): NetworkMapCacheInternal {

@@ -32,10 +32,9 @@ class RPCSecurityManagerTest {
     @Test(timeout=300_000)
 	fun `Generic RPC call authorization`() {
         checkUserActions(
-                permitted = setOf(listOf("nodeInfo"), listOf("notaryIdentities")),
+                permitted = setOf(listOf("nodeInfo")),
                 permissions = setOf(
-                        invokeRpc(CordaRPCOps::nodeInfo),
-                        invokeRpc(CordaRPCOps::notaryIdentities)))
+                        invokeRpc(CordaRPCOps::nodeInfo)))
     }
 
     @Test(timeout=300_000)

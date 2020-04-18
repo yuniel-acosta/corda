@@ -80,39 +80,11 @@ class NodeMonitorModel : AutoCloseable {
         rpc = CordaRPCClient(nodeHostAndPort).start(username, password, GracefulReconnect())
         proxyObservable.value = rpc.proxy
 
-        // Vault snapshot (force single page load with MAX_PAGE_SIZE) + updates
-//        val (
-//                statesSnapshot,
-//                vaultUpdates
-//        ) = rpc.proxy.vaultTrackBy<ContractState>(
-//                QueryCriteria.VaultQueryCriteria(Vault.StateStatus.ALL),
-//                PageSpecification(DEFAULT_PAGE_NUM, MAX_PAGE_SIZE)
-//        )
-//        val unconsumedStates =
-//                statesSnapshot.states.filterIndexed { index, _ ->
-//                    statesSnapshot.statesMetadata[index].status == Vault.StateStatus.UNCONSUMED
-//        }.toSet()
-//        val consumedStates = statesSnapshot.states.toSet() - unconsumedStates
-//        val initialVaultUpdate = Vault.Update(consumedStates, unconsumedStates, references = emptySet())
-//        vaultUpdates.startWith(initialVaultUpdate).subscribe(vaultUpdatesSubject::onNext)
-//
-//        // Transactions
-//        val (transactions, newTransactions) =
-//                @Suppress("DEPRECATION") rpc.proxy.internalVerifiedTransactionsFeed()
-//        newTransactions.startWith(transactions).subscribe(transactionsSubject::onNext)
-//
-//        // SM -> TX mapping
-//        val (smTxMappings, futureSmTxMappings) =
-//                rpc.proxy.stateMachineRecordedTransactionMappingFeed()
-//        futureSmTxMappings.startWith(smTxMappings).subscribe(stateMachineTransactionMappingSubject::onNext)
-
         // Parties on network
         val (parties, futurePartyUpdate) = rpc.proxy.networkMapFeed()
         futurePartyUpdate.startWith(parties.map(MapChange::Added)).subscribe(networkMapSubject::onNext)
 
         val stateMachines = rpc.proxy.stateMachinesSnapshot()
-
-        notaryIdentities = rpc.proxy.notaryIdentities()
 
         // Extract the flow tracking stream
         // TODO is there a nicer way of doing this? Stream of streams in general results in code like this...

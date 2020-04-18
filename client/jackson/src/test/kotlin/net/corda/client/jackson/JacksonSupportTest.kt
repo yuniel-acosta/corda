@@ -21,11 +21,9 @@ import net.corda.core.crypto.*
 import net.corda.core.crypto.CompositeKey
 import net.corda.core.crypto.PartialMerkleTree.PartialTree
 import net.corda.core.identity.*
-import net.corda.core.internal.AbstractAttachment
 import net.corda.core.internal.DigitalSignatureWithCert
 import net.corda.core.node.NodeInfo
 import net.corda.core.node.ServiceHub
-import net.corda.core.node.services.AttachmentStorage
 import net.corda.core.node.services.NetworkParametersService
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.serialization.SerializedBytes
@@ -82,13 +80,6 @@ class JacksonSupportTest(@Suppress("unused") private val name: String, factory: 
 
     @Before
     fun setup() {
-        val unsignedAttachment = object : AbstractAttachment({ byteArrayOf() }, "test") {
-            override val id: SecureHash get() = throw UnsupportedOperationException()
-        }
-
-        val attachments = rigorousMock<AttachmentStorage>().also {
-            doReturn(unsignedAttachment).whenever(it).openAttachment(any())
-        }
         services = rigorousMock()
         cordappProvider = rigorousMock()
         val networkParameters = testNetworkParameters(minimumPlatformVersion = 4)
@@ -98,7 +89,6 @@ class JacksonSupportTest(@Suppress("unused") private val name: String, factory: 
         doReturn(networkParametersService).whenever(services).networkParametersService
         doReturn(cordappProvider).whenever(services).cordappProvider
         doReturn(networkParameters).whenever(services).networkParameters
-        doReturn(attachments).whenever(services).attachments
     }
 
     @Test(timeout=300_000)
@@ -156,11 +146,6 @@ class JacksonSupportTest(@Suppress("unused") private val name: String, factory: 
         assertThat(mapper.convertValue<SerializedBytes<*>>(json)).isEqualTo(serializedBytes)
         assertThat(mapper.convertValue<SerializedBytes<*>>(BinaryNode(serializedBytes.bytes))).isEqualTo(serializedBytes)
     }
-
-    // This is the class that was used to serialise the message for the test below. It's commented out so that it's no
-    // longer on the classpath.
-//    @CordaSerializable
-//    data class ClassNotOnClasspath(val name: CordaX500Name, val value: Int)
 
     @Test(timeout=300_000)
 	fun `SerializedBytes of class not on classpath`() {
@@ -228,87 +213,6 @@ class JacksonSupportTest(@Suppress("unused") private val name: String, factory: 
         assertThat(partialMerkleTreeJson.valueAs<PartialMerkleTree>(mapper).root).isEqualTo(partialMerkleTree.root)
         assertThat(mapper.convertValue<TransactionSignature>(json)).isEqualTo(transactionSignature)
     }
-
-//    @Test(timeout=300_000)
-//	fun `SignedTransaction (WireTransaction)`() {
-//        val attachmentId = SecureHash.randomSHA256()
-//        doReturn(attachmentId).whenever(cordappProvider).getContractAttachmentID(DummyContract.PROGRAM_ID)
-//        val attachmentStorage = rigorousMock<AttachmentStorage>()
-//        doReturn(attachmentStorage).whenever(services).attachments
-//        doReturn(mock<TransactionStorage>()).whenever(services).validatedTransactions
-//        val attachment = rigorousMock<ContractAttachment>()
-//        doReturn(attachment).whenever(attachmentStorage).openAttachment(attachmentId)
-//        doReturn(attachmentId).whenever(attachment).id
-//        doReturn(emptyList<Party>()).whenever(attachment).signerKeys
-//        doReturn(setOf(DummyContract.PROGRAM_ID)).whenever(attachment).allContracts
-//        doReturn("app").whenever(attachment).uploader
-//
-//        val wtx = TransactionBuilder(
-//                notary = DUMMY_NOTARY,
-//                inputs = mutableListOf(StateRef(SecureHash.randomSHA256(), 1)),
-//                attachments = mutableListOf(attachmentId),
-//                outputs = mutableListOf(createTransactionState()),
-//                commands = mutableListOf(Command(DummyCommandData, listOf(BOB_PUBKEY))),
-//                window = TimeWindow.fromStartAndDuration(Instant.now(), 1.hours),
-//                references = mutableListOf(StateRef(SecureHash.randomSHA256(), 0)),
-//                privacySalt = net.corda.core.contracts.PrivacySalt()
-//        ).toWireTransaction(services)
-//        val stx = sign(wtx)
-//        partyObjectMapper.identities += listOf(MINI_CORP.party, DUMMY_NOTARY)
-//        val json = mapper.valueToTree<ObjectNode>(stx)
-//        println(mapper.writeValueAsString(json))
-//        val (wtxJson, signaturesJson) = json.assertHasOnlyFields("wire", "signatures")
-//        assertThat(signaturesJson.childrenAs<TransactionSignature>(mapper)).isEqualTo(stx.sigs)
-//        val wtxFields = wtxJson.assertHasOnlyFields("id", "notary", "inputs", "attachments", "outputs", "commands", "timeWindow", "references", "privacySalt", "networkParametersHash")
-//        assertThat(wtxFields[0].valueAs<SecureHash>(mapper)).isEqualTo(wtx.id)
-//        assertThat(wtxFields[1].valueAs<Party>(mapper)).isEqualTo(wtx.notary)
-//        assertThat(wtxFields[2].childrenAs<StateRef>(mapper)).isEqualTo(wtx.inputs)
-//        assertThat(wtxFields[3].childrenAs<SecureHash>(mapper)).isEqualTo(wtx.attachments)
-//        assertThat(wtxFields[4].childrenAs<TransactionState<*>>(mapper)).isEqualTo(wtx.outputs)
-//        assertThat(wtxFields[5].childrenAs<Command<*>>(mapper)).isEqualTo(wtx.commands)
-//        assertThat(wtxFields[6].valueAs<TimeWindow>(mapper)).isEqualTo(wtx.timeWindow)
-//        assertThat(wtxFields[7].childrenAs<StateRef>(mapper)).isEqualTo(wtx.references)
-//        assertThat(wtxFields[8].valueAs<PrivacySalt>(mapper)).isEqualTo(wtx.privacySalt)
-//        assertThat(mapper.convertValue<WireTransaction>(wtxJson)).isEqualTo(wtx)
-//        assertThat(mapper.convertValue<SignedTransaction>(json)).isEqualTo(stx)
-//    }
-//
-//    @Test(timeout=300_000)
-//	fun TransactionState() {
-//        val txState = createTransactionState()
-//        val json = mapper.valueToTree<ObjectNode>(txState)
-//        println(mapper.writeValueAsString(json))
-//        partyObjectMapper.identities += listOf(MINI_CORP.party, DUMMY_NOTARY)
-//        assertThat(mapper.convertValue<TransactionState<*>>(json)).isEqualTo(txState)
-//    }
-//
-//    @Test(timeout=300_000)
-//	fun Command() {
-//        val command = Command(DummyCommandData, listOf(BOB_PUBKEY))
-//        val json = mapper.valueToTree<ObjectNode>(command)
-//        assertThat(mapper.convertValue<Command<*>>(json)).isEqualTo(command)
-//    }
-//
-//    @Test(timeout=300_000)
-//	fun `TimeWindow - fromOnly`() {
-//        val fromOnly = TimeWindow.fromOnly(Instant.now())
-//        val json = mapper.valueToTree<ObjectNode>(fromOnly)
-//        assertThat(mapper.convertValue<TimeWindow>(json)).isEqualTo(fromOnly)
-//    }
-//
-//    @Test(timeout=300_000)
-//	fun `TimeWindow - untilOnly`() {
-//        val untilOnly = TimeWindow.untilOnly(Instant.now())
-//        val json = mapper.valueToTree<ObjectNode>(untilOnly)
-//        assertThat(mapper.convertValue<TimeWindow>(json)).isEqualTo(untilOnly)
-//    }
-//
-//    @Test(timeout=300_000)
-//	fun `TimeWindow - between`() {
-//        val between = TimeWindow.between(Instant.now(), Instant.now() + 1.days)
-//        val json = mapper.valueToTree<ObjectNode>(between)
-//        assertThat(mapper.convertValue<TimeWindow>(json)).isEqualTo(between)
-//    }
 
     @Test(timeout=300_000)
 	fun PrivacySalt() {
@@ -682,26 +586,6 @@ class JacksonSupportTest(@Suppress("unused") private val name: String, factory: 
         val json = mapper.valueToTree<ObjectNode>(CordaSerializableKotlinObject)
         assertThat(mapper.convertValue<CordaSerializableKotlinObject>(json)).isSameAs(CordaSerializableKotlinObject)
     }
-
-//    private fun sign(ctx: CoreTransaction): SignedTransaction {
-//        val partialMerkleTree = PartialMerkleTree(PartialTree.Node(
-//                left = PartialTree.Leaf(SecureHash.randomSHA256()),
-//                right = PartialTree.IncludedLeaf(SecureHash.randomSHA256())
-//        ))
-//        val signatures = listOf(
-//                TransactionSignature(ByteArray(1), ALICE_PUBKEY, SignatureMetadata(1, Crypto.findSignatureScheme(ALICE_PUBKEY).schemeNumberID), partialMerkleTree),
-//                TransactionSignature(ByteArray(1), BOB_PUBKEY, SignatureMetadata(1, Crypto.findSignatureScheme(BOB_PUBKEY).schemeNumberID))
-//        )
-//        return SignedTransaction(ctx, signatures)
-//    }
-//
-//    private fun createTransactionState(): TransactionState<DummyContract.SingleOwnerState> {
-//        return TransactionState(
-//                data = DummyContract.SingleOwnerState(magicNumber = 123, owner = MINI_CORP.party),
-//                contract = DummyContract.PROGRAM_ID,
-//                notary = DUMMY_NOTARY
-//        )
-//    }
 
     private inline fun <reified T : Any> testToStringSerialisation(value: T) {
         val json = mapper.valueToTree<TextNode>(value)
