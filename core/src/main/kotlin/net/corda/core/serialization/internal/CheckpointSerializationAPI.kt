@@ -1,8 +1,8 @@
 package net.corda.core.serialization.internal
 
-import net.corda.core.DeleteForDJVM
+
 import net.corda.core.DoNotImplement
-import net.corda.core.KeepForDJVM
+
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.*
 import net.corda.core.utilities.ByteSequence
@@ -11,12 +11,12 @@ import java.io.NotSerializableException
 
 
 object CheckpointSerializationDefaults {
-    @DeleteForDJVM
+    
     val CHECKPOINT_CONTEXT get() = effectiveSerializationEnv.checkpointContext
     val CHECKPOINT_SERIALIZER get() = effectiveSerializationEnv.checkpointSerializer
 }
 
-@KeepForDJVM
+
 @DoNotImplement
 interface CheckpointSerializer {
     @Throws(NotSerializableException::class)
@@ -29,7 +29,7 @@ interface CheckpointSerializer {
 /**
  * Parameters to checkpoint serialization and deserialization.
  */
-@KeepForDJVM
+
 @DoNotImplement
 interface CheckpointSerializationContext {
     /**

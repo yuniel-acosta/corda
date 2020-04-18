@@ -1,6 +1,6 @@
 package net.corda.core.node
 
-import net.corda.core.DeleteForDJVM
+
 import net.corda.core.flows.FlowLogic
 import net.corda.core.messaging.FlowHandle
 import net.corda.core.messaging.FlowProgressHandle
@@ -16,7 +16,7 @@ import rx.Observable
  * In particular such a [net.corda.core.node.services.CordaService] can initiate and track flows marked
  * with [net.corda.core.flows.StartableByService].
  */
-@DeleteForDJVM
+
 interface AppServiceHub : ServiceHub {
 
     companion object {

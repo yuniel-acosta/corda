@@ -1,6 +1,6 @@
 package net.corda.serialization.internal.amqp
 
-import net.corda.core.KeepForDJVM
+
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.serialization.SerializationContext
 import net.corda.serialization.internal.model.FingerprintWriter
@@ -73,7 +73,7 @@ abstract class CustomSerializer<T : Any> : AMQPSerializer<T>, SerializerFor {
      * subclass in the schema, so that we can distinguish between subclasses.
      */
     // TODO: should this be a custom serializer at all, or should it just be a plain AMQPSerializer?
-    @KeepForDJVM
+    
     class SubClass<T : Any>(private val clazz: Class<*>, private val superClassSerializer: CustomSerializer<T>) : CustomSerializer<T>() {
         // TODO: should this be empty or contain the schema of the super?
         override val schemaForDocumentation = Schema(emptyList())
@@ -133,13 +133,13 @@ abstract class CustomSerializer<T : Any> : AMQPSerializer<T>, SerializerFor {
     /**
      * Additional base features for a custom serializer for a particular class, that excludes subclasses.
      */
-    @KeepForDJVM
+    
     abstract class Is<T : Any>(clazz: Class<T>) : CustomSerializerImp<T>(clazz, false)
 
     /**
      * Additional base features for a custom serializer for all implementations of a particular interface or super class.
      */
-    @KeepForDJVM
+    
     abstract class Implements<T : Any>(clazz: Class<T>) : CustomSerializerImp<T>(clazz, true)
 
     /**
@@ -149,7 +149,7 @@ abstract class CustomSerializer<T : Any> : AMQPSerializer<T>, SerializerFor {
      * The proxy class must use only types which are either native AMQP or other types for which there are pre-registered
      * custom serializers.
      */
-    @KeepForDJVM
+    
     abstract class Proxy<T : Any, P : Any>(clazz: Class<T>,
                                            protected val proxyClass: Class<P>,
                                            protected val factory: LocalSerializerFactory,
@@ -208,7 +208,7 @@ abstract class CustomSerializer<T : Any> : AMQPSerializer<T>, SerializerFor {
      * @param maker A lambda for constructing an instance, that defaults to calling a constructor that expects a string.
      * @param unmaker A lambda that extracts the string value for an instance, that defaults to the [toString] method.
      */
-    @KeepForDJVM
+    
     abstract class ToString<T : Any>(clazz: Class<T>, withInheritance: Boolean = false,
                                      private val maker: (String) -> T = clazz.getConstructor(String::class.java).let { `constructor` ->
                                          { string -> `constructor`.newInstance(string) }

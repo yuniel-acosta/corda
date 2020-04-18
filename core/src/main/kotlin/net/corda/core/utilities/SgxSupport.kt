@@ -1,8 +1,8 @@
 package net.corda.core.utilities
 
-import net.corda.core.DeleteForDJVM
 
-@DeleteForDJVM
+
+
 object SgxSupport {
     @JvmStatic
     val isInsideEnclave: Boolean by lazy {

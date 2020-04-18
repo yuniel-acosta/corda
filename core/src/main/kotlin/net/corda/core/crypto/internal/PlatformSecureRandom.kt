@@ -1,9 +1,9 @@
 @file:JvmName("PlatformSecureRandom")
-@file:DeleteForDJVM
+
 package net.corda.core.crypto.internal
 
 import io.netty.util.concurrent.FastThreadLocal
-import net.corda.core.DeleteForDJVM
+
 import net.corda.core.crypto.DummySecureRandom
 import net.corda.core.utilities.SgxSupport
 import net.corda.core.utilities.loggerFor
@@ -30,7 +30,7 @@ internal val platformSecureRandom: () -> SecureRandom = when {
     }
 }
 
-@DeleteForDJVM
+
 class PlatformSecureRandomService(provider: Provider)
     : Provider.Service(provider, "SecureRandom", algorithm, PlatformSecureRandomSpi::javaClass.name, null, null) {
 
@@ -54,7 +54,7 @@ class PlatformSecureRandomService(provider: Provider)
     override fun newInstance(constructorParameter: Any?) = instance
 }
 
-@DeleteForDJVM
+
 private class PlatformSecureRandomSpi : SecureRandomSpi() {
     private val threadLocalSecureRandom = object : FastThreadLocal<SecureRandom>() {
         override fun initialValue() = SecureRandom.getInstanceStrong()
@@ -67,7 +67,7 @@ private class PlatformSecureRandomSpi : SecureRandomSpi() {
     override fun engineGenerateSeed(numBytes: Int): ByteArray = secureRandom.generateSeed(numBytes)
 }
 
-@DeleteForDJVM
+
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
 private class LinuxSecureRandomSpi : SecureRandomSpi() {
     private fun openURandom(): InputStream {

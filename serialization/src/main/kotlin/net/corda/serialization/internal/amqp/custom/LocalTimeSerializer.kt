@@ -1,6 +1,6 @@
 package net.corda.serialization.internal.amqp.custom
 
-import net.corda.core.KeepForDJVM
+
 import net.corda.serialization.internal.amqp.CustomSerializer
 import net.corda.serialization.internal.amqp.SerializerFactory
 import java.time.LocalTime
@@ -29,6 +29,6 @@ class LocalTimeSerializer(
             proxy.nano
     )
 
-    @KeepForDJVM
+    
     data class LocalTimeProxy(val hour: Byte, val minute: Byte, val second: Byte, val nano: Int)
 }

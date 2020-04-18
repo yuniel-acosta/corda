@@ -2,7 +2,7 @@ package net.corda.core.internal
 
 import io.github.classgraph.ClassGraph
 import io.github.classgraph.ClassInfo
-import net.corda.core.StubOutForDJVM
+
 
 /**
  * Creates instances of all the classes in the classpath of the provided classloader, which implement the interface of the provided class.
@@ -16,7 +16,7 @@ import net.corda.core.StubOutForDJVM
  * - be non-abstract
  * - either be a Kotlin object or have a constructor with no parameters (or only optional ones)
  */
-@StubOutForDJVM
+
 fun <T: Any> createInstancesOfClassesImplementing(classloader: ClassLoader, clazz: Class<T>): Set<T> {
     return getNamesOfClassesImplementing(classloader, clazz)
         .map { classloader.loadClass(it).asSubclass(clazz) }
@@ -30,7 +30,7 @@ fun <T: Any> createInstancesOfClassesImplementing(classloader: ClassLoader, claz
  *
  * @return names of the identified classes.
  */
-@StubOutForDJVM
+
 fun <T: Any> getNamesOfClassesImplementing(classloader: ClassLoader, clazz: Class<T>): Set<String> {
     return ClassGraph().overrideClassLoaders(classloader)
         .ignoreParentClassLoaders()

@@ -257,7 +257,7 @@ data class DriverParameters(
                 "misleading results in tests. Use cordappsForAllNodes instead.")
         val extraCordappPackagesToScan: List<String> = emptyList(),
         @Suppress("DEPRECATION") val jmxPolicy: JmxPolicy = JmxPolicy(),
-        val networkParameters: NetworkParameters = testNetworkParameters(notaries = emptyList()),
+        val networkParameters: NetworkParameters = testNetworkParameters(),
         val notaryCustomOverrides: Map<String, Any?> = emptyMap(),
         val inMemoryDB: Boolean = true,
         val cordappsForAllNodes: Collection<TestCordapp>? = null,
@@ -280,7 +280,7 @@ data class DriverParameters(
             notarySpecs: List<NotarySpec> = listOf(NotarySpec(DUMMY_NOTARY_NAME)),
             extraCordappPackagesToScan: List<String> = emptyList(),
             @Suppress("DEPRECATION") jmxPolicy: JmxPolicy = JmxPolicy(),
-            networkParameters: NetworkParameters = testNetworkParameters(notaries = emptyList()),
+            networkParameters: NetworkParameters = testNetworkParameters(),
             notaryCustomOverrides: Map<String, Any?> = emptyMap(),
             inMemoryDB: Boolean = true,
             cordappsForAllNodes: Collection<TestCordapp>? = null
@@ -319,7 +319,7 @@ data class DriverParameters(
             notarySpecs: List<NotarySpec> = listOf(NotarySpec(DUMMY_NOTARY_NAME)),
             extraCordappPackagesToScan: List<String> = emptyList(),
             @Suppress("DEPRECATION") jmxPolicy: JmxPolicy = JmxPolicy(),
-            networkParameters: NetworkParameters = testNetworkParameters(notaries = emptyList()),
+            networkParameters: NetworkParameters = testNetworkParameters(),
             notaryCustomOverrides: Map<String, Any?> = emptyMap(),
             inMemoryDB: Boolean = true
     ) : this(

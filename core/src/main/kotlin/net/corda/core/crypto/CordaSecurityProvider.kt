@@ -1,7 +1,7 @@
 package net.corda.core.crypto
 
-import net.corda.core.KeepForDJVM
-import net.corda.core.StubOutForDJVM
+
+
 import net.corda.core.crypto.CordaObjectIdentifier.COMPOSITE_KEY
 import net.corda.core.crypto.CordaObjectIdentifier.COMPOSITE_SIGNATURE
 import net.corda.core.crypto.internal.PlatformSecureRandomService
@@ -10,7 +10,7 @@ import java.security.Provider
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-@KeepForDJVM
+
 @Suppress("DEPRECATION")    // JDK11: should replace with Provider(String name, double version, String info) (since 9)
 class CordaSecurityProvider : Provider(PROVIDER_NAME, 0.1, "$PROVIDER_NAME security provider wrapper") {
     companion object {
@@ -27,7 +27,7 @@ class CordaSecurityProvider : Provider(PROVIDER_NAME, 0.1, "$PROVIDER_NAME secur
         putPlatformSecureRandomService()
     }
 
-    @StubOutForDJVM
+    
     private fun putPlatformSecureRandomService() {
         putService(PlatformSecureRandomService(this))
     }
@@ -45,7 +45,7 @@ class CordaSecurityProvider : Provider(PROVIDER_NAME, 0.1, "$PROVIDER_NAME secur
 
     private fun superGetService(type: String, algorithm: String): Service? = super.getService(type, algorithm)
 
-    @StubOutForDJVM
+    
     private fun makeCachingFactory(): Function2<String, String, Service?> {
         return object : Function2<String, String, Service?> {
             private val services = ConcurrentHashMap<Pair<String, String>, Optional<Service>>()
@@ -67,7 +67,7 @@ class CordaSecurityProvider : Provider(PROVIDER_NAME, 0.1, "$PROVIDER_NAME secur
     }
 }
 
-@KeepForDJVM
+
 object CordaObjectIdentifier {
     // UUID-based OID
     // TODO define and use an official Corda OID in [CordaOID]. We didn't do yet for backwards compatibility purposes,

@@ -1,6 +1,6 @@
 //package net.corda.serialization.internal.amqp.custom
 //
-//import net.corda.core.KeepForDJVM
+//
 //import net.corda.core.contracts.Attachment
 //import net.corda.core.internal.readFully
 //import net.corda.core.serialization.MissingAttachmentsException
@@ -40,7 +40,7 @@
 //        return ContractAttachment.create(proxy.attachment, proxy.contract, proxy.contracts, proxy.uploader, proxy.signers, proxy.version)
 //    }
 //
-//    @KeepForDJVM
+//    
 //    data class ContractAttachmentProxy(
 //            val attachment: Attachment,
 //            val contract: ContractClassName,

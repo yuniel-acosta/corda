@@ -1,6 +1,6 @@
 package net.corda.core.schemas
 
-import net.corda.core.KeepForDJVM
+
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.utilities.toHexString
 import org.hibernate.annotations.Immutable
@@ -19,7 +19,7 @@ import javax.persistence.MappedSuperclass
  * @param version The version number of this instance within the family.
  * @param mappedTypes The JPA entity classes that the ORM layer needs to be configure with for this schema.
  */
-@KeepForDJVM
+
 open class MappedSchema(schemaFamily: Class<*>,
                         val version: Int,
                         val mappedTypes: Iterable<Class<*>>) {

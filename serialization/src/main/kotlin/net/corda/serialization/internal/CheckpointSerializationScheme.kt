@@ -1,6 +1,6 @@
 package net.corda.serialization.internal
 
-import net.corda.core.KeepForDJVM
+
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.ClassWhitelist
 import net.corda.core.serialization.EncodingWhitelist
@@ -8,7 +8,7 @@ import net.corda.core.serialization.SerializationEncoding
 import net.corda.core.serialization.internal.CheckpointSerializationContext
 import java.lang.UnsupportedOperationException
 
-@KeepForDJVM
+
 data class CheckpointSerializationContextImpl @JvmOverloads constructor(
                                                               override val deserializationClassLoader: ClassLoader,
                                                               override val whitelist: ClassWhitelist,

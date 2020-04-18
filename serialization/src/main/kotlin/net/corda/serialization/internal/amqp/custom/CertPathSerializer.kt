@@ -1,6 +1,6 @@
 package net.corda.serialization.internal.amqp.custom
 
-import net.corda.core.KeepForDJVM
+
 import net.corda.serialization.internal.amqp.CustomSerializer
 import net.corda.serialization.internal.amqp.SerializerFactory
 import java.io.NotSerializableException
@@ -28,7 +28,7 @@ class CertPathSerializer(
         }
     }
 
-    @KeepForDJVM
+    
     @Suppress("ArrayInDataClass")
     data class CertPathProxy(val type: String, val encoded: ByteArray)
 }

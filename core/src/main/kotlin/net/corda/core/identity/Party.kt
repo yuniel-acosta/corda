@@ -1,6 +1,6 @@
 package net.corda.core.identity
 
-import net.corda.core.KeepForDJVM
+
 import net.corda.core.contracts.PartyAndReference
 import net.corda.core.crypto.CompositeKey
 import net.corda.core.crypto.Crypto
@@ -34,7 +34,7 @@ import java.security.cert.X509Certificate
  *
  * @see CompositeKey
  */
-@KeepForDJVM
+
 class Party(val name: CordaX500Name, owningKey: PublicKey) : Destination, AbstractParty(owningKey) {
     constructor(certificate: X509Certificate)
             : this(CordaX500Name.build(certificate.subjectX500Principal), Crypto.toSupportedPublicKey(certificate.publicKey))

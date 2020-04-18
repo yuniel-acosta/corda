@@ -27,9 +27,6 @@ configurations {
     
     slowIntegrationTestCompile.extendsFrom testCompile
     slowIntegrationTestRuntimeOnly.extendsFrom testRuntimeOnly
-
-    jdkRt
-    deterministic
 }
 
 sourceSets {
@@ -137,19 +134,6 @@ dependencies {
     // TypeSafe Config: for simple and human friendly config files.
     compile "com.typesafe:config:$typesafe_config_version"
 
-    // Sandbox for deterministic contract verification
-    compile "net.corda.djvm:corda-djvm:$djvm_version"
-    compile project(':serialization-djvm')
-    compile(project(':node:djvm')) {
-        transitive = false
-    }
-    jdkRt "net.corda:deterministic-rt:$deterministic_rt_version"
-    deterministic project(path: ':core-deterministic', configuration: 'deterministicArtifacts')
-    deterministic project(path: ':serialization-deterministic', configuration: 'deterministicArtifacts')
-    deterministic project(':serialization-djvm:deserializers')
-    deterministic project(':node:djvm')
-    deterministic "org.slf4j:slf4j-nop:$slf4j_version"
-
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junit_jupiter_version}"
     testImplementation "junit:junit:$junit_version"
 
@@ -246,8 +230,6 @@ tasks.withType(Test) {
     if (JavaVersion.current() == JavaVersion.VERSION_11) {
         jvmArgs '-Djdk.attach.allowAttachSelf=true'
     }
-    systemProperty 'deterministic-rt.path', configurations.jdkRt.asPath
-    systemProperty 'deterministic-sources.path', configurations.deterministic.asPath
 }
 
 task integrationTest(type: Test) {
@@ -298,10 +280,6 @@ quasar {
 
 jar {
     baseName 'corda-node'
-    manifest {
-        attributes('Corda-Deterministic-Runtime': configurations.jdkRt.singleFile.name)
-        attributes('Corda-Deterministic-Classpath': configurations.deterministic.collect { it.name }.join(' '))
-    }
 }
 
 publish {

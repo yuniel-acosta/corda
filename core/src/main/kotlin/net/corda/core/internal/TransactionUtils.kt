@@ -1,6 +1,6 @@
 package net.corda.core.internal
 
-import net.corda.core.KeepForDJVM
+
 import net.corda.core.contracts.*
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.componentHash

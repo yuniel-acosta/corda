@@ -1,6 +1,6 @@
 package net.corda.core.cordapp
 
-import net.corda.core.DeleteForDJVM
+
 import net.corda.core.DoNotImplement
 import net.corda.core.cordapp.Cordapp.Info.*
 import net.corda.core.crypto.SecureHash
@@ -36,7 +36,7 @@ import java.net.URL
  * @property targetPlatformVersion The target platform version this CorDapp was designed and tested on.
  */
 @DoNotImplement
-@DeleteForDJVM
+
 interface Cordapp {
     val name: String
     val initiatedFlows: List<Class<out FlowLogic<*>>>

@@ -1,6 +1,6 @@
 package net.corda.serialization.internal.amqp
 
-import net.corda.core.KeepForDJVM
+
 import net.corda.core.serialization.SerializationContext
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.utilities.contextLogger
@@ -16,7 +16,7 @@ import java.lang.reflect.WildcardType
 import java.util.*
 import kotlin.collections.LinkedHashSet
 
-@KeepForDJVM
+
 data class BytesAndSchemas<T : Any>(
         val obj: SerializedBytes<T>,
         val schema: Schema,
@@ -28,7 +28,7 @@ data class BytesAndSchemas<T : Any>(
  * @param serializerFactory This is the factory for [AMQPSerializer] instances and can be shared across multiple
  * instances and threads.
  */
-@KeepForDJVM
+
 open class SerializationOutput constructor(
         internal val serializerFactory: LocalSerializerFactory
 ) {

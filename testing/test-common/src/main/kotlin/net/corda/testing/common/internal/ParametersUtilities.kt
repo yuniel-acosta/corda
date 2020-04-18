@@ -10,15 +10,13 @@ import java.time.Instant
 
 @JvmOverloads
 fun testNetworkParameters(
-        notaries: List<NotaryInfo> = emptyList(),
         minimumPlatformVersion: Int = 1,
         modifiedTime: Instant = Instant.now(),
         maxMessageSize: Int = 10485760,
         // TODO: Make this configurable and consistence across driver, bootstrapper, demobench and NetworkMapServer
         maxTransactionSize: Int = maxMessageSize * 50,
         epoch: Int = 1,
-        eventHorizon: Duration = 30.days,
-        packageOwnership: Map<String, PublicKey> = emptyMap()
+        eventHorizon: Duration = 30.days
 ): NetworkParameters {
     return NetworkParameters(
             minimumPlatformVersion = minimumPlatformVersion,

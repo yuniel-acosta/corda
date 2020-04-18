@@ -1,7 +1,7 @@
 package net.corda.core.crypto.internal
 
-import net.corda.core.DeleteForDJVM
-import net.corda.core.StubOutForDJVM
+
+
 import net.corda.core.crypto.SignatureScheme
 import net.corda.core.internal.LazyPool
 import java.security.Provider
@@ -39,12 +39,12 @@ object Instances {
                 @Suppress("DEPRECATION") provider?.version) // JDK11: should replace with getVersionStr() (since 9)
     }
 
-    @StubOutForDJVM
+    
     private fun makeCachingFactory(): SignatureFactory {
         return CachingSignatureFactory()
     }
 
-    @DeleteForDJVM
+    
     private class CachingSignatureFactory : SignatureFactory {
         private val signatureInstances = ConcurrentHashMap<SignatureKey, LazyPool<Signature>>()
 

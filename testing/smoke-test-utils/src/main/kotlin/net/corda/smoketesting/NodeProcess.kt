@@ -78,11 +78,11 @@ class NodeProcess(
 
         private fun createNetworkParameters(notaryInfo: NotaryInfo, nodeDir: Path) {
             try {
-                networkParametersCopier = NetworkParametersCopier(testNetworkParameters(notaries = listOf(notaryInfo)))
+                networkParametersCopier = NetworkParametersCopier(testNetworkParameters())
             } catch (_: IllegalStateException) {
                 // Assuming serialization env not in context.
                 AMQPClientSerializationScheme.createSerializationEnv().asContextEnv {
-                    networkParametersCopier = NetworkParametersCopier(testNetworkParameters(notaries = listOf(notaryInfo)))
+                    networkParametersCopier = NetworkParametersCopier(testNetworkParameters())
                 }
             }
             networkParametersCopier.install(nodeDir)

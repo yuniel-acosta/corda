@@ -76,8 +76,6 @@ buildscript {
     ext.disruptor_version = constants.getProperty("disruptorVersion")
     ext.metrics_version = constants.getProperty("metricsVersion")
     ext.metrics_new_relic_version = constants.getProperty("metricsNewRelicVersion")
-    ext.djvm_version = constants.getProperty("djvmVersion")
-    ext.deterministic_rt_version = constants.getProperty('deterministicRtVersion')
     ext.okhttp_version = '3.14.2'
     ext.netty_version = '4.1.29.Final'
     ext.tcnative_version = '2.0.14.Final'
@@ -133,9 +131,6 @@ buildscript {
         ext.fontawesomefx_commons_version = '8.15'
         ext.fontawesomefx_fontawesome_version = '4.7.0-5'
     }
-
-    // Name of the IntelliJ SDK created for the deterministic Java rt.jar.
-    // ext.deterministic_idea_sdk = '1.8 (Deterministic)'
 
     // Update 121 is required for ObjectInputFilter.
     // Updates [131, 161] also have zip compression bugs on MacOS (High Sierra).
@@ -481,14 +476,10 @@ bintrayConfig {
             'corda-mock',
             'corda-rpc',
             'corda-core',
-            'corda-core-deterministic',
-            'corda-deterministic-verifier',
-            'corda-deserializers-djvm',
             'corda',
             'corda-finance-workflows',
             'corda-node',
             'corda-node-api',
-            'corda-node-djvm',
             'corda-test-common',
             'corda-test-utils',
             'corda-test-db',
@@ -500,8 +491,6 @@ bintrayConfig {
             'corda-shell',
             'corda-tools-shell-cli',
             'corda-serialization',
-            'corda-serialization-deterministic',
-            'corda-serialization-djvm',
             'corda-tools-blob-inspector',
             'corda-tools-network-bootstrapper',
             'corda-tools-cliutils',

@@ -1,6 +1,6 @@
 package net.corda.serialization.internal.amqp.custom
 
-import net.corda.core.KeepForDJVM
+
 import net.corda.serialization.internal.amqp.CustomSerializer
 import net.corda.serialization.internal.amqp.SerializerFactory
 import java.time.LocalDate
@@ -19,6 +19,6 @@ class LocalDateSerializer(
 
     override fun fromProxy(proxy: LocalDateProxy): LocalDate = LocalDate.of(proxy.year, proxy.month.toInt(), proxy.day.toInt())
 
-    @KeepForDJVM
+    
     data class LocalDateProxy(val year: Int, val month: Byte, val day: Byte)
 }

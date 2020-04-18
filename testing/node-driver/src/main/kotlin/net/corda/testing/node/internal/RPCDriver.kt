@@ -112,7 +112,6 @@ fun <A> rpcDriver(
         externalTrace: Trace? = null,
         @Suppress("DEPRECATION") jmxPolicy: JmxPolicy = JmxPolicy(),
         networkParameters: NetworkParameters = testNetworkParameters(),
-        notaryCustomOverrides: Map<String, Any?> = emptyMap(),
         inMemoryDB: Boolean = true,
         cordappsForAllNodes: Collection<TestCordappInternal>? = null,
         djvmBootstrapSource: Path? = null,

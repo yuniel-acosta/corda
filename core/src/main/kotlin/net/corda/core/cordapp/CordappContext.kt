@@ -1,7 +1,7 @@
 package net.corda.core.cordapp
 
 import net.corda.core.CordaInternal
-import net.corda.core.DeleteForDJVM
+
 import net.corda.core.crypto.SecureHash
 import java.lang.UnsupportedOperationException
 
@@ -18,7 +18,7 @@ import java.lang.UnsupportedOperationException
  * @property classLoader the classloader used to load this cordapp's classes
  * @property config Configuration for this CorDapp
  */
-@DeleteForDJVM
+
 class CordappContext private constructor(
         val cordapp: Cordapp,
         val classLoader: ClassLoader,

@@ -30,13 +30,13 @@ fun checkMinimumPlatformVersion(minimumPlatformVersion: Int, requiredMinPlatform
 fun getJavaUpdateVersion(javaVersion: String): Long = javaVersion.substringAfter("_").substringBefore("-").toLong()
 
 ///** Provide access to internal method for AttachmentClassLoaderTests. */
-//@DeleteForDJVM
+//
 //fun TransactionBuilder.toWireTransaction(services: ServicesForResolution, serializationContext: SerializationContext): WireTransaction {
 //    return toWireTransactionWithContext(services, serializationContext)
 //}
 //
 ///** Provide access to internal method for AttachmentClassLoaderTests. */
-//@DeleteForDJVM
+//
 //fun TransactionBuilder.toLedgerTransaction(services: ServicesForResolution, serializationContext: SerializationContext): LedgerTransaction {
 //    return toLedgerTransactionWithContext(services, serializationContext)
 //}

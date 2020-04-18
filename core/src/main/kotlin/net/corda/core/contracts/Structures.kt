@@ -1,8 +1,8 @@
 @file:JvmName("Structures")
 package net.corda.core.contracts
 
-import net.corda.core.DeleteForDJVM
-import net.corda.core.KeepForDJVM
+
+
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.secureRandomBytes
 import net.corda.core.identity.AbstractParty
@@ -78,7 +78,7 @@ data class PartyAndReference(val party: AbstractParty, val reference: OpaqueByte
 @CordaSerializable
 class PrivacySalt(bytes: ByteArray) : OpaqueBytes(bytes) {
     /** Constructs a salt with a randomly-generated 32 byte value. */
-    @DeleteForDJVM
+    
     constructor() : this(secureRandomBytes(32))
 
     init {

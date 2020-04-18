@@ -2,9 +2,9 @@
 
 package net.corda.serialization.internal.amqp
 
-import net.corda.core.DeleteForDJVM
-import net.corda.core.KeepForDJVM
-import net.corda.core.StubOutForDJVM
+
+
+
 import net.corda.core.cordapp.Cordapp
 import net.corda.core.internal.VisibleForTesting
 import net.corda.core.internal.toSynchronised
@@ -40,14 +40,14 @@ interface SerializerFactoryFactory {
     fun make(context: SerializationContext): SerializerFactory
 }
 
-@KeepForDJVM
+
 abstract class AbstractAMQPSerializationScheme(
         private val cordappCustomSerializers: Set<SerializationCustomSerializer<*, *>>,
         private val cordappSerializationWhitelists: Set<SerializationWhitelist>,
         maybeNotConcurrentSerializerFactoriesForContexts: MutableMap<SerializationFactoryCacheKey, SerializerFactory>,
         val sff: SerializerFactoryFactory = createSerializerFactoryFactory()
 ) : SerializationScheme {
-    @DeleteForDJVM
+    
     constructor(cordapps: List<Cordapp>) : this(
             cordapps.customSerializers,
             cordapps.serializationWhitelists,
@@ -69,11 +69,11 @@ abstract class AbstractAMQPSerializationScheme(
     companion object {
         private val serializationWhitelists: List<SerializationWhitelist> by lazy { listOf(DefaultWhitelist) }
 
-        @DeleteForDJVM
+        
         val List<Cordapp>.customSerializers
             get() = flatMapTo(LinkedHashSet(), Cordapp::serializationCustomSerializers)
 
-        @DeleteForDJVM
+        
         val List<Cordapp>.serializationWhitelists
             get() = flatMapTo(LinkedHashSet(), Cordapp::serializationWhitelists)
     }
@@ -202,7 +202,7 @@ fun registerCustomSerializers(factory: SerializerFactory) {
 /*
  * Register the serializers which will be excluded from the DJVM.
  */
-@StubOutForDJVM
+
 private fun registerNonDeterministicSerializers(factory: SerializerFactory) {
     with(factory) {
         register(net.corda.serialization.internal.amqp.custom.SimpleStringSerializer)

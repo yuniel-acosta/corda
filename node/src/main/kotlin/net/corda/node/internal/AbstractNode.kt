@@ -51,9 +51,6 @@ import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.days
 import net.corda.core.utilities.minutes
-import net.corda.djvm.source.ApiSource
-import net.corda.djvm.source.EmptyApi
-import net.corda.djvm.source.UserSource
 import net.corda.node.CordaClock
 import net.corda.node.VersionInfo
 import net.corda.node.internal.classloading.requireAnnotation

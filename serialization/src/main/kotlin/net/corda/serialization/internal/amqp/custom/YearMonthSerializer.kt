@@ -1,6 +1,6 @@
 package net.corda.serialization.internal.amqp.custom
 
-import net.corda.core.KeepForDJVM
+
 import net.corda.serialization.internal.amqp.CustomSerializer
 import net.corda.serialization.internal.amqp.SerializerFactory
 import java.time.YearMonth
@@ -19,6 +19,6 @@ class YearMonthSerializer(
 
     override fun fromProxy(proxy: YearMonthProxy): YearMonth = YearMonth.of(proxy.year, proxy.month.toInt())
 
-    @KeepForDJVM
+    
     data class YearMonthProxy(val year: Int, val month: Byte)
 }
