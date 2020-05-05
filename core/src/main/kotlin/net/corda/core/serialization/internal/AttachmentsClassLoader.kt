@@ -377,7 +377,7 @@ object AttachmentsClassLoaderBuilder {
 object AttachmentURLStreamHandlerFactory : URLStreamHandlerFactory {
     internal const val attachmentScheme = "attachment"
 
-    private val loadedAttachments = WeakHashMap<URL, WeakReference<Pair<URL, Attachment>>>().toSynchronised()
+    private val loadedAttachments = WeakHashMap<URL, Pair<WeakReference<URL>, Attachment>>().toSynchronised()
 
     override fun createURLStreamHandler(protocol: String): URLStreamHandler? {
         return if (attachmentScheme == protocol) {
@@ -388,12 +388,12 @@ object AttachmentURLStreamHandlerFactory : URLStreamHandlerFactory {
     @Synchronized
     fun toUrl(attachment: Attachment): URL {
         val proposedURL = URL(attachmentScheme, "", -1, attachment.id.toString(), AttachmentURLStreamHandler)
-        val existing = loadedAttachments.get(proposedURL)?.get()
-        return if (existing == null) {
-            loadedAttachments.put(proposedURL, WeakReference(proposedURL to attachment))
+        val existingURL = loadedAttachments.get(proposedURL)?.first?.get()
+        return if (existingURL == null) {
+            loadedAttachments.put(proposedURL, WeakReference(proposedURL) to attachment)
             proposedURL
         } else {
-            existing.first
+            existingURL
         }
     }
 
@@ -414,7 +414,7 @@ object AttachmentURLStreamHandlerFactory : URLStreamHandlerFactory {
 
         override fun openConnection(url: URL): URLConnection {
             if (url.protocol != attachmentScheme) throw IOException("Cannot handle protocol: ${url.protocol}")
-            val attachment = loadedAttachments[url]?.get()?.second ?: throw IOException("Could not load url: $url .")
+            val attachment = loadedAttachments[url]?.second ?: throw IOException("Could not load url: $url .")
             return AttachmentURLConnection(url, attachment)
         }
     }
