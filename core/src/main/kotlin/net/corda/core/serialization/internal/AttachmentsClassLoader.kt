@@ -54,10 +54,8 @@ class AttachmentsClassLoader(attachments: List<Attachment>,
                              val params: NetworkParameters,
                              private val sampleTxId: SecureHash,
                              isAttachmentTrusted: (Attachment) -> Boolean,
-                             parent: ClassLoader = ClassLoader.getSystemClassLoader(),
-                             @Suppress("UNUSED") // We need to keep a hard reference to the de-duplicated attachments.
-                             private val attachmentsToUrls: List<Pair<Attachment, URL>> = attachments.map(::toUrl)) :
-        URLClassLoader(attachmentsToUrls.map { it.second }.toTypedArray(), parent) {
+                             parent: ClassLoader = ClassLoader.getSystemClassLoader()) :
+        URLClassLoader(attachments.map(::toUrl).toTypedArray(), parent) {
 
     companion object {
         private val log = contextLogger()
@@ -379,10 +377,7 @@ object AttachmentsClassLoaderBuilder {
 object AttachmentURLStreamHandlerFactory : URLStreamHandlerFactory {
     internal const val attachmentScheme = "attachment"
 
-    // These 3 maps create a linkage from Attachment -> String (id) -> Attachment
-    private val attachmentDeduplicate = WeakHashMap<Attachment, WeakReference<Attachment>>()
-    private val loadedAttachmentsIds = WeakHashMap<Attachment, String>()
-    private val loadedAttachments = WeakHashMap<String, WeakReference<Attachment>>().toSynchronised() // For use in openConnection
+    private val loadedAttachments = WeakHashMap<URL, WeakReference<Pair<URL, Attachment>>>().toSynchronised()
 
     override fun createURLStreamHandler(protocol: String): URLStreamHandler? {
         return if (attachmentScheme == protocol) {
@@ -390,35 +385,36 @@ object AttachmentURLStreamHandlerFactory : URLStreamHandlerFactory {
         } else null
     }
 
-    private fun deduplicateAttachment(attachment: Attachment): Attachment {
-        val existing = attachmentDeduplicate.get(attachment)?.get()
-        return if (existing != null) {
-            existing
+    @Synchronized
+    fun toUrl(attachment: Attachment): URL {
+        val proposedURL = URL(attachmentScheme, "", -1, attachment.id.toString(), AttachmentURLStreamHandler)
+        val existing = loadedAttachments.get(proposedURL)?.get()
+        return if (existing == null) {
+            loadedAttachments.put(proposedURL, WeakReference(proposedURL to attachment))
+            proposedURL
         } else {
-            attachmentDeduplicate.put(attachment, WeakReference(attachment))
-            attachment
+            existing.first
         }
-    }
-
-    @Synchronized // Because this accesses all 3 maps and that needs to be atomic
-    fun toUrl(attachment: Attachment): Pair<Attachment, URL> {
-        val deduplicatedAttachment = deduplicateAttachment(attachment)
-        val attachmentId = loadedAttachmentsIds.computeIfAbsent(deduplicatedAttachment) { it.id.toString() }
-
-        val existing = loadedAttachments.get(attachmentId)?.get()
-        if (existing == null) {
-            loadedAttachments.put(attachmentId, WeakReference(deduplicatedAttachment))
-        }
-        return deduplicatedAttachment to URL(attachmentScheme, "", -1, attachmentId, AttachmentURLStreamHandler)
     }
 
     @VisibleForTesting
     fun loadedAttachmentsSize(): Int = loadedAttachments.size
 
     private object AttachmentURLStreamHandler : URLStreamHandler() {
+        override fun equals(attachmentUrl: URL, otherURL: URL?): Boolean {
+            if (attachmentUrl.protocol != otherURL?.protocol) return false
+            if (attachmentUrl.protocol != attachmentScheme) throw IOException("Cannot handle protocol: ${attachmentUrl.protocol}")
+            return attachmentUrl.file == otherURL?.file
+        }
+
+        override fun hashCode(url: URL): Int {
+            if (url.protocol != attachmentScheme) throw IOException("Cannot handle protocol: ${url.protocol}")
+            return url.file.hashCode()
+        }
+
         override fun openConnection(url: URL): URLConnection {
             if (url.protocol != attachmentScheme) throw IOException("Cannot handle protocol: ${url.protocol}")
-            val attachment = loadedAttachments[url.path]?.get() ?: throw IOException("Could not load url: $url .")
+            val attachment = loadedAttachments[url]?.get()?.second ?: throw IOException("Could not load url: $url .")
             return AttachmentURLConnection(url, attachment)
         }
     }
