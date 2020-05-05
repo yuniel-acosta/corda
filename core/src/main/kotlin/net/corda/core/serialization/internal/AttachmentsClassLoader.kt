@@ -8,18 +8,32 @@ import net.corda.core.contracts.TransactionVerificationException.OverlappingAtta
 import net.corda.core.contracts.TransactionVerificationException.PackageOwnershipException
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.sha256
-import net.corda.core.internal.*
+import net.corda.core.internal.JDK1_2_CLASS_FILE_FORMAT_MAJOR_VERSION
+import net.corda.core.internal.JDK8_CLASS_FILE_FORMAT_MAJOR_VERSION
+import net.corda.core.internal.JarSignatureCollector
+import net.corda.core.internal.VisibleForTesting
 import net.corda.core.internal.cordapp.targetPlatformVersion
+import net.corda.core.internal.createInstancesOfClassesImplementing
+import net.corda.core.internal.createSimpleCache
+import net.corda.core.internal.toSynchronised
 import net.corda.core.node.NetworkParameters
-import net.corda.core.serialization.*
+import net.corda.core.serialization.SerializationContext
+import net.corda.core.serialization.SerializationCustomSerializer
+import net.corda.core.serialization.SerializationFactory
+import net.corda.core.serialization.SerializationWhitelist
 import net.corda.core.serialization.internal.AttachmentURLStreamHandlerFactory.toUrl
-import net.corda.core.serialization.internal.AttachmentsClassLoaderBuilder.AttachmentWithKey
+import net.corda.core.serialization.withWhitelist
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.debug
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
-import java.net.*
+import java.lang.ref.WeakReference
+import java.net.URL
+import java.net.URLClassLoader
+import java.net.URLConnection
+import java.net.URLStreamHandler
+import java.net.URLStreamHandlerFactory
 import java.security.Permission
 import java.util.*
 
@@ -36,16 +50,14 @@ import java.util.*
  *           if not all code is invoked every time, however we want a txid for errors in case of attachment bogusness.
  */
 @DeleteForDJVM
-class AttachmentsClassLoader(attachmentsWithKeys: List<AttachmentWithKey>,
+class AttachmentsClassLoader(attachments: List<Attachment>,
                              val params: NetworkParameters,
                              private val sampleTxId: SecureHash,
                              isAttachmentTrusted: (Attachment) -> Boolean,
-                             parent: ClassLoader = ClassLoader.getSystemClassLoader()) :
-        URLClassLoader(attachmentsWithKeys.map{ toUrl(it) }.toTypedArray(), parent) {
-
-    // Sole purpose of this is to maintain a strong reference to keys in the weakhashmap in
-    // AttachmentURLStreamHandlerFactory
-    private val attachmentKeys = attachmentsWithKeys.map { it.key }
+                             parent: ClassLoader = ClassLoader.getSystemClassLoader(),
+                             @Suppress("UNUSED") // We need to keep a hard reference to the de-duplicated attachments.
+                             private val attachmentsToUrls: List<Pair<Attachment, URL>> = attachments.map(::toUrl)) :
+        URLClassLoader(attachmentsToUrls.map { it.second }.toTypedArray(), parent) {
 
     companion object {
         private val log = contextLogger()
@@ -114,7 +126,6 @@ class AttachmentsClassLoader(attachmentsWithKeys: List<AttachmentWithKey>,
     }
 
     init {
-        val attachments = attachmentsWithKeys.map { it.attachment }
         // Make some preliminary checks to ensure that we're not loading invalid attachments.
 
         // All attachments need to be valid JAR or ZIP files.
@@ -328,11 +339,9 @@ object AttachmentsClassLoaderBuilder {
                                               parent: ClassLoader = ClassLoader.getSystemClassLoader(),
                                               block: (ClassLoader) -> T): T {
         val attachmentIds = attachments.map(Attachment::id).toSet()
-        val attachmentsWithKeys = attachments.map { AttachmentWithKey(it.id.toString(), it) }
-
         val serializationContext = cache.computeIfAbsent(Key(attachmentIds, params)) {
             // Create classloader and load serializers, whitelisted classes
-            val transactionClassLoader = AttachmentsClassLoader(attachmentsWithKeys, params, txId, isAttachmentTrusted, parent)
+            val transactionClassLoader = AttachmentsClassLoader(attachments, params, txId, isAttachmentTrusted, parent)
             val serializers = try {
                 createInstancesOfClassesImplementing(transactionClassLoader, SerializationCustomSerializer::class.java,
                         JDK1_2_CLASS_FILE_FORMAT_MAJOR_VERSION..JDK8_CLASS_FILE_FORMAT_MAJOR_VERSION)
@@ -370,7 +379,10 @@ object AttachmentsClassLoaderBuilder {
 object AttachmentURLStreamHandlerFactory : URLStreamHandlerFactory {
     internal const val attachmentScheme = "attachment"
 
-    private val loadedAttachments = WeakHashMap<String, Attachment>().toSynchronised()
+    // These 3 maps create a linkage from Attachment -> String (id) -> Attachment
+    private val attachmentDeduplicate = WeakHashMap<Attachment, WeakReference<Attachment>>()
+    private val loadedAttachmentsIds = WeakHashMap<Attachment, String>()
+    private val loadedAttachments = WeakHashMap<String, WeakReference<Attachment>>().toSynchronised() // For use in openConnection
 
     override fun createURLStreamHandler(protocol: String): URLStreamHandler? {
         return if (attachmentScheme == protocol) {
@@ -378,9 +390,26 @@ object AttachmentURLStreamHandlerFactory : URLStreamHandlerFactory {
         } else null
     }
 
-    fun toUrl(attachmentWithKey: AttachmentWithKey): URL {
-        loadedAttachments[attachmentWithKey.key] = attachmentWithKey.attachment
-        return URL(attachmentScheme, "", -1, attachmentWithKey.key, AttachmentURLStreamHandler)
+    private fun deduplicateAttachment(attachment: Attachment): Attachment {
+        val existing = attachmentDeduplicate.get(attachment)?.get()
+        return if (existing != null) {
+            existing
+        } else {
+            attachmentDeduplicate.put(attachment, WeakReference(attachment))
+            attachment
+        }
+    }
+
+    @Synchronized // Because this accesses all 3 maps and that needs to be atomic
+    fun toUrl(attachment: Attachment): Pair<Attachment, URL> {
+        val deduplicatedAttachment = deduplicateAttachment(attachment)
+        val attachmentId = loadedAttachmentsIds.computeIfAbsent(deduplicatedAttachment) { it.id.toString() }
+
+        val existing = loadedAttachments.get(attachmentId)?.get()
+        if (existing == null) {
+            loadedAttachments.put(attachmentId, WeakReference(deduplicatedAttachment))
+        }
+        return deduplicatedAttachment to URL(attachmentScheme, "", -1, attachmentId, AttachmentURLStreamHandler)
     }
 
     @VisibleForTesting
@@ -389,7 +418,7 @@ object AttachmentURLStreamHandlerFactory : URLStreamHandlerFactory {
     private object AttachmentURLStreamHandler : URLStreamHandler() {
         override fun openConnection(url: URL): URLConnection {
             if (url.protocol != attachmentScheme) throw IOException("Cannot handle protocol: ${url.protocol}")
-            val attachment = loadedAttachments[url.path] ?: throw IOException("Could not load url: $url .")
+            val attachment = loadedAttachments[url.path]?.get() ?: throw IOException("Could not load url: $url .")
             return AttachmentURLConnection(url, attachment)
         }
     }
