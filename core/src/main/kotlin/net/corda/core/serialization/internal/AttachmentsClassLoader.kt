@@ -403,12 +403,12 @@ object AttachmentURLStreamHandlerFactory : URLStreamHandlerFactory {
     private object AttachmentURLStreamHandler : URLStreamHandler() {
         override fun equals(attachmentUrl: URL, otherURL: URL?): Boolean {
             if (attachmentUrl.protocol != otherURL?.protocol) return false
-            if (attachmentUrl.protocol != attachmentScheme) throw IOException("Cannot handle protocol: ${attachmentUrl.protocol}")
+            if (attachmentUrl.protocol != attachmentScheme) throw IllegalArgumentException("Cannot handle protocol: ${attachmentUrl.protocol}")
             return attachmentUrl.file == otherURL?.file
         }
 
         override fun hashCode(url: URL): Int {
-            if (url.protocol != attachmentScheme) throw IOException("Cannot handle protocol: ${url.protocol}")
+            if (url.protocol != attachmentScheme) throw IllegalArgumentException("Cannot handle protocol: ${url.protocol}")
             return url.file.hashCode()
         }
 
