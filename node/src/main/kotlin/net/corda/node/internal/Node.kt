@@ -8,8 +8,8 @@ import com.jcabi.manifests.Manifests
 import com.palominolabs.metrics.newrelic.AllEnabledMetricAttributeFilter
 import com.palominolabs.metrics.newrelic.NewRelicReporter
 import io.netty.util.NettyRuntime
-import net.corda.nodeapi.internal.rpc.client.AMQPClientSerializationScheme
 import net.corda.cliutils.ShellConstants
+import net.corda.common.logging.errorReporting.NodeDatabaseErrors
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.CordaX500Name
@@ -44,9 +44,6 @@ import net.corda.node.internal.artemis.BrokerAddresses
 import net.corda.node.internal.security.RPCSecurityManager
 import net.corda.node.internal.security.RPCSecurityManagerImpl
 import net.corda.node.internal.security.RPCSecurityManagerWithAdditionalUser
-import net.corda.nodeapi.internal.serialization.amqp.AMQPServerSerializationScheme
-import net.corda.nodeapi.internal.serialization.kryo.KRYO_CHECKPOINT_CONTEXT
-import net.corda.nodeapi.internal.serialization.kryo.KryoCheckpointSerializer
 import net.corda.node.services.Permissions
 import net.corda.node.services.api.FlowStarter
 import net.corda.node.services.api.ServiceHubInternal
@@ -73,7 +70,6 @@ import net.corda.node.utilities.DefaultNamedCacheFactory
 import net.corda.node.utilities.DemoClock
 import net.corda.node.utilities.errorAndTerminate
 import net.corda.nodeapi.internal.ArtemisMessagingClient
-import net.corda.common.logging.errorReporting.NodeDatabaseErrors
 import net.corda.nodeapi.internal.ShutdownHook
 import net.corda.nodeapi.internal.addShutdownHook
 import net.corda.nodeapi.internal.bridging.BridgeControlListener
@@ -81,6 +77,10 @@ import net.corda.nodeapi.internal.config.User
 import net.corda.nodeapi.internal.crypto.X509Utilities
 import net.corda.nodeapi.internal.persistence.CouldNotCreateDataSourceException
 import net.corda.nodeapi.internal.protonwrapper.netty.toRevocationConfig
+import net.corda.nodeapi.internal.rpc.client.AMQPClientSerializationScheme
+import net.corda.nodeapi.internal.serialization.amqp.AMQPServerSerializationScheme
+import net.corda.nodeapi.internal.serialization.kryo.KRYO_CHECKPOINT_CONTEXT
+import net.corda.nodeapi.internal.serialization.kryo.KryoCheckpointSerializer
 import net.corda.serialization.internal.AMQP_P2P_CONTEXT
 import net.corda.serialization.internal.AMQP_RPC_CLIENT_CONTEXT
 import net.corda.serialization.internal.AMQP_RPC_SERVER_CONTEXT
@@ -338,7 +338,7 @@ open class Node(configuration: NodeConfiguration,
         )
     }
 
-    override fun startMessagingService(rpcOps: RPCOps, nodeInfo: NodeInfo, myNotaryIdentity: PartyAndCertificate?, networkParameters: NetworkParameters) {
+    override fun startMessagingService(rpcOps: List<RPCOps>, nodeInfo: NodeInfo, myNotaryIdentity: PartyAndCertificate?, networkParameters: NetworkParameters) {
         require(nodeInfo.legalIdentities.size in 1..2) { "Currently nodes must have a primary address and optionally one serviced address" }
 
         network as P2PMessagingClient

@@ -1,5 +1,6 @@
 package net.corda.node.internal
 
+import ThreadContextAdjustingRpcOpsProxy
 import co.paralleluniverse.fibers.instrument.Retransform
 import com.codahale.metrics.MetricRegistry
 import com.google.common.collect.MutableClassToInstanceMap
@@ -76,7 +77,6 @@ import net.corda.node.internal.cordapp.CordappProviderInternal
 import net.corda.node.internal.cordapp.JarScanningCordappLoader
 import net.corda.node.internal.cordapp.VirtualCordapp
 import net.corda.node.internal.rpc.proxies.AuthenticatedRpcOpsProxy
-import net.corda.node.internal.rpc.proxies.ThreadContextAdjustingRpcOpsProxy
 import net.corda.node.services.ContractUpgradeHandler
 import net.corda.node.services.FinalityHandler
 import net.corda.node.services.NotaryChangeHandler
@@ -193,6 +193,31 @@ import java.util.concurrent.TimeUnit.MINUTES
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.function.Consumer
 import javax.persistence.EntityManager
+import kotlin.collections.ArrayList
+import kotlin.collections.List
+import kotlin.collections.MutableList
+import kotlin.collections.MutableSet
+import kotlin.collections.Set
+import kotlin.collections.drop
+import kotlin.collections.emptyList
+import kotlin.collections.filterIsInstance
+import kotlin.collections.filterNotNull
+import kotlin.collections.first
+import kotlin.collections.flatMap
+import kotlin.collections.forEach
+import kotlin.collections.groupBy
+import kotlin.collections.last
+import kotlin.collections.listOf
+import kotlin.collections.map
+import kotlin.collections.mapOf
+import kotlin.collections.mutableListOf
+import kotlin.collections.mutableSetOf
+import kotlin.collections.plus
+import kotlin.collections.plusAssign
+import kotlin.collections.reversed
+import kotlin.collections.setOf
+import kotlin.collections.single
+import kotlin.collections.toSet
 
 /**
  * A base node implementation that can be customised either for production (with real implementations that do real
@@ -397,7 +422,7 @@ abstract class AbstractNode<S>(val configuration: NodeConfiguration,
     }
 
     /** The implementation of the [CordaRPCOps] interface used by this node. */
-    open fun makeRPCOps(cordappLoader: CordappLoader, checkpointDumper: CheckpointDumperImpl): CordaRPCOps {
+    open fun makeRPCOps(cordappLoader: CordappLoader, checkpointDumper: CheckpointDumperImpl): List<RPCOps> {
         val ops: InternalCordaRPCOps = CordaRPCOpsImpl(
                 services,
                 smm,
@@ -406,11 +431,31 @@ abstract class AbstractNode<S>(val configuration: NodeConfiguration,
         ) {
             shutdownExecutor.submit(::stop)
         }.also { it.closeOnStop() }
-        val proxies = mutableListOf<(InternalCordaRPCOps) -> InternalCordaRPCOps>()
+        //val proxies = mutableListOf<(InternalCordaRPCOps) -> InternalCordaRPCOps>()
         // Mind that order is relevant here.
-        proxies += ::AuthenticatedRpcOpsProxy
-        proxies += { ThreadContextAdjustingRpcOpsProxy(it, cordappLoader.appClassLoader) }
-        return proxies.fold(ops) { delegate, decorate -> decorate(delegate) }
+        //proxies += ::AuthenticatedRpcOpsProxy
+        //proxies += { ThreadContextAdjustingRpcOpsProxy(it, cordappLoader.appClassLoader) }
+
+        fun <T : RPCOps> decorateOps(rpcOpsImpl: T?, targetInterface: Class<out T>?): T? {
+            //proxies.fold(ops) { delegate, decorate -> decorate(delegate) }
+            if (rpcOpsImpl == null || targetInterface == null) return null
+            // Mind that order of proxies is important
+            val stage1Proxy = AuthenticatedRpcOpsProxy.proxy(rpcOpsImpl, targetInterface)
+            val stage2Proxy = ThreadContextAdjustingRpcOpsProxy.proxy(stage1Proxy, targetInterface, cordappLoader.appClassLoader)
+            return stage2Proxy
+        }
+
+        val testOps: Class<out RPCOps>? = try {
+            Class.forName("net.corda.node.internal.CordaTestRPCOps") as Class<out RPCOps>
+        } catch (e: Exception) {
+            null
+        }
+        val testOpsImpl: RPCOps? = try {
+            Class.forName("net.corda.node.internal.CordaTestRPCOpsImpl").getConstructor(ServiceHubInternal::class.java).newInstance(services) as RPCOps
+        } catch (e: Exception) {
+            null
+        }
+        return listOf(decorateOps(ops, InternalCordaRPCOps::class.java)!!) + listOf(decorateOps(testOpsImpl, testOps)).filterNotNull()
     }
 
     private fun initKeyStores(): X509Certificate {
@@ -552,7 +597,7 @@ abstract class AbstractNode<S>(val configuration: NodeConfiguration,
             flowMonitor.start()
             schedulerService.start()
 
-            val resultingNodeInfo = createStartedNode(nodeInfo, rpcOps, notaryService).also { _started = it }
+            val resultingNodeInfo = createStartedNode(nodeInfo, rpcOps.filterIsInstance(CordaRPCOps::class.java).single(), notaryService).also { _started = it }
             val readyFuture = smmStartedFuture.flatMap {
                 log.debug("SMM ready")
                 network.activeChange.filter { it }.toFuture()
@@ -998,7 +1043,7 @@ abstract class AbstractNode<S>(val configuration: NodeConfiguration,
 
     protected abstract fun makeMessagingService(): MessagingService
 
-    protected abstract fun startMessagingService(rpcOps: RPCOps,
+    protected abstract fun startMessagingService(rpcOps: List<RPCOps>,
                                                  nodeInfo: NodeInfo,
                                                  myNotaryIdentity: PartyAndCertificate?,
                                                  networkParameters: NetworkParameters)
