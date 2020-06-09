@@ -2,7 +2,9 @@ package net.corda.bn.flows
 
 import net.corda.bn.flows.extensions.BNMemberAuth
 import net.corda.bn.schemas.MembershipStateSchemaV1
+import net.corda.bn.schemas.RelationshipStateSchemaV1
 import net.corda.bn.states.MembershipState
+import net.corda.bn.states.RelationshipState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.Party
@@ -45,7 +47,15 @@ class DatabaseService(private val serviceHub: ServiceHub) : SingletonSerializeAs
         it.state.data.identity
     }
 
+    fun getRelationship(membershipId: UniqueIdentifier): StateAndRef<RelationshipState>? {
+        val criteria = QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED)
+                .and(membershipIdCriteria(membershipId))
+        val states = serviceHub.vaultService.queryBy<RelationshipState>(criteria).states
+        return states.maxBy { it.state.data.modified }
+    }
+
     private fun networkIdCriteria(networkID: String) = QueryCriteria.VaultCustomQueryCriteria(builder { MembershipStateSchemaV1.PersistentMembershipState::networkId.equal(networkID) })
     private fun identityCriteria(cordaIdentity: Party) = QueryCriteria.VaultCustomQueryCriteria(builder { MembershipStateSchemaV1.PersistentMembershipState::cordaIdentity.equal(cordaIdentity) })
     private fun linearIdCriteria(linearId: UniqueIdentifier) = QueryCriteria.LinearStateQueryCriteria(linearId = listOf(linearId))
+    private fun membershipIdCriteria(membershipId: UniqueIdentifier) = QueryCriteria.VaultCustomQueryCriteria(builder { RelationshipStateSchemaV1.PersistentRelationshipState::membershipId.equal(membershipId.toString()) })
 }

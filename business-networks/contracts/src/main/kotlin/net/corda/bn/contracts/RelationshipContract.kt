@@ -25,9 +25,9 @@ open class RelationshipContract : Contract {
     override fun verify(tx: LedgerTransaction) {
         val command = tx.commands.requireSingleCommand<Commands>()
         val input = if (tx.inputStates.isNotEmpty()) tx.inputs.single() else null
-        val inputState = input?.state?.data as? RelationshipState<*>
+        val inputState = input?.state?.data as? RelationshipState
         val output = if (tx.outputStates.isNotEmpty()) tx.outputs.single() else null
-        val outputState = output?.data as? RelationshipState<*>
+        val outputState = output?.data as? RelationshipState
 
         requireThat {
             input?.apply {
@@ -44,31 +44,29 @@ open class RelationshipContract : Contract {
         }
 
         when (command.value) {
-            is Commands.Issue -> verifyIssue(tx, command, tx.outputsOfType<RelationshipState<*>>().single())
-            is Commands.Amend -> verifyAmend(tx, command, tx.inputsOfType<RelationshipState<*>>().single(), tx.outputsOfType<RelationshipState<*>>().single())
-            is Commands.Exit -> verifyExit(tx, command, tx.inputsOfType<RelationshipState<*>>().single())
+            is Commands.Issue -> verifyIssue(tx, command, tx.outputsOfType<RelationshipState>().single())
+            is Commands.Amend -> verifyAmend(tx, command, tx.inputsOfType<RelationshipState>().single(), tx.outputsOfType<RelationshipState>().single())
+            is Commands.Exit -> verifyExit(tx, command, tx.inputsOfType<RelationshipState>().single())
             else -> throw IllegalArgumentException("Unsupported command ${command.value}")
         }
     }
 
     open fun contractName() = CONTRACT_NAME
 
-    open fun verifyIssue(tx: LedgerTransaction, command: CommandWithParties<Commands>, outputRelationship: RelationshipState<*>) = requireThat {
+    open fun verifyIssue(tx: LedgerTransaction, command: CommandWithParties<Commands>, outputRelationship: RelationshipState) = requireThat {
         "Relationship issuance transaction shouldn't contain any inputs" using (tx.inputs.isEmpty())
     }
 
     open fun verifyAmend(
             tx: LedgerTransaction,
             command: CommandWithParties<Commands>,
-            inputRelationship: RelationshipState<*>,
-            outputRelationship: RelationshipState<*>
+            inputRelationship: RelationshipState,
+            outputRelationship: RelationshipState
     ) = requireThat {
         "Input and output states of amendment transaction should have different groups field" using (inputRelationship.groups != outputRelationship.groups)
-        "Input and output state's group metadata should be of the same type" using (
-                inputRelationship.groups.values.first().metadata.javaClass == outputRelationship.groups.values.first().metadata.javaClass)
     }
 
-    open fun verifyExit(tx: LedgerTransaction, command: CommandWithParties<Commands>, inputRelationship: RelationshipState<*>) = requireThat {
+    open fun verifyExit(tx: LedgerTransaction, command: CommandWithParties<Commands>, inputRelationship: RelationshipState) = requireThat {
         "Relationship exit transaction shouldn't contain any outputs" using (tx.outputs.isEmpty())
     }
 }
