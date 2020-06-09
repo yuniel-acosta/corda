@@ -60,6 +60,7 @@ class RequestMembershipFlow(private val authorisedParty: Party, private val netw
     }
 }
 
+@InitiatingFlow
 @InitiatedBy(RequestMembershipFlow::class)
 class RequestMembershipFlowResponder(private val session: FlowSession) : FlowLogic<Unit>() {
 
@@ -82,11 +83,12 @@ class RequestMembershipFlowResponder(private val session: FlowSession) : FlowLog
         }
 
         // building transaction
+        val observers = (databaseService.getMembersAuthorisedToModifyMembership(networkId, auth) - ourIdentity).toSet()
         val membershipState = MembershipState(
                 identity = counterparty,
                 networkId = networkId,
                 status = MembershipStatus.PENDING,
-                participants = listOf(ourIdentity, counterparty)
+                participants = (observers + ourIdentity + counterparty).toList()
         )
         val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.first())
                 .addOutputState(membershipState)
@@ -98,8 +100,16 @@ class RequestMembershipFlowResponder(private val session: FlowSession) : FlowLog
         val allSignedTransaction = subFlow(CollectSignaturesFlow(selfSignedTransaction, listOf(session)))
 
         // finalise transaction
-        val observers = databaseService.getMembersAuthorisedToModifyMembership(networkId, auth) - ourIdentity
         val observerSessions = observers.map { initiateFlow(it) }.toSet()
         subFlow(FinalityFlow(allSignedTransaction, observerSessions + session))
+    }
+}
+
+@InitiatedBy(RequestMembershipFlowResponder::class)
+class RequestMembershipObserverFlow(private val session: FlowSession) : FlowLogic<Unit>() {
+
+    @Suspendable
+    override fun call() {
+        subFlow(ReceiveFinalityFlow(session))
     }
 }

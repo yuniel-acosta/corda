@@ -47,7 +47,7 @@ class ActivateMembershipFlow(private val membershipId: UniqueIdentifier) : FlowL
         builder.verify(serviceHub)
 
         // send info to observers whether they need to sign the transaction
-        val observers = databaseService.getMembersAuthorisedToModifyMembership(networkId, auth) - ourIdentity
+        val observers = databaseService.getMembersAuthorisedToModifyMembership(networkId, auth) + membership.state.data.identity - ourIdentity
         val observerSessions = observers.map { initiateFlow(it) }
         observerSessions.forEach { it.send(signers.contains(it.counterparty)) }
 
