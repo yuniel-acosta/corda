@@ -73,7 +73,7 @@ class RequestMembershipFlowResponder(private val session: FlowSession) : FlowLog
         val auth = BNUtils.loadBNMemberAuth()
         val databaseService = serviceHub.cordaService(DatabaseService::class.java)
         val ourMembership = databaseService.getMembership(networkId, ourIdentity)?.state?.data
-        if (ourMembership != null && !auth.canRequestMembership(ourMembership)) {
+        if (ourMembership != null && !auth.canActivateMembership(ourMembership)) {
             throw FlowException("Receiver is not authorised to modify membership")
         }
 

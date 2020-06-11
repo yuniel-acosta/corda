@@ -39,7 +39,7 @@ class CreateBusinessNetworkFlow : FlowLogic<SignedTransaction>() {
 
         val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.first())
                 .addInputState(membership)
-                .addOutputState(membership.state.data.copy(status = MembershipStatus.ACTIVE))
+                .addOutputState(membership.state.data.copy(status = MembershipStatus.ACTIVE, modified = serviceHub.clock.instant()))
                 .addCommand(MembershipContract.Commands.Activate(), ourIdentity.owningKey)
         builder.verify(serviceHub)
 
