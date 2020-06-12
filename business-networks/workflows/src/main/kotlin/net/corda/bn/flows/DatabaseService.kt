@@ -35,18 +35,19 @@ class DatabaseService(private val serviceHub: ServiceHub) : SingletonSerializeAs
         return states.maxBy { it.state.data.modified }
     }
 
-    fun getAllMembershipsWithStatus(networkId: String, status: MembershipStatus): List<StateAndRef<MembershipState>> {
+    fun getAllMembershipsWithStatus(networkId: String, vararg statuses: MembershipStatus): List<StateAndRef<MembershipState>> {
         val criteria = QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED)
                 .and(networkIdCriteria(networkId))
-                .and(statusCriteria(status))
+                .and(statusCriteria(statuses.toList()))
         return serviceHub.vaultService.queryBy<MembershipState>(criteria).states
     }
 
-    fun getMembersAuthorisedToModifyMembership(networkId: String, auth: BNMemberAuth): List<Party> = getAllMembershipsWithStatus(networkId, MembershipStatus.ACTIVE).filter {
+    fun getMembersAuthorisedToModifyMembership(networkId: String, auth: BNMemberAuth): List<StateAndRef<MembershipState>> = getAllMembershipsWithStatus(
+            networkId,
+            MembershipStatus.ACTIVE, MembershipStatus.SUSPENDED
+    ).filter {
         val membership = it.state.data
         auth.run { canActivateMembership(membership) || canSuspendMembership(membership) || canRevokeMembership(membership) }
-    }.map {
-        it.state.data.identity
     }
 
     fun getRelationship(membershipId: UniqueIdentifier): StateAndRef<RelationshipState>? {
@@ -58,7 +59,7 @@ class DatabaseService(private val serviceHub: ServiceHub) : SingletonSerializeAs
 
     private fun networkIdCriteria(networkID: String) = QueryCriteria.VaultCustomQueryCriteria(builder { MembershipStateSchemaV1.PersistentMembershipState::networkId.equal(networkID) })
     private fun identityCriteria(cordaIdentity: Party) = QueryCriteria.VaultCustomQueryCriteria(builder { MembershipStateSchemaV1.PersistentMembershipState::cordaIdentity.equal(cordaIdentity) })
-    private fun statusCriteria(status: MembershipStatus) = QueryCriteria.VaultCustomQueryCriteria(builder { MembershipStateSchemaV1.PersistentMembershipState::status.equal(status) })
+    private fun statusCriteria(statuses: List<MembershipStatus>) = QueryCriteria.VaultCustomQueryCriteria(builder { MembershipStateSchemaV1.PersistentMembershipState::status.`in`(statuses) })
     private fun linearIdCriteria(linearId: UniqueIdentifier) = QueryCriteria.LinearStateQueryCriteria(linearId = listOf(linearId))
     private fun membershipIdCriteria(membershipId: UniqueIdentifier) = QueryCriteria.VaultCustomQueryCriteria(builder { RelationshipStateSchemaV1.PersistentRelationshipState::membershipId.equal(membershipId.toString()) })
 }

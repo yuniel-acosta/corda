@@ -18,7 +18,6 @@ import net.corda.core.flows.ReceiveTransactionFlow
 import net.corda.core.flows.SendTransactionFlow
 import net.corda.core.flows.SignTransactionFlow
 import net.corda.core.flows.StartableByRPC
-import net.corda.core.identity.Party
 import net.corda.core.node.StatesToRecord
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
@@ -39,13 +38,20 @@ class ActivateMembershipFlow(private val membershipId: UniqueIdentifier) : FlowL
         val auth = BNUtils.loadBNMemberAuth()
         val ourMembership = databaseService.getMembership(networkId, ourIdentity)?.state?.data
                 ?: throw FlowException("Initiator is not member of a business network")
+        if (!ourMembership.isActive()) {
+            throw FlowException("Initiator's membership is not active")
+        }
         if (!auth.canActivateMembership(ourMembership)) {
             throw FlowException("Initiator is not authorised to run ${javaClass.name} flow")
         }
 
+        // fetch observers and signers
+        val authorisedMemberships = databaseService.getMembersAuthorisedToModifyMembership(networkId, auth)
+        val observers = (authorisedMemberships.map { it.state.data.identity } + membership.state.data.identity - ourIdentity).toSet()
+        val signers = authorisedMemberships.filter { it.state.data.isActive() }.map { it.state.data.identity }
+
         // building transaction
         val outputMembership = membership.state.data.copy(status = MembershipStatus.ACTIVE, modified = serviceHub.clock.instant())
-        val signers = databaseService.getMembersAuthorisedToModifyMembership(networkId, auth)
         val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.first())
                 .addInputState(membership)
                 .addOutputState(outputMembership)
@@ -53,7 +59,6 @@ class ActivateMembershipFlow(private val membershipId: UniqueIdentifier) : FlowL
         builder.verify(serviceHub)
 
         // send info to observers whether they need to sign the transaction
-        val observers = signers + membership.state.data.identity - ourIdentity
         val observerSessions = observers.map { initiateFlow(it) }
         observerSessions.forEach { it.send(it.counterparty in signers) }
 
@@ -65,25 +70,23 @@ class ActivateMembershipFlow(private val membershipId: UniqueIdentifier) : FlowL
         // finalise transaction
         val finalisedTransaction = subFlow(FinalityFlow(allSignedTransaction, observerSessions, StatesToRecord.ALL_VISIBLE))
 
-        // send signers' memberships to new activated member
-        // also send all pending membership requests if new activated member is authorised to modify them
-        val activatedMemberSession = observerSessions.single { it.counterparty == membership.state.data.identity }
-        val signersMemberships = signers.map {
-            databaseService.getMembership(networkId, it)
-                    ?: throw FlowException("Membership for party $it in business network with $networkId ID doesn't exist")
+        // send authorised memberships to new activated or new suspended member (status moved from PENDING to ACTIVE/SUSPENDED)
+        // also send all non revoked memberships (ones that can be modified) if new activated member is authorised to modify them
+        if (membership.state.data.isPending()) {
+            val activatedMemberSession = observerSessions.single { it.counterparty == membership.state.data.identity }
+            val pendingAndSuspendedMemberships =
+                    if (auth.run { canActivateMembership(outputMembership) || canSuspendMembership(outputMembership) || canRevokeMembership(outputMembership) }) {
+                        databaseService.getAllMembershipsWithStatus(networkId, MembershipStatus.PENDING, MembershipStatus.ACTIVE, MembershipStatus.SUSPENDED)
+                    } else emptyList()
+            sendMemberships(authorisedMemberships + pendingAndSuspendedMemberships, observerSessions, activatedMemberSession)
         }
-        val pendingMemberships =
-                if (auth.run { canActivateMembership(outputMembership) || canSuspendMembership(outputMembership) || canRevokeMembership(outputMembership) }) {
-                    databaseService.getAllMembershipsWithStatus(networkId, MembershipStatus.PENDING)
-                } else emptyList()
-        sendMemberships(signersMemberships + pendingMemberships, observerSessions, activatedMemberSession)
 
         return finalisedTransaction
     }
 
     @Suspendable
     private fun sendMemberships(
-            memberships: List<StateAndRef<MembershipState>>,
+            memberships: Collection<StateAndRef<MembershipState>>,
             observerSessions: List<FlowSession>,
             destinationSession: FlowSession
     ) {

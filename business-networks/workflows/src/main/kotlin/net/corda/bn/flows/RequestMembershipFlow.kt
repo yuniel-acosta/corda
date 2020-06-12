@@ -83,7 +83,8 @@ class RequestMembershipFlowResponder(private val session: FlowSession) : FlowLog
         }
 
         // building transaction
-        val observers = (databaseService.getMembersAuthorisedToModifyMembership(networkId, auth) - ourIdentity).toSet()
+        val authorisedMemberships = databaseService.getMembersAuthorisedToModifyMembership(networkId, auth)
+        val observers = (authorisedMemberships.map { it.state.data.identity } - ourIdentity).toSet()
         val membershipState = MembershipState(
                 identity = counterparty,
                 networkId = networkId,

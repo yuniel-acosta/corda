@@ -4,5 +4,5 @@ import net.corda.bn.flows.extensions.PublicCentralisedBNMemberAuth
 import net.corda.bn.flows.extensions.PublicDecentralisedBNMemberAuth
 
 object BNUtils {
-    fun loadBNMemberAuth() = PublicDecentralisedBNMemberAuth()
+    fun loadBNMemberAuth() = PublicCentralisedBNMemberAuth()
 }

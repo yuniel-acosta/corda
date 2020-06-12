@@ -21,14 +21,14 @@ import net.corda.core.utilities.unwrap
 
 @InitiatingFlow
 @StartableByRPC
-class RevokeMembershipFlow(private val membershipId: UniqueIdentifier) : FlowLogic<SignedTransaction>(), MembershipManagementFlow {
+class RevokeMembershipFlow(private val membershipId: UniqueIdentifier) : FlowLogic<SignedTransaction>() {
 
     @Suspendable
     override fun call(): SignedTransaction {
         val databaseService = serviceHub.cordaService(DatabaseService::class.java)
         val membership = databaseService.getMembership(membershipId)
                 ?: throw FlowException("Membership state with $membershipId linear ID doesn't exist")
-        val signers = requiredSigners()
+        val signers = listOf(ourIdentity)
 
         // check whether party is authorised to initiate flow
         val networkId = membership.state.data.networkId
@@ -47,7 +47,8 @@ class RevokeMembershipFlow(private val membershipId: UniqueIdentifier) : FlowLog
         builder.verify(serviceHub)
 
         // send info to observers whether they need to sign the transaction
-        val observers = databaseService.getMembersAuthorisedToModifyMembership(networkId, auth) + membership.state.data.identity - ourIdentity
+        val authorisedMemberships = databaseService.getMembersAuthorisedToModifyMembership(networkId, auth)
+        val observers = authorisedMemberships.map { it.state.data.identity } + membership.state.data.identity - ourIdentity
         val observerSessions = observers.map { initiateFlow(it) }
         observerSessions.forEach { it.send(signers.contains(it.counterparty)) }
 
@@ -59,8 +60,6 @@ class RevokeMembershipFlow(private val membershipId: UniqueIdentifier) : FlowLog
         // finalise transaction
         return subFlow(FinalityFlow(allSignedTransaction, observerSessions))
     }
-
-    override fun requiredSigners(): List<Party> = listOf(ourIdentity)
 }
 
 @InitiatedBy(RevokeMembershipFlow::class)

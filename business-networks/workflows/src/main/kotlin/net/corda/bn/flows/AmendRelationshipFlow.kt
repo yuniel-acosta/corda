@@ -20,7 +20,7 @@ import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.unwrap
 
 @InitiatingFlow
-class AmendRelationshipFlow(private val membershipId: UniqueIdentifier, private val groups: Map<String, Group>) : FlowLogic<SignedTransaction>(), MembershipManagementFlow {
+class AmendRelationshipFlow(private val membershipId: UniqueIdentifier, private val groups: Map<String, Group>) : FlowLogic<SignedTransaction>() {
 
     @Suspendable
     override fun call(): SignedTransaction {
@@ -39,7 +39,7 @@ class AmendRelationshipFlow(private val membershipId: UniqueIdentifier, private 
                 .apply { if (inputRelationship != null) addInputState(inputRelationship) }
         builder.verify(serviceHub)
 
-        val signers = requiredSigners()
+        val signers = listOf(ourIdentity)
         val observers = signers - ourIdentity + membershipParty
         val observerSessions = observers.map { initiateFlow(it) }
         observerSessions.forEach { it.counterparty in signers }
@@ -50,8 +50,6 @@ class AmendRelationshipFlow(private val membershipId: UniqueIdentifier, private 
 
         return subFlow(FinalityFlow(allSignedTransaction, signerSessions))
     }
-
-    override fun requiredSigners() = listOf(ourIdentity)
 }
 
 @InitiatedBy(AmendRelationshipFlow::class)
