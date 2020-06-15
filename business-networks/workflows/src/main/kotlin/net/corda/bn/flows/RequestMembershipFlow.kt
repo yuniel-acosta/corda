@@ -29,7 +29,7 @@ class RequestMembershipFlow(private val authorisedParty: Party, private val netw
         val auth = BNUtils.loadBNMemberAuth()
         val databaseService = serviceHub.cordaService(DatabaseService::class.java)
         val ourMembership = databaseService.getMembership(networkId, ourIdentity)?.state?.data
-        if (ourMembership != null && !auth.canRequestMembership(ourMembership)) {
+        if (ourMembership != null) {
             throw FlowException("Initiator is not authorised to run ${javaClass.name} flow")
         }
 
@@ -73,7 +73,11 @@ class RequestMembershipFlowResponder(private val session: FlowSession) : FlowLog
         val auth = BNUtils.loadBNMemberAuth()
         val databaseService = serviceHub.cordaService(DatabaseService::class.java)
         val ourMembership = databaseService.getMembership(networkId, ourIdentity)?.state?.data
-        if (ourMembership != null && !auth.canActivateMembership(ourMembership)) {
+                ?: throw FlowException("Receiver is not member of a business network")
+        if (!ourMembership.isActive()) {
+            throw FlowException("Receiver's membership is not active")
+        }
+        if (!auth.canActivateMembership(ourMembership)) {
             throw FlowException("Receiver is not authorised to modify membership")
         }
 

@@ -43,7 +43,7 @@ class SuspendMembershipFlow(private val membershipId: UniqueIdentifier) : FlowLo
         if (!ourMembership.isActive()) {
             throw FlowException("Initiator's membership is not active")
         }
-        if (!auth.canActivateMembership(ourMembership)) {
+        if (!auth.canSuspendMembership(ourMembership)) {
             throw FlowException("Initiator is not authorised to run ${javaClass.name} flow")
         }
 

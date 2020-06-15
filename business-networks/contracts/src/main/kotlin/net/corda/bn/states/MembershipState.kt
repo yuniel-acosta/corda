@@ -37,8 +37,7 @@ data class MembershipState(
     fun isPending() = status == MembershipStatus.PENDING
     fun isActive() = status == MembershipStatus.ACTIVE
     fun isSuspended() = status == MembershipStatus.SUSPENDED
-    fun isRevoked() = status == MembershipStatus.REVOKED
 }
 
 @CordaSerializable
-enum class MembershipStatus { PENDING, ACTIVE, SUSPENDED, REVOKED }
+enum class MembershipStatus { PENDING, ACTIVE, SUSPENDED }

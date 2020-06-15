@@ -14,7 +14,7 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.ReceiveFinalityFlow
 import net.corda.core.flows.SignTransactionFlow
 import net.corda.core.flows.StartableByRPC
-import net.corda.core.identity.Party
+import net.corda.core.node.StatesToRecord
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.unwrap
@@ -28,37 +28,41 @@ class RevokeMembershipFlow(private val membershipId: UniqueIdentifier) : FlowLog
         val databaseService = serviceHub.cordaService(DatabaseService::class.java)
         val membership = databaseService.getMembership(membershipId)
                 ?: throw FlowException("Membership state with $membershipId linear ID doesn't exist")
-        val signers = listOf(ourIdentity)
 
         // check whether party is authorised to initiate flow
         val networkId = membership.state.data.networkId
         val auth = BNUtils.loadBNMemberAuth()
         val ourMembership = databaseService.getMembership(networkId, ourIdentity)?.state?.data
                 ?: throw FlowException("Initiator is not member of a business network")
-        if (!auth.canActivateMembership(ourMembership)) {
+        if (!ourMembership.isActive()) {
+            throw FlowException("Initiator's membership is not active")
+        }
+        if (!auth.canRevokeMembership(ourMembership)) {
             throw FlowException("Initiator is not authorised to run ${javaClass.name} flow")
         }
+
+        // fetch observers and signers
+        val authorisedMemberships = databaseService.getMembersAuthorisedToModifyMembership(networkId, auth)
+        val observers = authorisedMemberships.map { it.state.data.identity } + membership.state.data.identity - ourIdentity
+        val signers = authorisedMemberships.filter { it.state.data.isActive() }.map { it.state.data.identity } - membership.state.data.identity
 
         // building transaction
         val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.first())
                 .addInputState(membership)
-                .addOutputState(membership.state.data.copy(status = MembershipStatus.REVOKED, modified = serviceHub.clock.instant()))
                 .addCommand(MembershipContract.Commands.Revoke(), signers.map { it.owningKey })
         builder.verify(serviceHub)
 
         // send info to observers whether they need to sign the transaction
-        val authorisedMemberships = databaseService.getMembersAuthorisedToModifyMembership(networkId, auth)
-        val observers = authorisedMemberships.map { it.state.data.identity } + membership.state.data.identity - ourIdentity
         val observerSessions = observers.map { initiateFlow(it) }
-        observerSessions.forEach { it.send(signers.contains(it.counterparty)) }
+        observerSessions.forEach { it.send(it.counterparty in signers) }
 
         // signing transaction
         val selfSignedTransaction = serviceHub.signInitialTransaction(builder)
-        val signerSessions = (signers - ourIdentity).map { initiateFlow(it) }
+        val signerSessions = observerSessions.filter { it.counterparty in signers }
         val allSignedTransaction = subFlow(CollectSignaturesFlow(selfSignedTransaction, signerSessions))
 
         // finalise transaction
-        return subFlow(FinalityFlow(allSignedTransaction, observerSessions))
+        return subFlow(FinalityFlow(allSignedTransaction, observerSessions, StatesToRecord.ALL_VISIBLE))
     }
 }
 
@@ -83,6 +87,6 @@ class RevokeMembershipFlowResponder(val session: FlowSession) : FlowLogic<Unit>(
             subFlow(signResponder)
         } else null
 
-        subFlow(ReceiveFinalityFlow(session, stx?.id))
+        subFlow(ReceiveFinalityFlow(session, stx?.id, StatesToRecord.ALL_VISIBLE))
     }
 }
