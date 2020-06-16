@@ -1,7 +1,6 @@
 package net.corda.bn.contracts
 
 import net.corda.bn.states.MembershipState
-import net.corda.bn.states.MembershipStatus
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.Contract
@@ -11,10 +10,13 @@ import net.corda.core.contracts.requireThat
 import net.corda.core.transactions.LedgerTransaction
 import java.lang.IllegalArgumentException
 
+/**
+ * Contract that verifies an evolution of [MembershipState].
+ */
 open class MembershipContract : Contract {
 
     companion object {
-        private const val CONTRACT_NAME = "net.corda.bn.contracts.MembershipContract"
+        const val CONTRACT_NAME = "net.corda.bn.contracts.MembershipContract"
     }
 
     open class Commands : CommandData, TypeOnlyCommandData() {
@@ -24,6 +26,7 @@ open class MembershipContract : Contract {
         class Revoke : Commands()
     }
 
+    @Suppress("ComplexMethod")
     override fun verify(tx: LedgerTransaction) {
         val command = tx.commands.requireSingleCommand<Commands>()
         val input = if (tx.inputStates.isNotEmpty()) tx.inputs.single() else null
@@ -36,10 +39,10 @@ open class MembershipContract : Contract {
                 "Input state has to be validated by ${contractName()}" using (input.state.contract == contractName())
             }
             inputState?.apply {
-                "Modified timestamp should be greater or equal to issued timestamp" using (inputState.issued <= inputState.modified)
+                "Input state's modified timestamp should be greater or equal to issued timestamp" using (inputState.issued <= inputState.modified)
             }
             outputState?.apply {
-                "Modified timestamp should be greater or equal to issued timestamp" using (outputState.issued <= outputState.modified)
+                "Output state's modified timestamp should be greater or equal to issued timestamp" using (outputState.issued <= outputState.modified)
             }
             output?.apply {
                 "Output state has to be validated by ${contractName()}" using (output.contract == contractName())
@@ -50,14 +53,15 @@ open class MembershipContract : Contract {
                 "Input and output state should have same issued timestamps" using (inputState.issued == outputState.issued)
                 "Output state's modified timestamp should be greater or equal than input's" using (inputState.modified <= outputState.modified)
                 "Input and output state should have same linear IDs" using (inputState.linearId == outputState.linearId)
+                "Input and output state should have same participants" using (inputState.participants.toSet() == outputState.participants.toSet())
             }
         }
 
         when (command.value) {
-            is Commands.Request -> verifyRequest(tx, command, tx.outputsOfType<MembershipState>().single())
-            is Commands.Activate -> verifyActivate(tx, command, tx.inputsOfType<MembershipState>().single(), tx.outputsOfType<MembershipState>().single())
-            is Commands.Suspend -> verifySuspend(tx, command, tx.inputsOfType<MembershipState>().single(), tx.outputsOfType<MembershipState>().single())
-            is Commands.Revoke -> verifyRevoke(tx, command, tx.inputsOfType<MembershipState>().single())
+            is Commands.Request -> verifyRequest(tx, command, outputState!!)
+            is Commands.Activate -> verifyActivate(tx, command, inputState!!, outputState!!)
+            is Commands.Suspend -> verifySuspend(tx, command, inputState!!, outputState!!)
+            is Commands.Revoke -> verifyRevoke(tx, command, inputState!!)
             else -> throw IllegalArgumentException("Unsupported command ${command.value}")
         }
     }
@@ -77,8 +81,6 @@ open class MembershipContract : Contract {
     ) = requireThat {
         "Input state of membership activation transaction shouldn't be already active" using (!inputMembership.isActive())
         "Output state of membership activation transaction should be active" using (outputMembership.isActive())
-        "Input and output state of membership activation transaction should only have different status and modified timestamp field" using (
-                inputMembership.copy(status = MembershipStatus.ACTIVE, modified = outputMembership.modified) == outputMembership)
     }
 
     open fun verifySuspend(
@@ -89,8 +91,6 @@ open class MembershipContract : Contract {
     ) = requireThat {
         "Input state of membership suspension transaction shouldn't be already suspended" using (!inputMembership.isSuspended())
         "Output state of membership suspension transaction should be suspended" using (outputMembership.isSuspended())
-        "Input and output state of membership suspension transaction should only have different status and modified timestamp field" using (
-                inputMembership.copy(status = MembershipStatus.SUSPENDED, modified = outputMembership.modified) == outputMembership)
     }
 
     open fun verifyRevoke(

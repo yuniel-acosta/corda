@@ -12,6 +12,15 @@ import net.corda.core.schemas.QueryableState
 import net.corda.core.serialization.CordaSerializable
 import java.time.Instant
 
+/**
+ * Represents a membership on the ledger.
+ *
+ * @property identity Corda Identity of a member.
+ * @property networkId Unique identifier of a Business Network membership belongs to.
+ * @property status Status of the state (i.e. PENDING, ACTIVE, SUSPENDED).
+ * @property issued Timestamp when the state has been issued.
+ * @property modified Timestamp when the state has been modified last time.
+ */
 @BelongsToContract(MembershipContract::class)
 data class MembershipState(
         val identity: Party,
@@ -39,5 +48,23 @@ data class MembershipState(
     fun isSuspended() = status == MembershipStatus.SUSPENDED
 }
 
+/**
+ * Statuses that membership can go through.
+ */
 @CordaSerializable
-enum class MembershipStatus { PENDING, ACTIVE, SUSPENDED }
+enum class MembershipStatus {
+    /**
+     * Newly submitted state which hasn't been approved by authorised member yet. Pending members can't transact on the Business Network.
+     */
+    PENDING,
+
+    /**
+     * Active members can transact on the Business Network and modify other memberships if they are authorised.
+     */
+    ACTIVE,
+
+    /**
+     * Suspended members can't transact on the Business Network or modify other memberships. Suspended members can be activated back.
+     */
+    SUSPENDED
+}
