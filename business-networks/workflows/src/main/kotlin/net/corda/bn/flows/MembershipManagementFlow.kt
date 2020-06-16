@@ -26,14 +26,13 @@ import net.corda.core.utilities.unwrap
  */
 abstract class MembershipManagementFlow<T> : FlowLogic<T>() {
 
-    /**
+	/**
      * Performs authorisation checks of the flow initiator using provided authorisation methods.
      *
      * @param networkId ID of the Business Network in which we perform authorisation.
      * @param databaseService Service used to query vault for memberships.
      * @param authorisationMethod Method which does actual authorisation check over membership.
      */
-    @Suppress("ThrowsCount")
     @Suspendable
     protected fun authorise(networkId: String, databaseService: DatabaseService, authorisationMethod: (MembershipState) -> Boolean) {
         val ourMembership = databaseService.getMembership(networkId, ourIdentity)?.state?.data
