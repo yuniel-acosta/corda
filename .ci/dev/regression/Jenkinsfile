@@ -20,6 +20,8 @@ killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
 //boolean isTag = (env.TAG_NAME =~ /^release-V(\d+\.\d+)?(\.\d+)?(-.+)?$/)
 boolean isTag = (env.TAG_NAME =~ /^ci03-test(-.+)?$/)
 
+// testing update to branch -- summary email should trigger as !isTag ...
+
 pipeline {
     agent { label 'k8s' }
     options {
