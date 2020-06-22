@@ -25,21 +25,24 @@ pipeline {
     }
 
     stages {
-//        stage('Detekt check') {
-//            steps {
-//                sh "./gradlew --no-daemon clean detekt"
-//            }
-//        }
+        stage('Detekt check') {
+            steps {
+                sh "./gradlew --no-daemon clean detekt"
+            }
+        }
 
-//        stage('Compilation warnings check') {
-//            steps {
-//                sh "./gradlew --no-daemon -Pcompilation.warningsAsErrors=true compileAll"
-//            }
-//        }
+        stage('Compilation warnings check') {
+            steps {
+                sh "./gradlew --no-daemon -Pcompilation.warningsAsErrors=true compileAll"
+            }
+        }
 
         stage('Sonatype Check') {
             steps {
-                sh "./gradlew --no-daemon fatJar"
+                sh "./gradlew --no-daemon --info " +
+                        "-Pcompilation.warningsAsErrors=false " +
+                        "-Ptests.failFast=true " +
+                        "jar"
                 nexusPolicyEvaluation (
                         failBuildOnNetworkError: false,
                         iqApplication: selectedApplication('test-build'),
