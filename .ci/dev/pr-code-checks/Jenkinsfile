@@ -26,10 +26,6 @@ pipeline {
         timeout(time: 3, unit: 'HOURS')
     }
 
-//    environment {
-//        PR_CONTEXT_STRING = "PR Code Checks"
-//    }
-
     stages {
         stage('Detekt check') {
             steps {
@@ -60,7 +56,6 @@ pipeline {
                     def artifactId = 'corda'
                     nexusAppId = "jenkins-${groupId}-${artifactId}-${version}-PR"
                 }
-                echo "Nexus application id: ${nexusAppId}"
                 nexusPolicyEvaluation (
                         failBuildOnNetworkError: false,
                         iqApplication: manualApplication(nexusAppId),
