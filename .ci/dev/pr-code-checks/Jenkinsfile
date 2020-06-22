@@ -27,19 +27,23 @@ pipeline {
     stages {
         stage('Detekt check') {
             steps {
-                sh "./gradlew --no-daemon clean detekt"
+                /**
+                 * Since this build starts Gradle multiple times,
+                 * *do* start it as a daemon.
+                 */
+                sh "./gradlew clean detekt"
             }
         }
 
         stage('Compilation warnings check') {
             steps {
-                sh "./gradlew --no-daemon -Pcompilation.warningsAsErrors=true compileAll"
+                sh "./gradlew -Pcompilation.warningsAsErrors=true compileAll"
             }
         }
 
         stage('Sonatype Check') {
             steps {
-                sh "./gradlew --no-daemon --info " +
+                sh "./gradlew --info " +
                         "-Pcompilation.warningsAsErrors=false " +
                         "-Ptests.failFast=true " +
                         "jar"
@@ -52,21 +56,27 @@ pipeline {
             }
         }
 
-//        stage('No API change check') {
-//            steps {
-//                sh "./gradlew --no-daemon generateApi"
-//                sh ".ci/check-api-changes.sh"
-//            }
-//        }
-//
-//        stage('Deploy Nodes') {
-//            steps {
-//                sh "./gradlew --no-daemon jar deployNodes"
-//            }
-//        }
+        stage('No API change check') {
+            steps {
+                sh "./gradlew generateApi"
+                sh ".ci/check-api-changes.sh"
+            }
+        }
+
+        stage('Deploy Nodes') {
+            steps {
+                sh "./gradlew jar deployNodes"
+            }
+        }
     }
 
     post {
+        always {
+            /**
+             * Make sure Gradle daemon is stopped after this build
+             */
+            sh "./gradlew --stop"
+        }
         cleanup {
             deleteDir() /* clean up our workspace */
         }
