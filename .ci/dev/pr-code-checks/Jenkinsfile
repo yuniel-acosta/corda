@@ -5,13 +5,19 @@
 
 /**
  * Kill already started job.
- * Assume new commit takes precendence and results from previous
+ * Assume new commit takes precedence and results from previous
  * unfinished builds are not required.
  * This feature doesn't play well with disableConcurrentBuilds() option
  */
 @Library('corda-shared-build-pipeline-steps')
 import static com.r3.build.BuildControl.killAllExistingBuildsForJob
 killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
+
+/*
+ * A placeholder of computed NexusIQ application id
+ */
+
+def nexusAppId = null
 
 pipeline {
     agent { label 'standard' }
@@ -20,9 +26,9 @@ pipeline {
         timeout(time: 3, unit: 'HOURS')
     }
 
-    environment {
-        PR_CONTEXT_STRING = "PR Code Checks"
-    }
+//    environment {
+//        PR_CONTEXT_STRING = "PR Code Checks"
+//    }
 
     stages {
         stage('Detekt check') {
@@ -37,21 +43,30 @@ pipeline {
 
         stage('Compilation warnings check') {
             steps {
-                sh "./gradlew -Pcompilation.warningsAsErrors=true compileAll"
+                sh "./gradlew --info " +
+                    "-Pcompilation.warningsAsErrors=true " +
+                    "compileAll"
             }
         }
 
         stage('Sonatype Check') {
             steps {
-                sh "./gradlew --info " +
-                        "-Pcompilation.warningsAsErrors=false " +
-                        "-Ptests.failFast=true " +
-                        "jar"
+                sh "./gradlew -Pcompilation.warningsAsErrors=false " +
+                    "jar"
+                script {
+                    sh "./gradlew properties | grep -E '^(version|group):' >version-properties"
+                    def version = sh (returnStdout: true, script: "grep ^version: version-properties | sed -e 's/^version: //'").trim()
+                    def groupId = sh (returnStdout: true, script: "grep ^group: version-properties | sed -e 's/^group: //'").trim()
+                    def artifactId = 'corda'
+                    nexusAppId = "jenkins-${groupId}-${artifactId}-${version}-PR"
+                }
+                echo "Nexus application id: ${nexusAppId}"
                 nexusPolicyEvaluation (
                         failBuildOnNetworkError: false,
-                        iqApplication: selectedApplication('test-build'),
+                        iqApplication: manualApplication(nexusAppId),
                         iqScanPatterns: [[scanPattern: 'node/capsule/build/libs/corda*.jar']],
                         iqStage: 'build'
+//                        jobCredentialsId: 'nexusiq_evaluator'
                 )
             }
         }
