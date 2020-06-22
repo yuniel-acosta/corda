@@ -85,7 +85,7 @@ pipeline {
             /**
              * Make sure Gradle daemon is stopped after this build
              */
-            sh "./gradlew --stop"
+            sh "./gradlew --stop && true"
         }
         cleanup {
             deleteDir() /* clean up our workspace */
