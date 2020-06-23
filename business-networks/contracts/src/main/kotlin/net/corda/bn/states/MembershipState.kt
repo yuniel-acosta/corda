@@ -26,6 +26,7 @@ data class MembershipState(
         val identity: Party,
         val networkId: String,
         val status: MembershipStatus,
+        val roles: Set<BNRole> = emptySet(),
         val issued: Instant = Instant.now(),
         val modified: Instant = issued,
         override val linearId: UniqueIdentifier = UniqueIdentifier(),
@@ -46,6 +47,13 @@ data class MembershipState(
     fun isPending() = status == MembershipStatus.PENDING
     fun isActive() = status == MembershipStatus.ACTIVE
     fun isSuspended() = status == MembershipStatus.SUSPENDED
+
+    private fun permissions() = roles.flatMap { it.permissions }.toSet()
+    fun canActivateMembership() = AdminPermission.CAN_ACTIVATE_MEMBERSHIP in permissions()
+    fun canSuspendMembership() = AdminPermission.CAN_SUSPEND_MEMBERSHIP in permissions()
+    fun canRevokeMembership() = AdminPermission.CAN_REVOKE_MEMBERSHIP in permissions()
+    fun canModifyPermissions() = AdminPermission.CAN_MODIFY_PERMISSIONS in permissions()
+    fun canModifyMembership() = permissions().isNotEmpty()
 }
 
 /**
@@ -67,4 +75,29 @@ enum class MembershipStatus {
      * Suspended members can't transact on the Business Network or modify other memberships. Suspended members can be activated back.
      */
     SUSPENDED
+}
+
+@CordaSerializable
+open class BNRole(val name: String, val permissions: Set<BNPermission>)
+
+@CordaSerializable
+class BNORole : BNRole("BNO", setOf(
+        AdminPermission.CAN_ACTIVATE_MEMBERSHIP,
+        AdminPermission.CAN_SUSPEND_MEMBERSHIP,
+        AdminPermission.CAN_REVOKE_MEMBERSHIP,
+        AdminPermission.CAN_MODIFY_PERMISSIONS
+))
+
+@CordaSerializable
+class MemberRole : BNRole("Member", emptySet())
+
+@CordaSerializable
+interface BNPermission
+
+@CordaSerializable
+enum class AdminPermission : BNPermission {
+    CAN_ACTIVATE_MEMBERSHIP,
+    CAN_SUSPEND_MEMBERSHIP,
+    CAN_REVOKE_MEMBERSHIP,
+    CAN_MODIFY_PERMISSIONS
 }
