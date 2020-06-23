@@ -1,72 +1,91 @@
+#!groovy
+/**
+ * Jenkins pipeline to run basic code checks.
+ */
+
+/**
+ * Kill already started job.
+ * Assume new commit takes precedence and results from previous
+ * unfinished builds are not required.
+ * This feature doesn't play well with disableConcurrentBuilds() option
+ */
 @Library('corda-shared-build-pipeline-steps')
 import static com.r3.build.BuildControl.killAllExistingBuildsForJob
-
 killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
 
+/*
+ * A placeholder of computed NexusIQ application id
+ */
+
+def nexusAppId = null
+
 pipeline {
-    agent { label 'k8s' }
+    agent { label 'standard' }
     options {
         timestamps()
         timeout(time: 3, unit: 'HOURS')
     }
 
-    environment {
-        PR_CONTEXT_STRING = "PR Code Checks"
-    }
-
     stages {
         stage('Detekt check') {
             steps {
-                script {
-                    pullRequest.createStatus(
-                            status: 'pending',
-                            context: "${PR_CONTEXT_STRING}",
-                            description: "Running code checks",
-                            targetUrl: "${env.BUILD_URL}")
-                }
-                sh "./gradlew --no-daemon clean detekt"
+                /**
+                 * Since this build starts Gradle multiple times,
+                 * *do* start it as a daemon.
+                 */
+                sh "./gradlew clean detekt"
             }
         }
 
         stage('Compilation warnings check') {
             steps {
-                sh "./gradlew --no-daemon -Pcompilation.warningsAsErrors=true compileAll"
+                sh "./gradlew --info " +
+                    "-Pcompilation.warningsAsErrors=true " +
+                    "compileAll"
+            }
+        }
+
+        stage('Sonatype Check') {
+            steps {
+                sh "./gradlew -Pcompilation.warningsAsErrors=false " +
+                    "jar"
+                script {
+                    sh "./gradlew properties | grep -E '^(version|group):' >version-properties"
+                    def version = sh (returnStdout: true, script: "grep ^version: version-properties | sed -e 's/^version: //'").trim()
+                    def groupId = sh (returnStdout: true, script: "grep ^group: version-properties | sed -e 's/^group: //'").trim()
+                    def artifactId = 'corda'
+                    nexusAppId = "jenkins-${groupId}-${artifactId}-${version}-PR"
+                }
+                nexusPolicyEvaluation (
+                        failBuildOnNetworkError: false,
+                        iqApplication: manualApplication(nexusAppId),
+                        iqScanPatterns: [[scanPattern: 'node/capsule/build/libs/corda*.jar']],
+                        iqStage: 'build'
+//                        jobCredentialsId: 'nexusiq_evaluator'
+                )
             }
         }
 
         stage('No API change check') {
             steps {
-                sh "./gradlew --no-daemon generateApi"
+                sh "./gradlew generateApi"
                 sh ".ci/check-api-changes.sh"
             }
         }
 
         stage('Deploy Nodes') {
             steps {
-                sh "./gradlew --no-daemon jar deployNodes"
+                sh "./gradlew jar deployNodes"
             }
         }
     }
 
     post {
-        success {
-            script {
-                pullRequest.createStatus(
-                        status: 'success',
-                        context: "${PR_CONTEXT_STRING}",
-                        description: 'Code checks passed',
-                        targetUrl: "${env.BUILD_URL}")
-            }
-        }
-
-        failure {
-            script {
-                pullRequest.createStatus(
-                        status: 'failure',
-                        context: "${PR_CONTEXT_STRING}",
-                        description: 'Code checks failed',
-                        targetUrl: "${env.BUILD_URL}")
-            }
+        always {
+            /**
+             * Make sure Gradle daemon is stopped after this build
+             */
+            sh "./gradlew --stop && true"
         }
         cleanup {
             deleteDir() /* clean up our workspace */
