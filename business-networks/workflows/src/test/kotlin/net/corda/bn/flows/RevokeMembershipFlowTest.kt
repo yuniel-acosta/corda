@@ -1,5 +1,6 @@
 package net.corda.bn.flows
 
+import net.corda.bn.states.BNORole
 import net.corda.bn.states.MembershipState
 import net.corda.core.contracts.UniqueIdentifier
 import org.junit.Test
@@ -28,7 +29,10 @@ class RevokeMembershipFlowTest : MembershipManagementFlowTest(numberOfAuthorised
 
         assertFailsWith<MembershipNotFoundException> { runRevokeMembershipFlow(nonMember, membership.linearId) }
 
-        runRequestAndSuspendMembershipFlow(nonMember, authorisedMember, networkId)
+        runRequestAndSuspendMembershipFlow(nonMember, authorisedMember, networkId).apply {
+            val membership = tx.outputStates.single() as MembershipState
+            runModifyRolesFlow(authorisedMember, membership.linearId, setOf(BNORole()))
+        }
         assertFailsWith<IllegalMembershipStatusException> { runRevokeMembershipFlow(nonMember, membership.linearId) }
     }
 

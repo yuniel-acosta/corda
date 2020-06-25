@@ -1,6 +1,7 @@
 package net.corda.bn.flows
 
 import net.corda.bn.contracts.MembershipContract
+import net.corda.bn.states.BNORole
 import net.corda.bn.states.MembershipState
 import net.corda.bn.states.MembershipStatus
 import net.corda.core.contracts.UniqueIdentifier
@@ -30,7 +31,10 @@ class SuspendMembershipFlowTest : MembershipManagementFlowTest(numberOfAuthorise
 
         assertFailsWith<MembershipNotFoundException> { runSuspendMembershipFlow(nonMember, membership.linearId) }
 
-        runRequestAndSuspendMembershipFlow(nonMember, authorisedMember, networkId)
+        runRequestAndSuspendMembershipFlow(nonMember, authorisedMember, networkId).apply {
+            val membership = tx.outputStates.single() as MembershipState
+            runModifyRolesFlow(authorisedMember, membership.linearId, setOf(BNORole()))
+        }
         assertFailsWith<IllegalMembershipStatusException> { runSuspendMembershipFlow(nonMember, membership.linearId) }
     }
 
