@@ -2,6 +2,7 @@ package net.corda.bn.flows
 
 import net.corda.bn.contracts.MembershipContract
 import net.corda.bn.states.BNORole
+import net.corda.bn.states.MemberRole
 import net.corda.bn.states.MembershipState
 import net.corda.core.contracts.UniqueIdentifier
 import org.junit.Test
@@ -20,7 +21,7 @@ class ModifyRolesFlowTest : MembershipManagementFlowTest(numberOfAuthorisedMembe
     }
 
     @Test(timeout = 300_000)
-    fun `modify roles flow should fail if initiator is not part of the business network or if its membership is not active`() {
+    fun `modify roles flow should fail if initiator is not part of the business network, its membership is not active or is not authorised`() {
         val authorisedMember = authorisedMembers.first()
         val regularMember = regularMembers.first()
         val nonMember = regularMembers[1]
@@ -32,9 +33,16 @@ class ModifyRolesFlowTest : MembershipManagementFlowTest(numberOfAuthorisedMembe
 
         runRequestAndSuspendMembershipFlow(nonMember, authorisedMember, networkId).apply {
             val membership = tx.outputStates.single() as MembershipState
+
+            // make `nonMember` authorised to modify membership so he fetches all members to be modified
             runModifyRolesFlow(authorisedMember, membership.linearId, setOf(BNORole()))
+            assertFailsWith<IllegalMembershipStatusException> { runModifyRolesFlow(nonMember, membership.linearId, setOf(BNORole())) }
+
+            // remove permissions from `nonMember` and activate membership
+            runActivateMembershipFlow(authorisedMember, membership.linearId)
+            runModifyRolesFlow(authorisedMember, membership.linearId, setOf(MemberRole()))
+            assertFailsWith<MembershipAuthorisationException> { runModifyRolesFlow(nonMember, membership.linearId, setOf(BNORole())) }
         }
-        assertFailsWith<IllegalMembershipStatusException> { runModifyRolesFlow(nonMember, membership.linearId, setOf(BNORole())) }
     }
 
     @Test(timeout = 300_000)
