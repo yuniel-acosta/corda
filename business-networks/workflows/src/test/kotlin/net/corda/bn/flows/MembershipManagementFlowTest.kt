@@ -57,7 +57,7 @@ abstract class MembershipManagementFlowTest(
             businessIdentity: BNIdentity? = null,
             notary: Party? = null
     ): SignedTransaction {
-        val future = initiator.startFlow(CreateBusinessNetworkFlow(networkId, businessIdentity, notary))
+        val future = initiator.startFlow(CreateBusinessNetworkFlow(networkId, businessIdentity, notary = notary))
         mockNetwork.runNetwork()
         return future.getOrThrow()
     }

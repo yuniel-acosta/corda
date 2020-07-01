@@ -2,11 +2,14 @@ package net.corda.bn.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.bn.contracts.MembershipContract
+import net.corda.bn.contracts.RelationshipContract
+import net.corda.bn.states.BNGroup
 import net.corda.bn.states.BNIdentity
 import net.corda.bn.states.BNORole
 import net.corda.bn.states.MembershipIdentity
 import net.corda.bn.states.MembershipState
 import net.corda.bn.states.MembershipStatus
+import net.corda.bn.states.RelationshipState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.FinalityFlow
@@ -33,6 +36,8 @@ import net.corda.core.transactions.TransactionBuilder
 class CreateBusinessNetworkFlow(
         private val networkId: UniqueIdentifier = UniqueIdentifier(),
         private val businessIdentity: BNIdentity? = null,
+        private val groupId: UniqueIdentifier = UniqueIdentifier(),
+        private val groupName: String? = null,
         private val notary: Party? = null
 ) : FlowLogic<SignedTransaction>() {
 
@@ -85,13 +90,29 @@ class CreateBusinessNetworkFlow(
     }
 
     @Suspendable
+    private fun createBusinessNetworkGroup(membershipId: UniqueIdentifier): SignedTransaction {
+        val relationship = RelationshipState(membershipId = membershipId, groups = setOf(BNGroup(groupId, groupName)))
+        val builder = TransactionBuilder(notary ?: serviceHub.networkMapCache.notaryIdentities.first())
+                .addOutputState(relationship)
+                .addCommand(RelationshipContract.Commands.Issue(), ourIdentity.owningKey)
+        builder.verify(serviceHub)
+
+        val stx = serviceHub.signInitialTransaction(builder)
+        return subFlow(FinalityFlow(stx, emptyList()))
+    }
+
+    @Suspendable
     override fun call(): SignedTransaction {
         // first issue membership with PENDING status
         val pendingMembership = createMembershipRequest().tx.outRefsOfType(MembershipState::class.java).single()
         // after that activate the membership
         val activeMembership = activateMembership(pendingMembership).tx.outRefsOfType(MembershipState::class.java).single()
-        // in the end give all permissions to the membership
-        return authoriseMembership(activeMembership)
+        // give all administrative permissions to the membership
+        return authoriseMembership(activeMembership).apply {
+            // in the end create initial business network relationships group
+            val authorisedMembership = tx.outRefsOfType(MembershipState::class.java).single()
+            createBusinessNetworkGroup(authorisedMembership.state.data.linearId)
+        }
     }
 }
 
