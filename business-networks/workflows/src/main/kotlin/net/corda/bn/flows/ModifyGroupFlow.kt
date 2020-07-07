@@ -71,7 +71,7 @@ class ModifyGroupInternalFlow(
     override fun call(): SignedTransaction {
         // validate flow arguments
         if (name == null && participants == null) {
-            throw FlowException("One of the name or participants arguments must be specified")
+            throw IllegalFlowArgumentException("One of the name or participants arguments must be specified")
         }
 
         // fetch group state with groupId linear ID
@@ -92,10 +92,15 @@ class ModifyGroupInternalFlow(
         // get all new participants' identities from provided memberships
         val participantsIdentities = participantsMemberships?.map {
             if (it.state.data.isPending()) {
-                throw FlowException("$it can't be participant of Business Network groups since it has pending status")
+                throw IllegalMembershipStatusException("$it can't be participant of Business Network groups since it has pending status")
             }
 
             it.state.data.identity.cordaIdentity
+        }
+
+        // check if initiator is one of group participants
+        if (participantsIdentities != null && !participantsIdentities.contains(ourIdentity)) {
+            throw IllegalBusinessNetworkGroupStateException("Initiator must be participant of modified Business Network Group.")
         }
 
         // check whether any member is not participant of any group
@@ -114,7 +119,7 @@ class ModifyGroupInternalFlow(
             membership.state.data.identity.cordaIdentity !in (databaseService.getAllBusinessNetworkGroups(networkId) - group).flatMap { it.state.data.participants }
         }
         if (syncMembershipsParticipants && membersWithoutGroup.isNotEmpty()) {
-            throw FlowException("Illegal group modification: $membersWithoutGroup would remain without any group participation.")
+            throw MembershipMissingGroupParticipationException("Illegal group modification: $membersWithoutGroup would remain without any group participation.")
         }
 
         // fetch signers

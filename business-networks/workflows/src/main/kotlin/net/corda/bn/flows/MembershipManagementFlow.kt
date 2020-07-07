@@ -191,3 +191,13 @@ class BusinessNetworkGroupNotFoundException(message: String) : FlowException(mes
  * Exception thrown by any [MembershipManagementFlow] whenever member remains without participation in any Business Network Group.
  */
 class MembershipMissingGroupParticipationException(message: String) : FlowException(message)
+
+/**
+ * [MembershipManagementFlow] version of [IllegalArgumentException]
+ */
+class IllegalFlowArgumentException(message: String) : FlowException(message)
+
+/**
+ * Exception thrown by any [MembershipManagementFlow] whenever group ends up in illegal state.
+ */
+class IllegalBusinessNetworkGroupStateException(message: String) : FlowException(message)

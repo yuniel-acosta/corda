@@ -65,10 +65,10 @@ class CreateGroupFlowTest : MembershipManagementFlowTest(numberOfAuthorisedMembe
     @Test(timeout = 300_000)
     fun `create group flow should fail if any of the additional participants memberships is in pending status`() {
         val authorisedMember = authorisedMembers.first()
-        val regularMembership = regularMembers.first()
+        val regularMember = regularMembers.first()
 
         val networkId = (runCreateBusinessNetworkFlow(authorisedMember).tx.outputStates.single() as MembershipState).networkId
-        val membership = runRequestMembershipFlow(regularMembership, authorisedMember, networkId).tx.outputStates.single() as MembershipState
+        val membership = runRequestMembershipFlow(regularMember, authorisedMember, networkId).tx.outputStates.single() as MembershipState
         assertFailsWith<IllegalMembershipStatusException> { runCreateGroupFlow(authorisedMember, networkId, additionalParticipants = setOf(membership.linearId)) }
     }
 
@@ -106,7 +106,7 @@ class CreateGroupFlowTest : MembershipManagementFlowTest(numberOfAuthorisedMembe
                 assertEquals(2, size)
                 single { it.linearId == groupId }
             }.apply {
-                assertEquals(2, participants.size)
+                assertEquals(2, participants.size, "Vault size assertion failed for ${member.identity()}")
                 assertTrue(participants.any { it == authorisedMember.identity() }, "Expected to have ${authorisedMember.identity()} in new group of ${member.identity()} vault")
                 assertTrue(participants.any { it == regularMember.identity() }, "Expected to have ${regularMember.identity()} in new group of ${member.identity()} vault")
             }

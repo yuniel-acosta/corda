@@ -9,7 +9,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
-class DeleteGroupFlowTest : MembershipManagementFlowTest(numberOfAuthorisedMembers = 1, numberOfRegularMembers = 2) {
+class DeleteGroupFlowTest : MembershipManagementFlowTest(numberOfAuthorisedMembers = 1, numberOfRegularMembers = 1) {
 
     @Test(timeout = 300_000)
     fun `delete group flow should fail if group with given ID doesn't exits`() {
