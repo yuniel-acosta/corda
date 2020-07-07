@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
 
 class CreateGroupFlowTest : MembershipManagementFlowTest(numberOfAuthorisedMembers = 1, numberOfRegularMembers = 1) {
 
-    @Test
+    @Test(timeout = 300_000)
     fun `create group flow should fail if business network doesn't exist`() {
         val authorisedMember = authorisedMembers.first()
         val invalidNetworkId = "invalid-network-id"

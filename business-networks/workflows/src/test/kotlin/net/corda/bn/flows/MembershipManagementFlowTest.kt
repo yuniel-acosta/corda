@@ -53,13 +53,16 @@ abstract class MembershipManagementFlowTest(
 
     private fun createNode(name: CordaX500Name) = mockNetwork.createNode(MockNodeParameters(legalName = name))
 
+    @Suppress("LongParameterList")
     protected fun runCreateBusinessNetworkFlow(
             initiator: StartedMockNode,
             networkId: UniqueIdentifier = UniqueIdentifier(),
             businessIdentity: BNIdentity? = null,
+            groupId: UniqueIdentifier = UniqueIdentifier(),
+            groupName: String? = null,
             notary: Party? = null
     ): SignedTransaction {
-        val future = initiator.startFlow(CreateBusinessNetworkFlow(networkId, businessIdentity, notary = notary))
+        val future = initiator.startFlow(CreateBusinessNetworkFlow(networkId, businessIdentity, groupId, groupName, notary))
         mockNetwork.runNetwork()
         return future.getOrThrow()
     }

@@ -67,6 +67,11 @@ class RevokeMembershipFlowTest : MembershipManagementFlowTest(numberOfAuthorised
         listOf(authorisedMember, regularMember).forEach { member ->
             getAllMembershipsFromVault(member, networkId).single().apply {
                 assertEquals(authorisedMember.identity(), identity.cordaIdentity, "Expected to have ${authorisedMember.identity()} in ${member.identity()} vault")
+                assertEquals(setOf(authorisedMember.identity()), participants.toSet())
+            }
+
+            getAllGroupsFromVault(member, networkId).single().apply {
+                assertEquals(setOf(authorisedMember.identity()), participants.toSet())
             }
         }
     }
