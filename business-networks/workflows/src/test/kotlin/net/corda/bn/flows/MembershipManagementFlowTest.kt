@@ -2,6 +2,7 @@ package net.corda.bn.flows
 
 import net.corda.bn.states.BNIdentity
 import net.corda.bn.states.BNRole
+import net.corda.bn.states.GroupState
 import net.corda.bn.states.MembershipState
 import net.corda.bn.states.MembershipStatus
 import net.corda.core.contracts.UniqueIdentifier
@@ -185,6 +186,11 @@ abstract class MembershipManagementFlowTest(
         ).map {
             it.state.data
         }
+    }
+
+    protected fun getAllGroupsFromVault(node: StartedMockNode, networkId: String): List<GroupState> {
+        val databaseService = node.services.cordaService(DatabaseService::class.java)
+        return databaseService.getAllBusinessNetworkGroups(networkId).map { it.state.data }
     }
 }
 

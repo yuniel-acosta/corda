@@ -58,7 +58,7 @@ class CreateGroupFlow(
         // get all additional participants' identities from provided memberships
         val additionalParticipantsIdentities = additionalParticipantsMemberships.map {
             if (it.state.data.isPending()) {
-                throw FlowException("$it can't be participant of Business Network groups since it has pending status")
+                throw IllegalMembershipStatusException("$it can't be participant of Business Network groups since it has pending status")
             }
 
             it.state.data.identity.cordaIdentity

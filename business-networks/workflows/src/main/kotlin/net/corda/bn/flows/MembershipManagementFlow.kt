@@ -186,3 +186,8 @@ class MembershipAuthorisationException(message: String) : FlowException(message)
  * Exception thrown by any [MembershipManagementFlow] whenever Business Network group with provided [GroupState.linearId] doesn't exist.
  */
 class BusinessNetworkGroupNotFoundException(message: String) : FlowException(message)
+
+/**
+ * Exception thrown by any [MembershipManagementFlow] whenever member remains without participation in any Business Network Group.
+ */
+class MembershipMissingGroupParticipationException(message: String) : FlowException(message)

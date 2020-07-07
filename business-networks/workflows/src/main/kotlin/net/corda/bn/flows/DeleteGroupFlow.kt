@@ -46,7 +46,7 @@ class DeleteGroupFlow(private val groupId: UniqueIdentifier, private val notary:
             membership.state.data.identity.cordaIdentity !in (databaseService.getAllBusinessNetworkGroups(networkId) - group).flatMap { it.state.data.participants }
         }
         if (membersWithoutGroup.isNotEmpty()) {
-            throw FlowException("Illegal group deletion: $membersWithoutGroup would remain without any group participation.")
+            throw MembershipMissingGroupParticipationException("Illegal group deletion: $membersWithoutGroup would remain without any group participation.")
         }
 
         // fetch signers

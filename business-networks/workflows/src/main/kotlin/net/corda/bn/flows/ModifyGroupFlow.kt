@@ -92,7 +92,7 @@ class ModifyGroupInternalFlow(
         // get all new participants' identities from provided memberships
         val participantsIdentities = participantsMemberships?.map {
             if (it.state.data.isPending()) {
-                throw FlowException("Pending membership state $it can't be participant of Business Network groups")
+                throw FlowException("$it can't be participant of Business Network groups since it has pending status")
             }
 
             it.state.data.identity.cordaIdentity
