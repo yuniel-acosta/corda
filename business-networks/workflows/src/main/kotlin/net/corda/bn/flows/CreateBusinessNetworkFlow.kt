@@ -112,6 +112,23 @@ class CreateBusinessNetworkFlow(
         return subFlow(FinalityFlow(stx, emptyList()))
     }
 
+    @Suspendable
+    private fun createBusinessNetworkGroup(databaseService: DatabaseService): SignedTransaction {
+        // check if business network group with groupId already exists
+        if (databaseService.businessNetworkGroupExists(groupId)) {
+            throw DuplicateBusinessNetworkGroupException("Business Network Group with $groupId already exists.")
+        }
+
+        val group = GroupState(networkId = networkId.toString(), name = groupName, linearId = groupId, participants = listOf(ourIdentity))
+        val builder = TransactionBuilder(notary ?: serviceHub.networkMapCache.notaryIdentities.first())
+                .addOutputState(group)
+                .addCommand(GroupContract.Commands.Create(listOf(ourIdentity.owningKey)), ourIdentity.owningKey)
+        builder.verify(serviceHub)
+
+        val stx = serviceHub.signInitialTransaction(builder)
+        return subFlow(FinalityFlow(stx, emptyList()))
+    }
+
     /**
      * Issues initial Business Network Group on initiator's ledger.
      *

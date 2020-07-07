@@ -161,3 +161,4 @@ abstract class MembershipManagementFlow<T> : FlowLogic<T>() {
         }
     }
 }
+}
