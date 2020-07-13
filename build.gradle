@@ -550,6 +550,8 @@ bintrayConfig {
             'corda-deserializers-djvm',
             'corda',
             'corda-business-network-contracts',
+            'corda-business-network-custom-contracts',
+            'corda-business-network-custom-workflows',
             'corda-business-network-workflows',
             'corda-finance-workflows',
             'corda-finance-contracts',

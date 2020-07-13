@@ -86,7 +86,7 @@ open class MembershipContract : Contract {
      * @param tx Ledger transaction over which contract performs verification.
      */
     @Suppress("ComplexMethod")
-    override fun verify(tx: LedgerTransaction) {
+    final override fun verify(tx: LedgerTransaction) {
         val command = tx.commands.requireSingleCommand<Commands>()
         val input = if (tx.inputStates.isNotEmpty()) tx.inputs.single() else null
         val inputState = input?.state?.data as? MembershipState

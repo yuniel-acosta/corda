@@ -1,7 +1,13 @@
-package net.corda.bn.flows
+package net.corda.bn.custom.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.bn.contracts.MembershipContract
+import net.corda.bn.custom.contracts.CustomMembershipContract
+import net.corda.bn.flows.DatabaseService
+import net.corda.bn.flows.MembershipRequest
+import net.corda.bn.flows.RequestMembershipFlow
+import net.corda.bn.flows.RequestMembershipFlowResponder
+import net.corda.bn.flows.RequestMembershipObserverFlow
 import net.corda.bn.states.BNIdentity
 import net.corda.bn.states.MembershipIdentity
 import net.corda.bn.states.MembershipState
@@ -17,31 +23,17 @@ import net.corda.core.flows.ReceiveFinalityFlow
 import net.corda.core.flows.SignTransactionFlow
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party
-import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.unwrap
 
-@CordaSerializable
-data class MembershipRequest(val networkId: String, val businessIdentity: BNIdentity?, val notary: Party?)
-
-/**
- * This flow is initiated by new potential member who requests membership activation from authorised Business Network member. Issues
- * new pending [MembershipState] on potential member and all authorised members' ledgers.
- *
- * @property authorisedParty Identity of authorised member from whom the membership activation is requested.
- * @property networkId ID of the Business Network that potential new member wants to join.
- * @property businessIdentity Custom business identity to be given to membership.
- * @property notary Identity of the notary to be used for transactions notarisation. If not specified, first one from the whitelist will be used.
- */
-@InitiatingFlow
 @StartableByRPC
-open class RequestMembershipFlow(
-        protected val authorisedParty: Party,
-        protected val networkId: String,
-        protected val businessIdentity: BNIdentity? = null,
-        protected val notary: Party? = null
-) : FlowLogic<SignedTransaction>() {
+class CustomRequestMembershipFlow(
+        authorisedParty: Party,
+        networkId: String,
+        businessIdentity: BNIdentity? = null,
+        notary: Party? = null
+) : RequestMembershipFlow(authorisedParty, networkId, businessIdentity, notary) {
 
     @Suspendable
     override fun call(): SignedTransaction {
@@ -78,9 +70,8 @@ open class RequestMembershipFlow(
     }
 }
 
-@InitiatingFlow
 @InitiatedBy(RequestMembershipFlow::class)
-open class RequestMembershipFlowResponder(val session: FlowSession) : MembershipManagementFlow<Unit>() {
+class CustomRequestMembershipFlowResponder(session: FlowSession) : RequestMembershipFlowResponder(session) {
 
     @Suspendable
     override fun call() {
@@ -105,7 +96,7 @@ open class RequestMembershipFlowResponder(val session: FlowSession) : Membership
         )
         val requiredSigners = listOf(ourIdentity.owningKey, counterparty.owningKey)
         val builder = TransactionBuilder(notary ?: serviceHub.networkMapCache.notaryIdentities.first())
-                .addOutputState(membershipState)
+                .addOutputState(membershipState, CustomMembershipContract.CONTRACT_NAME)
                 .addCommand(MembershipContract.Commands.Request(requiredSigners), requiredSigners)
         builder.verify(serviceHub)
 
@@ -120,10 +111,4 @@ open class RequestMembershipFlowResponder(val session: FlowSession) : Membership
 }
 
 @InitiatedBy(RequestMembershipFlowResponder::class)
-open class RequestMembershipObserverFlow(val session: FlowSession) : FlowLogic<Unit>() {
-
-    @Suspendable
-    override fun call() {
-        subFlow(ReceiveFinalityFlow(session))
-    }
-}
+class CustomRequestMembershipObserverFlow(session: FlowSession) : RequestMembershipObserverFlow(session)

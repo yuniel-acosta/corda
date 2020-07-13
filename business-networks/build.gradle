@@ -9,6 +9,8 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     cordapp project(':business-networks:contracts')
+    cordapp project(':business-networks:custom-contracts')
+    cordapp project(':business-networks:custom-workflows')
     cordapp project(':business-networks:workflows')
 
     // Cordformation needs a SLF4J implementation when executing the Network
@@ -42,6 +44,8 @@ cordapp {
 task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
     nodeDefaults {
         cordapp project(':business-networks:workflows')
+        cordapp project(':business-networks:custom-contracts')
+        cordapp project(':business-networks:custom-workflows')
         cordapp project(':business-networks:contracts')
     }
     node {
