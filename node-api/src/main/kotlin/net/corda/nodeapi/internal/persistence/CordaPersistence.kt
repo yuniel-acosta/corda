@@ -50,7 +50,7 @@ data class DatabaseConfig(
         val initialiseAppSchema = SchemaInitializationType.UPDATE
         val transactionIsolationLevel = TransactionIsolationLevel.REPEATABLE_READ
         val exportHibernateJMXStatistics = false
-        val mappedSchemaCacheSize = 100L
+        val mappedSchemaCacheSize = 25L
     }
 }
 

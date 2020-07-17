@@ -31,6 +31,7 @@ class InternalRPCMessagingClient(val sslConfig: MutualSslConfiguration, val serv
             clientFailureCheckPeriod = 30000
             minLargeMessageSize = maxMessageSize
             isUseGlobalPools = nodeSerializationEnv != null
+            threadPoolMaxSize = 2
         }
 
         rpcServer = RPCServer(rpcOps, NODE_RPC_USER, NODE_RPC_USER, locator!!, securityManager, nodeName, rpcServerConfiguration, cacheFactory)

@@ -134,7 +134,7 @@ class ArtemisMessagingServer(private val config: NodeConfiguration,
         acceptorConfigurations = mutableSetOf(p2pAcceptorTcpTransport(NetworkHostAndPort(messagingServerAddress.host, messagingServerAddress.port), config.p2pSslOptions))
         // Enable built in message deduplication. Note we still have to do our own as the delayed commits
         // and our own definition of commit mean that the built in deduplication cannot remove all duplicates.
-        idCacheSize = 2000 // Artemis Default duplicate cache size i.e. a guess
+        idCacheSize = 500 // Artemis Default duplicate cache size i.e. a guess
         isPersistIDCache = true
         isPopulateValidatedUser = true
         journalBufferSize_NIO = maxMessageSize + JOURNAL_HEADER_SIZE // Artemis default is 490KiB - required to address IllegalArgumentException (when Artemis uses Java NIO): Record is too large to store.
