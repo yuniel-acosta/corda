@@ -86,14 +86,16 @@ class ArtemisTcpTransport {
                 TransportConstants.SSL_ENABLED_PROP_NAME to true,
                 TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME to trustStoreProvider,
                 TransportConstants.TRUSTSTORE_PATH_PROP_NAME to trustStorePath,
-                TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME to trustStorePassword)
+                TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME to trustStorePassword,
+                TransportConstants.REMOTING_THREADS_PROPNAME to 2)
 
         private fun BrokerRpcSslOptions.toTransportOptions() = mapOf(
                 TransportConstants.SSL_ENABLED_PROP_NAME to true,
                 TransportConstants.KEYSTORE_PROVIDER_PROP_NAME to "JKS",
                 TransportConstants.KEYSTORE_PATH_PROP_NAME to keyStorePath,
                 TransportConstants.KEYSTORE_PASSWORD_PROP_NAME to keyStorePassword,
-                TransportConstants.NEED_CLIENT_AUTH_PROP_NAME to false)
+                TransportConstants.NEED_CLIENT_AUTH_PROP_NAME to false,
+                TransportConstants.REMOTING_THREADS_PROPNAME to 2)
 
         internal val acceptorFactoryClassName = "org.apache.activemq.artemis.core.remoting.impl.netty.NettyAcceptorFactory"
         internal val connectorFactoryClassName = NettyConnectorFactory::class.java.name
@@ -117,6 +119,7 @@ class ArtemisTcpTransport {
                 options[TransportConstants.SSL_PROVIDER] = if (useOpenSsl) TransportConstants.OPENSSL_PROVIDER else TransportConstants.DEFAULT_SSL_PROVIDER
             }
             options[TransportConstants.HANDSHAKE_TIMEOUT] = 0 // Suppress core.server.lambda$channelActive$0 - AMQ224088 error from load balancer type connections
+            options[TransportConstants.REMOTING_THREADS_PROPNAME] = 2
             return TransportConfiguration(acceptorFactoryClassName, options)
         }
 
@@ -130,6 +133,7 @@ class ArtemisTcpTransport {
                 options[TransportConstants.SSL_PROVIDER] = if (useOpenSsl) TransportConstants.OPENSSL_PROVIDER else TransportConstants.DEFAULT_SSL_PROVIDER
                 keyStoreProvider?.let { options.put(TransportConstants.KEYSTORE_PROVIDER_PROP_NAME, keyStoreProvider) }
             }
+            options[TransportConstants.REMOTING_THREADS_PROPNAME] = 2
             return TransportConfiguration(connectorFactoryClassName, options)
         }
 
@@ -146,6 +150,7 @@ class ArtemisTcpTransport {
                 options.putAll(defaultSSLOptions)
             }
             options[TransportConstants.HANDSHAKE_TIMEOUT] = 0 // Suppress core.server.lambda$channelActive$0 - AMQ224088 error from load balancer type connections
+            options[TransportConstants.REMOTING_THREADS_PROPNAME] = 2
             return TransportConfiguration(acceptorFactoryClassName, options)
         }
 
@@ -157,6 +162,7 @@ class ArtemisTcpTransport {
                 options.putAll(config.toTransportOptions())
                 options.putAll(defaultSSLOptions)
             }
+            options[TransportConstants.REMOTING_THREADS_PROPNAME] = 2
             return TransportConfiguration(connectorFactoryClassName, options)
         }
 

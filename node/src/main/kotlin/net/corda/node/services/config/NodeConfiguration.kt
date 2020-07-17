@@ -95,18 +95,18 @@ interface NodeConfiguration : ConfigurationWithOptionsContainer {
 
     companion object {
         // default to at least 8MB and a bit extra for larger heap sizes
-        val defaultTransactionCacheSize: Long = 8.MB + getAdditionalCacheMemory()
+        val defaultTransactionCacheSize: Long = 4.MB + getAdditionalCacheMemory()
 
         internal val DEFAULT_FLOW_MONITOR_PERIOD_MILLIS: Duration = Duration.ofMinutes(1)
         internal val DEFAULT_FLOW_MONITOR_SUSPENSION_LOGGING_THRESHOLD_MILLIS: Duration = Duration.ofMinutes(1)
 
         // add 5% of any heapsize over 300MB to the default transaction cache size
         private fun getAdditionalCacheMemory(): Long {
-            return Math.max((Runtime.getRuntime().maxMemory() - 300.MB) / 20, 0)
+            return Math.max((Runtime.getRuntime().maxMemory() - 400.MB) / 40, 0)
         }
 
-        internal val defaultAttachmentContentCacheSize: Long = 10.MB
-        internal const val defaultAttachmentCacheBound = 1024L
+        internal val defaultAttachmentContentCacheSize: Long = 5.MB
+        internal const val defaultAttachmentCacheBound = 512L
 
         const val cordappDirectoriesKey = "cordappDirectories"
 

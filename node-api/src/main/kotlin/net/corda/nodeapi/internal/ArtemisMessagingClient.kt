@@ -69,6 +69,7 @@ class ArtemisMessagingClient(private val config: MutualSslConfiguration,
                 isFailoverOnInitialConnection = messagingServerConnectionConfig.failoverOnInitialAttempt(isHA)
                 initialConnectAttempts = messagingServerConnectionConfig.initialConnectAttempts(isHA)
             }
+            threadPoolMaxSize = 2
             addIncomingInterceptor(ArtemisMessageSizeChecksInterceptor(maxMessageSize))
         }
         val sessionFactory = locator.createSessionFactory()

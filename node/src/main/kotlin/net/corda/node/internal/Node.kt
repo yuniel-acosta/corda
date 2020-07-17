@@ -180,7 +180,7 @@ open class Node(configuration: NodeConfiguration,
         private val sameVmNodeCounter = AtomicInteger()
 
         // TODO: make this configurable.
-        const val MAX_RPC_MESSAGE_SIZE = 10485760
+        const val MAX_RPC_MESSAGE_SIZE = 65536
 
         fun isInvalidJavaVersion(): Boolean {
             if (!hasMinimumJavaVersion()) {
@@ -280,7 +280,7 @@ open class Node(configuration: NodeConfiguration,
     private var internalRpcMessagingClient: InternalRPCMessagingClient? = null
     private var rpcBroker: ArtemisBroker? = null
 
-    protected open val journalBufferTimeout : Int? = null
+    protected open val journalBufferTimeout : Int? = 0
 
     private var shutdownHook: ShutdownHook? = null
 
@@ -343,12 +343,7 @@ open class Node(configuration: NodeConfiguration,
 
         network as P2PMessagingClient
 
-        if (System.getProperty("io.netty.allocator.numHeapArenas").isNullOrBlank()) {
-            // Netty arenas are approx 16MB each when max'd out.  Set arenas based on memory, not core count, unless memory is abundant.
-            val memBasedArenas = max(Runtime.getRuntime().maxMemory() / 256.MB, 1L)
-            // We set the min of the above and the default.
-            System.setProperty("io.netty.allocator.numHeapArenas", min(memBasedArenas, NettyRuntime.availableProcessors() * 2L).toString())
-        }
+        System.setProperty("io.netty.allocator.numHeapArenas", min(8L, 4L).toString())
 
         // Construct security manager reading users data either from the 'security' config section
         // if present or from rpcUsers list if the former is missing from config.
