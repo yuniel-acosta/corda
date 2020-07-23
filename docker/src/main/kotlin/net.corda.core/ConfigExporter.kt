@@ -48,6 +48,21 @@ class ConfigExporter {
             fileWriter.write(configToWrite.root().render(ConfigRenderOptions.concise().setFormatted(true).setJson(false)))
         }
     }
+
+    fun buildCustomConfig(ourConf: String, outputFile: String){
+        val ourParsedConfig = ConfigFactory.parseFile(File(ourConf))
+        File(outputFile).writer().use { fileWriter ->
+            val finalConfig = ourParsedConfig.parseAsNodeConfigWithFallback().value().toConfig()
+            var configToWrite = ConfigFactory.empty()
+            ourParsedConfig.entrySet().sortedBy { it.key }.forEach { configEntry ->
+                //use all keys present in "ourConfig" but get values from "finalConfig"
+                val keyWithoutQuotes = configEntry.key.replace("\"", "")
+                println("creating config key: $keyWithoutQuotes with value: ${finalConfig.getValue(keyWithoutQuotes)}")
+                configToWrite = configToWrite.withValue(keyWithoutQuotes, finalConfig.getValue(keyWithoutQuotes))
+            }
+            fileWriter.write(configToWrite.root().render(ConfigRenderOptions.concise().setFormatted(true).setJson(false)))
+        }
+    }
 }
 
 fun Config.parseAsNodeConfigWithFallback(): Validated<NodeConfiguration, Configuration.Validation.Error> {
@@ -75,6 +90,11 @@ fun main(args: Array<String>) {
             val ourConf = args[1]
             val outputFile = args[2]
             configExporter.buildGenericCZConfig(ourConf, outputFile)
+        }
+        "CUSTOM" -> {
+            val ourConf = args[1]
+            val outputFile = args[2]
+            configExporter.buildCustomConfig(ourConf, outputFile)
         }
         else -> {
             throw IllegalArgumentException("Unknown command: $command")

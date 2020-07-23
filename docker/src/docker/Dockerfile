@@ -59,6 +59,8 @@ COPY --chown=corda:corda generate-config.sh /opt/corda/bin/config-generator
 COPY --chown=corda:corda run-corda.sh /opt/corda/bin/run-corda
 ##BASE CONFIG FOR GENERATOR
 COPY --chown=corda:corda starting-node.conf /opt/corda/starting-node.conf
+##CUSTOM CONFIG FOR GENERATOR
+COPY --chown=corda:corda custom-node.conf /opt/corda/custom-node.conf
 
 USER "corda"
 EXPOSE ${MY_P2P_PORT} ${MY_RPC_PORT} ${MY_RPC_ADMIN_PORT}

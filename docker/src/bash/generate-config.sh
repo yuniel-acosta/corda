@@ -2,6 +2,7 @@
 
 GENERATE_TEST_NET=0
 GENERATE_GENERIC=0
+USE_CUSTOM=0
 EXIT_ON_GENERATE=0
 
 die() {
@@ -10,9 +11,10 @@ die() {
 }
 
 show_help() {
-  echo "usage: generate-config <--testnet>|<--generic>"
+  echo "usage: generate-config <--testnet>|<--generic>|<--custom>"
   echo -e "\t --testnet is used to generate config and certificates for joining TestNet"
   echo -e "\t --generic is used to generate config and certificates for joining an existing Corda Compatibility Zone"
+  echo -e "\t --custom is used to use a customised config file and can be used in place of the --generic option"
 }
 
 function generateTestnetConfig() {
@@ -67,6 +69,37 @@ function generateGenericCZConfig() {
     fi
 }
 
+function useCustomNodeConfFile() {
+  if  ! [[ -f ${CONFIG_FOLDER}/node.conf ]]; then
+    echo 'INFO: existing custom node config detected, using the existing structure'
+
+    if [[ ! -f ${CERTIFICATES_FOLDER}/${TRUST_STORE_NAME} ]]; then
+      die "Network Trust Root file not found"
+    fi
+    : ${RPC_PASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)}
+    RPC_PASSWORD=${RPC_PASSWORD} \
+      DB_PASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1) \
+      MY_PUBLIC_ADDRESS=${MY_PUBLIC_ADDRESS} \
+      MY_P2P_PORT=${MY_P2P_PORT} \
+      MY_RPC_PORT=${MY_RPC_PORT} \
+      MY_RPC_ADMIN_PORT=${MY_RPC_ADMIN_PORT} \
+      java -jar config-exporter.jar "CUSTOM" "/opt/corda/custom-node.conf" "${CONFIG_FOLDER}/node.conf"
+  fi
+
+  java -Djava.security.egd=file:/dev/./urandom -Dcapsule.jvm.args="${JVM_ARGS}" -jar /opt/corda/bin/corda.jar \
+    --initial-registration \
+    --base-directory /opt/corda \
+    --config-file ${CONFIG_FOLDER}/node.conf \
+    --network-root-truststore-password ${NETWORK_TRUST_PASSWORD} \
+    --network-root-truststore ${CERTIFICATES_FOLDER}/${TRUST_STORE_NAME} &&
+    echo "Successfully registered with ${DOORMAN_URL}, starting corda"
+    if [[ ${EXIT_ON_GENERATE} == 1 ]]; then
+      exit 0
+    else
+      run-corda
+    fi
+}
+
 function downloadTestnetCerts() {
   if [[ ! -f ${CERTIFICATES_FOLDER}/certs.zip ]]; then
     : ${ONE_TIME_DOWNLOAD_KEY:? '$ONE_TIME_DOWNLOAD_KEY must be set as environment variable'}
@@ -87,7 +120,7 @@ while :; do
     exit
     ;;
   -t | --testnet)
-    if [[ ${GENERATE_GENERIC} == 0 ]]; then
+    if [[ ${GENERATE_GENERIC} == 0 ]] || [[ ${USE_CUSTOM} == 0 ]]; then
       GENERATE_TEST_NET=1
     else
       die 'ERROR: cannot generate config for multiple networks'
@@ -98,6 +131,13 @@ while :; do
       GENERATE_GENERIC=1
     else
       die 'ERROR: cannot generate config for multiple networks'
+    fi
+    ;;
+  -c | --custom)
+    if [[ ${GENERATE_TEST_NET} == 0 ]]; then
+      USE_CUSTOM=1
+    else
+      die 'ERROR: cannot use custom config for multiple networks'
     fi
     ;;
   -e | --exit-on-generate)
@@ -130,6 +170,9 @@ if [[ ${GENERATE_TEST_NET} == 1 ]]; then
 elif [[ ${GENERATE_GENERIC} == 1 ]]; then
   : ${MY_PUBLIC_ADDRESS:? 'MY_PUBLIC_ADDRESS must be set as environment variable'}
   generateGenericCZConfig
+  elif [[ ${USE_CUSTOM} == 1 ]]; then
+  : ${MY_PUBLIC_ADDRESS:? 'MY_PUBLIC_ADDRESS must be set as environment variable'}
+  useCustomNodeConfFile
 else
   show_help
   die "No Valid Configuration requested"
