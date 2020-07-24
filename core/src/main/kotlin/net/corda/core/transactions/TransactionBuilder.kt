@@ -163,6 +163,10 @@ open class TransactionBuilder(
             checkConstraintValidity(state)
         }
 
+        val attachmentHashes = (allContractAttachments + attachments).toSortedSet().toList()
+        val attachments = attachmentHashes.map { attachmentId -> services.attachments.openAttachment(attachmentId) ?: throw IllegalArgumentException("There must a contract attachment in order to build the transaction summary") }
+        val summary = buildTransactionSummary(attachments, inputsWithTransactionState, outputs, commands.map{ it.value})
+
         val wireTx = SerializationFactory.defaultFactory.withCurrentContext(serializationContext) {
             WireTransaction(
                     createComponentGroups(
@@ -170,11 +174,12 @@ open class TransactionBuilder(
                             resolvedOutputs,
                             commands(),
                             // Sort the attachments to ensure transaction builds are stable.
-                            ((allContractAttachments + attachments).toSortedSet() - excludedAttachments).toList(),
+                            attachmentHashes,
                             notary,
                             window,
                             referenceStates,
-                            services.networkParametersService.currentHash),
+                            services.networkParametersService.currentHash,
+                            summary),
                     privacySalt
             )
         }
@@ -840,8 +845,13 @@ open class TransactionBuilder(
                             signatureMetadata: SignatureMetadata,
                             services: ServicesForResolution): SignedTransaction {
         val wtx = toWireTransaction(services)
-        val signableData = SignableData(wtx.id, signatureMetadata)
-        val sig = keyManagementService.sign(signableData, publicKey)
+
+        val sig = if(wtx.summary.isNotEmpty()) {
+            keyManagementService.signFilteredTransaction(signatureMetadata, publicKey, wtx)
+        } else {
+            keyManagementService.sign(SignableData(wtx.id, signatureMetadata), publicKey)
+        }
+
         return SignedTransaction(wtx, listOf(sig))
     }
 }

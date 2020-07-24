@@ -2,6 +2,7 @@ package net.corda.core.crypto
 
 import net.corda.core.KeepForDJVM
 import net.corda.core.serialization.CordaSerializable
+import net.corda.core.transactions.FilteredTransaction
 
 /**
  * A [SignableData] object is the packet actually signed.
@@ -15,3 +16,6 @@ import net.corda.core.serialization.CordaSerializable
 @CordaSerializable
 @KeepForDJVM
 data class SignableData(val txId: SecureHash, val signatureMetadata: SignatureMetadata)
+
+@CordaSerializable
+data class SignableFilteredTransaction(val ftx: FilteredTransaction, val signatureMetadata: SignatureMetadata)

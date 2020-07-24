@@ -149,8 +149,9 @@ fun createWireTransaction(inputs: List<StateRef>,
                           commands: List<Command<*>>,
                           notary: Party?,
                           timeWindow: TimeWindow?,
+                          txSummary: List<String>,
                           privacySalt: PrivacySalt = PrivacySalt()): WireTransaction {
-    val componentGroups = createComponentGroups(inputs, outputs, commands, attachments, notary, timeWindow, emptyList(), null)
+    val componentGroups = createComponentGroups(inputs, outputs, commands, attachments, notary, timeWindow, emptyList(), null, txSummary)
     return WireTransaction(componentGroups, privacySalt)
 }
 

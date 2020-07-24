@@ -82,6 +82,8 @@ private constructor(
         override val networkParameters: NetworkParameters?,
         /** Referenced states, which are like inputs but won't be consumed. */
         override val references: List<StateAndRef<ContractState>>,
+
+        val summary: List<String> = emptyList(),
         //DOCEND 1
 
         private val componentGroups: List<ComponentGroup>?,
@@ -127,6 +129,7 @@ private constructor(
                 serializedInputs: List<SerializedStateAndRef>? = null,
                 serializedReferences: List<SerializedStateAndRef>? = null,
                 isAttachmentTrusted: (Attachment) -> Boolean,
+                summary: List<String>,
                 attachmentsClassLoaderCache: AttachmentsClassLoaderCache?
         ): LedgerTransaction {
             return LedgerTransaction(
@@ -144,6 +147,7 @@ private constructor(
                 serializedInputs = protect(serializedInputs),
                 serializedReferences = protect(serializedReferences),
                 isAttachmentTrusted = isAttachmentTrusted,
+                summary = summary,
                 verifierFactory = ::BasicVerifier,
                 attachmentsClassLoaderCache = attachmentsClassLoaderCache
             )
@@ -323,6 +327,7 @@ private constructor(
                     privacySalt = this.privacySalt,
                     networkParameters = this.networkParameters,
                     references = deserializedReferences,
+                    summary = this.summary,
                     componentGroups = componentGroups,
                     serializedInputs = serializedInputs,
                     serializedReferences = serializedReferences,
@@ -665,6 +670,7 @@ private constructor(
     operator fun component8(): PrivacySalt = privacySalt
     operator fun component9(): NetworkParameters? = networkParameters
     operator fun component10(): List<StateAndRef<ContractState>> = references
+    operator fun component11(): List<String> = summary
 
     override fun equals(other: Any?): Boolean = this === other || other is LedgerTransaction && this.id == other.id
 
@@ -680,6 +686,7 @@ private constructor(
             |    notary=$notary
             |    timeWindow=$timeWindow
             |    references=$references
+            |    summary=$summary
             |    networkParameters=$networkParameters
             |    privacySalt=$privacySalt
             |)""".trimMargin()
@@ -708,6 +715,7 @@ private constructor(
             privacySalt = privacySalt,
             networkParameters = null,
             references = emptyList(),
+            summary = emptyList(),
             componentGroups = null,
             serializedInputs = null,
             serializedReferences = null,
@@ -738,6 +746,7 @@ private constructor(
             privacySalt = privacySalt,
             networkParameters = networkParameters,
             references = emptyList(),
+            summary = emptyList(),
             componentGroups = null,
             serializedInputs = null,
             serializedReferences = null,
@@ -754,7 +763,8 @@ private constructor(
              id: SecureHash,
              notary: Party?,
              timeWindow: TimeWindow?,
-             privacySalt: PrivacySalt
+             privacySalt: PrivacySalt,
+             summary: List<String> = emptyList()
     ): LedgerTransaction {
         return LedgerTransaction(
                 inputs = inputs,
@@ -767,6 +777,7 @@ private constructor(
                 privacySalt = privacySalt,
                 networkParameters = networkParameters,
                 references = references,
+                summary = summary,
                 componentGroups = componentGroups,
                 serializedInputs = serializedInputs,
                 serializedReferences = serializedReferences,
@@ -785,7 +796,8 @@ private constructor(
              notary: Party? = this.notary,
              timeWindow: TimeWindow? = this.timeWindow,
              privacySalt: PrivacySalt = this.privacySalt,
-             networkParameters: NetworkParameters? = this.networkParameters
+             networkParameters: NetworkParameters? = this.networkParameters,
+             summary: List<String> = emptyList()
     ): LedgerTransaction {
         return LedgerTransaction(
                 inputs = inputs,
@@ -798,6 +810,7 @@ private constructor(
                 privacySalt = privacySalt,
                 networkParameters = networkParameters,
                 references = references,
+                summary = summary,
                 componentGroups = componentGroups,
                 serializedInputs = serializedInputs,
                 serializedReferences = serializedReferences,

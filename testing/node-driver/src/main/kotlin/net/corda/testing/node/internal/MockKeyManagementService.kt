@@ -4,6 +4,7 @@ import net.corda.core.crypto.*
 import net.corda.core.node.services.IdentityService
 import net.corda.core.node.services.KeyManagementService
 import net.corda.core.serialization.SingletonSerializeAsToken
+import net.corda.core.transactions.WireTransaction
 import net.corda.node.services.identity.InMemoryIdentityService
 import net.corda.node.services.keys.KeyManagementServiceInternal
 import org.bouncycastle.operator.ContentSigner
@@ -59,5 +60,9 @@ class MockKeyManagementService(
     override fun sign(signableData: SignableData, publicKey: PublicKey): TransactionSignature {
         val keyPair = getSigningKeyPair(publicKey)
         return keyPair.sign(signableData)
+    }
+
+    override fun signFilteredTransaction(signatureMetadata: SignatureMetadata, publicKey: PublicKey, ftx: WireTransaction): TransactionSignature {
+        TODO("Not yet implemented")
     }
 }

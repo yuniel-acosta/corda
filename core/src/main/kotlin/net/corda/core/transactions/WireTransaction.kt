@@ -63,8 +63,9 @@ class WireTransaction(componentGroups: List<ComponentGroup>, val privacySalt: Pr
             commands: List<Command<*>>,
             notary: Party?,
             timeWindow: TimeWindow?,
-            privacySalt: PrivacySalt = PrivacySalt()
-    ) : this(createComponentGroups(inputs, outputs, commands, attachments, notary, timeWindow, emptyList(), null), privacySalt)
+            privacySalt: PrivacySalt = PrivacySalt(),
+            txSummary: List<String>
+    ) : this(createComponentGroups(inputs, outputs, commands, attachments, notary, timeWindow, emptyList(), null, txSummary), privacySalt)
 
     init {
         check(componentGroups.all { it.components.isNotEmpty() }) { "Empty component groups are not allowed" }
@@ -111,6 +112,7 @@ class WireTransaction(componentGroups: List<ComponentGroup>, val privacySalt: Pr
                 },
                 // `as?` is used due to [MockServices] not implementing [ServiceHubCoreInternal]
                 isAttachmentTrusted = { (services as? ServiceHubCoreInternal)?.attachmentTrustCalculator?.calculate(it) ?: true },
+                summary = this.summary,
                 attachmentsClassLoaderCache = (services as? ServiceHubCoreInternal)?.attachmentsClassLoaderCache
             )
         )
@@ -148,6 +150,7 @@ class WireTransaction(componentGroups: List<ComponentGroup>, val privacySalt: Pr
                 { stateRef -> resolveStateRef(stateRef)?.serialize() },
                 { null },
                 { it.isUploaderTrusted() },
+                emptyList(),
                 null
         )
     }
@@ -165,6 +168,7 @@ class WireTransaction(componentGroups: List<ComponentGroup>, val privacySalt: Pr
                 { stateRef -> resolveStateRef(stateRef)?.serialize() },
                 resolveParameters,
                 { true }, // Any attachment loaded through the DJVM should be trusted
+                emptyList(),
                 null
         )
     }
@@ -176,6 +180,7 @@ class WireTransaction(componentGroups: List<ComponentGroup>, val privacySalt: Pr
             resolveStateRefAsSerialized: (StateRef) -> SerializedBytes<TransactionState<ContractState>>?,
             resolveParameters: (SecureHash?) -> NetworkParameters?,
             isAttachmentTrusted: (Attachment) -> Boolean,
+            summary: List<String>,
             attachmentsClassLoaderCache: AttachmentsClassLoaderCache?
     ): LedgerTransaction {
         // Look up public keys to authenticated identities.
@@ -213,6 +218,7 @@ class WireTransaction(componentGroups: List<ComponentGroup>, val privacySalt: Pr
                 serializedResolvedInputs,
                 serializedResolvedReferences,
                 isAttachmentTrusted,
+                summary,
                 attachmentsClassLoaderCache
         )
 
@@ -341,7 +347,7 @@ class WireTransaction(componentGroups: List<ComponentGroup>, val privacySalt: Pr
                                   attachments: List<SecureHash>,
                                   notary: Party?,
                                   timeWindow: TimeWindow?): List<ComponentGroup> {
-            return createComponentGroups(inputs, outputs, commands, attachments, notary, timeWindow, emptyList(), null)
+            return createComponentGroups(inputs, outputs, commands, attachments, notary, timeWindow, emptyList(), null, mutableListOf())
         }
 
         /**

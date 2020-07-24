@@ -33,6 +33,8 @@ abstract class TraversableTransaction(open val componentGroups: List<ComponentGr
 
     override val outputs: List<TransactionState<ContractState>> = deserialiseComponentGroup(componentGroups, TransactionState::class, OUTPUTS_GROUP)
 
+    val summary: List<String> = deserialiseComponentGroup(componentGroups, String::class, SUMMARY_GROUP)
+
     /** Ordered list of ([CommandData], [PublicKey]) pairs that instruct the contracts what to do. */
     val commands: List<Command<*>> = deserialiseCommands(componentGroups)
 
@@ -153,6 +155,7 @@ class FilteredTransaction internal constructor(
                 wtx.outputs.forEachIndexed { internalIndex, it -> filter(it, OUTPUTS_GROUP.ordinal, internalIndex) }
                 wtx.commands.forEachIndexed { internalIndex, it -> filter(it, COMMANDS_GROUP.ordinal, internalIndex) }
                 wtx.attachments.forEachIndexed { internalIndex, it -> filter(it, ATTACHMENTS_GROUP.ordinal, internalIndex) }
+                wtx.summary.forEachIndexed{ internalIndex, it -> filter(it, SUMMARY_GROUP.ordinal, internalIndex) }
                 if (wtx.notary != null) filter(wtx.notary, NOTARY_GROUP.ordinal, 0)
                 if (wtx.timeWindow != null) filter(wtx.timeWindow, TIMEWINDOW_GROUP.ordinal, 0)
                 // Note that because [inputs] and [references] share the same type [StateRef], we use a wrapper for references [ReferenceStateRef],

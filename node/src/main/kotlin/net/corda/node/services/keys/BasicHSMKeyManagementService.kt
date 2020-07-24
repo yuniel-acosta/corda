@@ -5,6 +5,7 @@ import net.corda.core.crypto.internal.AliasPrivateKey
 import net.corda.core.internal.NamedCacheFactory
 import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.serialization.serialize
+import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.MAX_HASH_HEX_SIZE
 import net.corda.node.services.identity.PersistentIdentityService
 import net.corda.node.utilities.AppendOnlyPersistentMap
@@ -17,6 +18,7 @@ import java.security.KeyPair
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.util.*
+import java.util.function.Predicate
 import javax.persistence.*
 import kotlin.collections.LinkedHashSet
 
@@ -161,6 +163,33 @@ class BasicHSMKeyManagementService(
         } else {
             val keyPair = getSigningKeyPair(signingPublicKey)
             keyPair.sign(signableData)
+        }
+    }
+
+    override fun signFilteredTransaction(signatureMetadata: SignatureMetadata, publicKey: PublicKey, wtx: WireTransaction): TransactionSignature {
+        val ftx = wtx.buildFilteredTransaction(Predicate(::filterSummary))
+        val bytesToSign = SignableFilteredTransaction(ftx, signatureMetadata).serialize().bytes
+        val signableData = SignableData(ftx.id, signatureMetadata)
+
+        val signingPublicKey = getSigningPublicKey(publicKey)
+        return if (signingPublicKey in originalKeysMap) {
+            val sigKey: SignatureScheme = Crypto.findSignatureScheme(signingPublicKey)
+            val sigMetaData: SignatureScheme = Crypto.findSignatureScheme(signableData.signatureMetadata.schemeNumberID)
+            require(sigKey == sigMetaData || sigMetaData == Crypto.COMPOSITE_KEY) {
+                "Metadata schemeCodeName: ${sigMetaData.schemeCodeName} is not aligned with the key type: ${sigKey.schemeCodeName}."
+            }
+            val signatureBytes = cryptoService.sign(originalKeysMap[signingPublicKey]!!, bytesToSign)
+            TransactionSignature(signatureBytes, signingPublicKey, signableData.signatureMetadata)
+        } else {
+            val keyPair = getSigningKeyPair(signingPublicKey)
+            keyPair.sign(signableData)
+        }
+    }
+
+    private fun filterSummary(elem: Any): Boolean {
+        return when (elem) {
+            is String -> true
+            else -> false
         }
     }
 }

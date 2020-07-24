@@ -5,8 +5,10 @@ import net.corda.core.DoNotImplement
 import net.corda.core.crypto.CompositeKey
 import net.corda.core.crypto.DigitalSignature
 import net.corda.core.crypto.SignableData
+import net.corda.core.crypto.SignatureMetadata
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.identity.PartyAndCertificate
+import net.corda.core.transactions.WireTransaction
 import java.security.KeyPair
 import java.security.PrivateKey
 import java.security.PublicKey
@@ -89,4 +91,7 @@ interface KeyManagementService {
      */
     @Suspendable
     fun sign(signableData: SignableData, publicKey: PublicKey): TransactionSignature
+
+    @Suspendable
+    fun signFilteredTransaction(signatureMetadata: SignatureMetadata, publicKey: PublicKey, wtx: WireTransaction): TransactionSignature
 }

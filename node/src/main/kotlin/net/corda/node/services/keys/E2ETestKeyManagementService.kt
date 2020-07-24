@@ -5,6 +5,7 @@ import net.corda.core.crypto.internal.AliasPrivateKey
 import net.corda.core.internal.ThreadBox
 import net.corda.core.node.services.IdentityService
 import net.corda.core.serialization.SingletonSerializeAsToken
+import net.corda.core.transactions.WireTransaction
 import net.corda.nodeapi.internal.cryptoservice.CryptoService
 import net.corda.nodeapi.internal.cryptoservice.bouncycastle.BCCryptoService
 import org.bouncycastle.operator.ContentSigner
@@ -88,4 +89,9 @@ class E2ETestKeyManagementService(override val identityService: IdentityService,
         val keyPair = getSigningKeyPair(publicKey)
         return keyPair.sign(signableData)
     }
+
+    override fun signFilteredTransaction(signatureMetadata: SignatureMetadata, publicKey: PublicKey, ftx: WireTransaction): TransactionSignature {
+        TODO("Not yet implemented")
+    }
+
 }

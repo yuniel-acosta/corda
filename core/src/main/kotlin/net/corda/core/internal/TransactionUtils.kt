@@ -144,7 +144,8 @@ fun createComponentGroups(inputs: List<StateRef>,
                           notary: Party?,
                           timeWindow: TimeWindow?,
                           references: List<StateRef>,
-                          networkParametersHash: SecureHash?): List<ComponentGroup> {
+                          networkParametersHash: SecureHash?,
+                          txSummary: List<String> = emptyList()): List<ComponentGroup> {
     val serialize = { value: Any, _: Int -> value.serialize() }
     val componentGroupMap: MutableList<ComponentGroup> = mutableListOf()
     if (inputs.isNotEmpty()) componentGroupMap.add(ComponentGroup(ComponentGroupEnum.INPUTS_GROUP.ordinal, inputs.lazyMapped(serialize)))
@@ -159,6 +160,7 @@ fun createComponentGroups(inputs: List<StateRef>,
     // a FilteredTransaction can now verify it sees all the commands it should sign.
     if (commands.isNotEmpty()) componentGroupMap.add(ComponentGroup(ComponentGroupEnum.SIGNERS_GROUP.ordinal, commands.map { it.signers }.lazyMapped(serialize)))
     if (networkParametersHash != null) componentGroupMap.add(ComponentGroup(ComponentGroupEnum.PARAMETERS_GROUP.ordinal, listOf(networkParametersHash.serialize())))
+    if (txSummary.isNotEmpty()) componentGroupMap.add(ComponentGroup(ComponentGroupEnum.SUMMARY_GROUP.ordinal, txSummary.lazyMapped(serialize)))
     return componentGroupMap
 }
 
@@ -191,3 +193,17 @@ fun FlowLogic<*>.checkParameterHash(networkParametersHash: SecureHash?) {
 val SignedTransaction.dependencies: Set<SecureHash>
     get() = (inputs.asSequence() + references.asSequence()).map { it.txhash }.toSet()
 
+fun buildTransactionSummary(attachments: List<Attachment>,
+                            inputs: List<StateAndRef<ContractState>>,
+                            outputs: List<TransactionState<ContractState>>,
+                            commands: List<CommandData>): List<String> {
+
+    val contractName = attachments.map { it as ContractAttachment }.first().contract
+    val contractClass = Class.forName(contractName)
+    return if (contractClass.newInstance() is DescribableContract) {
+        val contract = contractClass.newInstance() as DescribableContract
+        contract.describeTransaction(inputs.map { it.state }, outputs, commands, attachments.map{ it.id })
+    } else {
+        emptyList()
+    }
+}
