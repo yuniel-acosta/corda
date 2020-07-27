@@ -9,8 +9,8 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     // Corda integration dependencies
+    cordaCompile project(':business-networks:workflows')
     cordaCompile project(':core')
-    compile fileTree(dir: 'lib', include: '*.jar')
     cordaCompile project(':samples:business-networks-demo:contracts')
 }
 

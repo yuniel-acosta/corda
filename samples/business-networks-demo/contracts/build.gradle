@@ -5,8 +5,8 @@ description 'Corda Business Networks Integration Demo - contracts'
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    cordaCompile project(':business-networks:contracts')
     cordaCompile project(':core')
-    compile fileTree(dir: 'lib', include: '*.jar')
 }
 
 cordapp {
