@@ -36,8 +36,8 @@ dependencies {
         exclude group: "org.apache.logging.log4j"
     }
 
-    cordapp project(':samples:business-networks-demo:contracts')
-    cordapp project(':samples:business-networks-demo:workflows')
+    cordapp project(':samples:business-networks-demo:business-networks-demo-contracts')
+    cordapp project(':samples:business-networks-demo:business-networks-demo-workflows')
 }
 
 task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
@@ -45,8 +45,8 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
         projectCordapp {
             deploy = false
         }
-        cordapp project(':samples:business-networks-demo:contracts')
-        cordapp project(':samples:business-networks-demo:workflows')
+        cordapp project(':samples:business-networks-demo:business-networks-demo-contracts')
+        cordapp project(':samples:business-networks-demo:business-networks-demo-workflows')
     }
     node {
         name "O=Notary Service,L=Zurich,C=CH"
