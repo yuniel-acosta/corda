@@ -20,6 +20,8 @@ cordapp {
     }
 }
 
+cordapp.signing.enabled = false
+
 jar {
     baseName 'corda-business-networks-demo-contracts'
 }

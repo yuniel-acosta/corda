@@ -9,7 +9,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     // Corda integration dependencies
-    cordaCompile project(':core')
+//    cordaCompile project(':core')
     compile fileTree(dir: 'lib', include: '*.jar')
     cordaCompile project(':samples:business-networks-demo:contracts')
 }
@@ -31,6 +31,8 @@ cordapp {
         licence "Open Source (Apache 2)"
     }
 }
+
+cordapp.signing.enabled = false
 
 jar {
     baseName 'corda-business-networks-demo-workflows'

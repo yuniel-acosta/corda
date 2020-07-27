@@ -26,6 +26,15 @@ dependencies {
     // Corda integration dependencies
     cordaRuntime project(path: ":node:capsule", configuration: 'runtimeArtifacts')
     cordaRuntime project(path: ":testing:testserver:testcapsule:", configuration: 'runtimeArtifacts')
+    cordaCompile project(':core')
+    cordaCompile project(':client:jfx')
+    cordaCompile project(':client:rpc')
+    cordaCompile(project(':testing:testserver')) {
+        exclude group: "org.apache.logging.log4j"
+    }
+    cordaCompile(project(':node-driver')) {
+        exclude group: "org.apache.logging.log4j"
+    }
 
     cordapp project(':samples:business-networks-demo:contracts')
     cordapp project(':samples:business-networks-demo:workflows')
