@@ -50,12 +50,14 @@ class LoanContract : Contract {
                 "Input state has to be validated by $CONTRACT_NAME" using (state.contract == CONTRACT_NAME)
             }
             inputState?.apply {
+                "Input state should have positive amount" using (amount > 0)
                 "Input state's participants list should contain lender and borrower only" using (participants.toSet() == setOf(lender, borrower))
             }
             output?.apply {
                 "Output state has to be validated by $CONTRACT_NAME" using (contract == CONTRACT_NAME)
             }
             outputState?.apply {
+                "Output state should have positive amount" using (amount > 0)
                 "Output state's participants list should contain lender and borrower only" using (participants.toSet() == setOf(lender, borrower))
             }
             if (inputState != null && outputState != null) {
@@ -63,15 +65,16 @@ class LoanContract : Contract {
                 "Input and output state should have same borrower" using (inputState.borrower == outputState.borrower)
                 "Input and output state should have same network ID" using (inputState.networkId == outputState.networkId)
                 "Input and output state should have same linear ID" using (inputState.linearId == outputState.linearId)
-                "Input and output state should have same set of participants" using (inputState.participants.toSet() == outputState.participants.toSet())
                 "Output state should have lower amount than input state" using (outputState.amount < inputState.amount)
             }
+            val participants = (inputState?.participants?.toSet() ?: emptySet()) + (outputState?.participants?.toSet() ?: emptySet())
+            "Transaction should be signed by all loan states' participants" using (command.signers.toSet() == participants.map { it.owningKey })
         }
 
         when (command.value) {
             is Commands.Issue -> verifyIssue(tx)
-            is Commands.Settle -> verifySettle(tx, inputState!!.lender, inputState.borrower)
-            is Commands.Exit -> verifyExit(tx, inputState!!.lender, inputState.borrower)
+            is Commands.Settle -> verifySettle(tx, inputState!!.networkId, inputState.lender, inputState.borrower)
+            is Commands.Exit -> verifyExit(tx, inputState!!.networkId, inputState.lender, inputState.borrower)
             else -> throw IllegalArgumentException("Unsupported command ${command.value}")
         }
     }
@@ -90,18 +93,18 @@ class LoanContract : Contract {
      *
      * @param tx Ledger transaction over which contract performs verification.
      */
-    private fun verifySettle(tx: LedgerTransaction, lender: Party, borrower: Party) = verifyMemberships(tx, lender, borrower)
+    private fun verifySettle(tx: LedgerTransaction, networkId: String, lender: Party, borrower: Party) = verifyMemberships(tx, networkId, lender, borrower, "settlement")
 
     /**
      * Contract verification check specific to [Commands.Exit] command.
      *
      * @param tx Ledger transaction over which contract performs verification.
      */
-    private fun verifyExit(tx: LedgerTransaction, lender: Party, borrower: Party) {
+    private fun verifyExit(tx: LedgerTransaction, networkId: String, lender: Party, borrower: Party) {
         requireThat {
             "Loan exit transaction shouldn't contain any outputs" using (tx.outputs.isEmpty())
         }
-        verifyMemberships(tx, lender, borrower)
+        verifyMemberships(tx, networkId, lender, borrower, "exit")
     }
 
     /**
@@ -111,14 +114,15 @@ class LoanContract : Contract {
      * @param lender Party issuing the loan.
      * @param borrower Party paying of the loan.
      */
-    private fun verifyMemberships(tx: LedgerTransaction, lender: Party, borrower: Party) = requireThat {
-        "Loan settlement transaction should have 2 reference states" using (tx.referenceStates.size == 2)
-        "Loan settlement transaction should contain only reference MembershipStates" using (tx.referenceStates.all { it is MembershipState })
+    private fun verifyMemberships(tx: LedgerTransaction, networkId: String, lender: Party, borrower: Party, commandName: String) = requireThat {
+        "Loan $commandName transaction should have 2 reference states" using (tx.referenceStates.size == 2)
+        "Loan $commandName transaction should contain only reference MembershipStates" using (tx.referenceStates.all { it is MembershipState })
         val membershipReferenceStates = tx.referenceStates.map { it as MembershipState }
-        val lenderMembership = membershipReferenceStates.find { it.identity.cordaIdentity == lender }
-        val borrowerMembership = membershipReferenceStates.find { it.identity.cordaIdentity == borrower }
-        "Loan settlement transaction should have lender's reference membership state" using (lenderMembership != null)
-        "Loan settlement transaction should have borrowers's reference membership state" using (borrowerMembership != null)
+        "Loan $commandName transaction should contain only reference membership states from Business Network with $networkId ID" using (membershipReferenceStates.all { it.networkId == networkId })
+        val lenderMembership = membershipReferenceStates.find { it.networkId == networkId && it.identity.cordaIdentity == lender }
+        val borrowerMembership = membershipReferenceStates.find { it.networkId == networkId && it.identity.cordaIdentity == borrower }
+        "Loan $commandName transaction should have lender's reference membership state" using (lenderMembership != null)
+        "Loan $commandName transaction should have borrowers's reference membership state" using (borrowerMembership != null)
         "Lender should be active member of Business Network with ${lenderMembership!!.networkId}" using (lenderMembership.isActive())
         "Borrower should be active member of Business Network with ${borrowerMembership!!.networkId}" using (borrowerMembership.isActive())
     }
