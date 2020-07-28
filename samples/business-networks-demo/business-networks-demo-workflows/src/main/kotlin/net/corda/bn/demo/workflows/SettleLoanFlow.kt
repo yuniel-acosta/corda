@@ -13,6 +13,8 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatedBy
 import net.corda.core.flows.InitiatingFlow
+import net.corda.core.flows.ReceiveFinalityFlow
+import net.corda.core.flows.SignTransactionFlow
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.vault.QueryCriteria
@@ -21,12 +23,12 @@ import net.corda.core.transactions.TransactionBuilder
 
 @InitiatingFlow
 @StartableByRPC
-class SettleLoanFlow(private val networkId: String, private val linearId: UniqueIdentifier, private val amountToSettle: Int) : FlowLogic<SignedTransaction>() {
+class SettleLoanFlow(private val loanId: UniqueIdentifier, private val amountToSettle: Int) : BusinessNetworkIntegrationFlow<SignedTransaction>() {
 
     @Suspendable
     override fun call(): SignedTransaction {
         val criteria = QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED)
-                .and(QueryCriteria.LinearStateQueryCriteria(linearId = listOf(linearId)))
+                .and(QueryCriteria.LinearStateQueryCriteria(linearId = listOf(loanId)))
         val inputState = serviceHub.vaultService.queryBy(LoanState::class.java, criteria).states.single()
 
         if (ourIdentity != inputState.state.data.borrower) {
@@ -39,11 +41,9 @@ class SettleLoanFlow(private val networkId: String, private val linearId: Unique
             throw FlowException("Amount to settle is bigger than actual loan amount")
         }
 
-        val bnService = serviceHub.cordaService(DatabaseService::class.java)
-        val lenderMembership = bnService.getMembership(networkId, inputState.state.data.lender)
-                ?: throw FlowException("Lender is not longer part of Business Network with $networkId ID")
-        val borrowerMembership = bnService.getMembership(networkId, inputState.state.data.borrower)
-                ?: throw FlowException("Borrower is not longer part of Business Network with $networkId ID")
+        val (lenderMembership, borrowerMembership) = inputState.state.data.run {
+            businessNetworkPartialVerification(networkId, lender, borrower)
+        }
 
         val isFullySettled = inputState.state.data.amount - amountToSettle == 0
         val command = if (isFullySettled) LoanContract.Commands.Exit() else LoanContract.Commands.Settle()
@@ -65,10 +65,31 @@ class SettleLoanFlow(private val networkId: String, private val linearId: Unique
 }
 
 @InitiatedBy(SettleLoanFlow::class)
-class SettleLoanResponderFlow(private val session: FlowSession) : FlowLogic<Unit>() {
+class SettleLoanResponderFlow(private val session: FlowSession) : BusinessNetworkIntegrationFlow<Unit>() {
 
     @Suspendable
     override fun call() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val signResponder = object : SignTransactionFlow(session) {
+            override fun checkTransaction(stx: SignedTransaction) {
+                val command = stx.tx.commands.single()
+                if (command.value !is LoanContract.Commands.Settle && command.value !is LoanContract.Commands.Exit) {
+                    throw FlowException("Only LoanContract.Commands.Settle or LoanContract.Commands.Exit commands are allowed")
+                }
+
+                val loanState = stx.tx.outputStates.single() as LoanState
+                loanState.apply {
+                    if (lender != ourIdentity) {
+                        throw FlowException("Lender doesn't match receivers's identity")
+                    }
+                    if (borrower != session.counterparty) {
+                        throw FlowException("Borrower doesn't match senders's identity")
+                    }
+                    businessNetworkPartialVerification(networkId, lender, borrower)
+                }
+            }
+        }
+        val stx = subFlow(signResponder)
+
+        subFlow(ReceiveFinalityFlow(session, stx.id))
     }
 }

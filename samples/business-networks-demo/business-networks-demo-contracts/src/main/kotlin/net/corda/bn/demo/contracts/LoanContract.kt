@@ -44,6 +44,7 @@ class LoanContract : Contract {
             if (inputState != null && outputState != null) {
                 "Input and output state should have same lender" using (inputState.lender == outputState.lender)
                 "Input and output state should have same borrower" using (inputState.borrower == outputState.borrower)
+                "Input and output state should have same network ID" using (inputState.networkId == outputState.networkId)
                 "Input and output state should have same linear ID" using (inputState.linearId == outputState.linearId)
                 "Input and output state should have same set of participants" using (inputState.participants.toSet() == outputState.participants.toSet())
                 "Output state should have lower amount than input state" using (outputState.amount < inputState.amount)
