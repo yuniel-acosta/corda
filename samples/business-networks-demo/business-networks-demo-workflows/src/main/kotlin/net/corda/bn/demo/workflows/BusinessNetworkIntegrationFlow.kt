@@ -11,8 +11,18 @@ import net.corda.core.identity.Party
 
 data class LoanMemberships(val lenderMembership: StateAndRef<MembershipState>, val borrowerMembership: StateAndRef<MembershipState>)
 
+/**
+ * This abstract flow is extended by any flow which will use business network membership verification methods.
+ */
 abstract class BusinessNetworkIntegrationFlow<T> : FlowLogic<T>() {
 
+    /**
+     * Verifies that [lender] and [borrower] are members of Business Network with [networkId] ID.
+     *
+     * @param networkId ID of the Business Network in which verification is performed.
+     * @param lender Party issuing the loan.
+     * @param borrower Party paying of the loan.
+     */
     @Suspendable
     protected fun businessNetworkPartialVerification(networkId: String, lender: Party, borrower: Party): LoanMemberships {
         val bnService = serviceHub.cordaService(DatabaseService::class.java)
@@ -24,6 +34,14 @@ abstract class BusinessNetworkIntegrationFlow<T> : FlowLogic<T>() {
         return LoanMemberships(lenderMembership, borrowerMembership)
     }
 
+    /**
+     * Verifies that [lender] and [borrower] are members of Business Network with [networkId] ID, their memberships are active and
+     * that lender is authorised to issue the loan.
+     *
+     * @param networkId ID of the Business Network in which verification is performed.
+     * @param lender Party issuing the loan.
+     * @param borrower Party paying of the loan.
+     */
     @Suspendable
     protected fun businessNetworkFullVerification(networkId: String, lender: Party, borrower: Party) {
         val bnService = serviceHub.cordaService(DatabaseService::class.java)

@@ -9,15 +9,32 @@ import net.corda.core.identity.Party
 import net.corda.core.transactions.LedgerTransaction
 import java.lang.IllegalArgumentException
 
+/**
+ * Contract that verifies an evolution of [LoanState].
+ */
 class LoanContract : Contract {
 
     companion object {
         const val CONTRACT_NAME = "net.corda.bn.demo.contracts.LoanContract"
     }
 
+    /**
+     * Each new [LoanContract] command must be wrapped and extend this class.
+     */
     open class Commands : TypeOnlyCommandData() {
+        /**
+         * Command responsible for [LoanState] issuance.
+         */
         class Issue : Commands()
+
+        /**
+         * Command responsible for [LoanState] partial settlement.
+         */
         class Settle : Commands()
+
+        /**
+         * Command responsible for [LoanState] full settlement and exit.
+         */
         class Exit : Commands()
     }
 
@@ -59,12 +76,27 @@ class LoanContract : Contract {
         }
     }
 
+    /**
+     * Contract verification check specific to [Commands.Issue] command.
+     *
+     * @param tx Ledger transaction over which contract performs verification.
+     */
     private fun verifyIssue(tx: LedgerTransaction) = requireThat {
         "Loan issuance transaction shouldn't contain any inputs" using (tx.inputs.isEmpty())
     }
 
+    /**
+     * Contract verification check specific to [Commands.Settle] command.
+     *
+     * @param tx Ledger transaction over which contract performs verification.
+     */
     private fun verifySettle(tx: LedgerTransaction, lender: Party, borrower: Party) = verifyMemberships(tx, lender, borrower)
 
+    /**
+     * Contract verification check specific to [Commands.Exit] command.
+     *
+     * @param tx Ledger transaction over which contract performs verification.
+     */
     private fun verifyExit(tx: LedgerTransaction, lender: Party, borrower: Party) {
         requireThat {
             "Loan exit transaction shouldn't contain any outputs" using (tx.outputs.isEmpty())
@@ -72,6 +104,13 @@ class LoanContract : Contract {
         verifyMemberships(tx, lender, borrower)
     }
 
+    /**
+     * Contract verification check over reference [MembershipState]s.
+     *
+     * @param tx Ledger transaction over which contract performs verification.
+     * @param lender Party issuing the loan.
+     * @param borrower Party paying of the loan.
+     */
     private fun verifyMemberships(tx: LedgerTransaction, lender: Party, borrower: Party) = requireThat {
         "Loan settlement transaction should have 2 reference states" using (tx.referenceStates.size == 2)
         "Loan settlement transaction should contain only reference MembershipStates" using (tx.referenceStates.all { it is MembershipState })

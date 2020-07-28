@@ -16,6 +16,14 @@ import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
+/**
+ * This flow issues [LoanState] with initiator as lender and borrower provided as flow argument. It also performs verification on both
+ * parties to ensure they are active members of Business Network with [networkId] and that initiator has permission to issue the loan.
+ *
+ * @property networkId ID of the Business Network the issued loan will belong to.
+ * @property borrower Identity of party to take loan.
+ * @property amount Amount of the loan to be returned.
+ */
 @InitiatingFlow
 @StartableByRPC
 class IssueLoanFlow(private val networkId: String, private val borrower: Party, private val amount: Int) : BusinessNetworkIntegrationFlow<SignedTransaction>() {

@@ -21,6 +21,14 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
+/**
+ * This flow decreases loan's amount by [amountToSettle]. If it fully settles it, associated [LoanState] is exited. Flow only checks whether
+ * parties are still part of the Business Network loan refers to while contract logic verifies whether the states are still active via
+ * usage of reference states.
+ *
+ * @property loanId ID of the loan to be settled.
+ * @property amountToSettle Amount by which loan's remaining amount will be decreased.
+ */
 @InitiatingFlow
 @StartableByRPC
 class SettleLoanFlow(private val loanId: UniqueIdentifier, private val amountToSettle: Int) : BusinessNetworkIntegrationFlow<SignedTransaction>() {
