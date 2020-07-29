@@ -68,7 +68,7 @@ class LoanContract : Contract {
                 "Output state should have lower amount than input state" using (outputState.amount < inputState.amount)
             }
             val participants = (inputState?.participants?.toSet() ?: emptySet()) + (outputState?.participants?.toSet() ?: emptySet())
-            "Transaction should be signed by all loan states' participants" using (command.signers.toSet() == participants.map { it.owningKey })
+            "Transaction should be signed by all loan states' participants only" using (command.signers.toSet() == participants.map { it.owningKey }.toSet())
         }
 
         when (command.value) {

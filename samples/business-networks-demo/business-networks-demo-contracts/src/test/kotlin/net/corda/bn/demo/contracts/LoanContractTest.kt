@@ -1,6 +1,5 @@
 package net.corda.bn.demo.contracts
 
-import net.corda.bn.contracts.MembershipContract
 import net.corda.bn.states.MembershipIdentity
 import net.corda.bn.states.MembershipState
 import net.corda.bn.states.MembershipStatus
@@ -9,9 +8,11 @@ import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.transactions.LedgerTransaction
+import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
+import net.corda.testing.node.makeTestIdentityService
 import org.junit.Test
 
 class DummyContract : Contract {
@@ -27,7 +28,12 @@ class DummyCommand : TypeOnlyCommandData()
 
 class LoanContractTest {
 
-    private val ledgerServices = MockServices(listOf("net.corda.bn.demo.contracts"))
+    private val ledgerServices = MockServices(
+            cordappPackages = listOf("net.corda.bn.demo.contracts"),
+            initialIdentityName = CordaX500Name("TestIdentity", "", "GB"),
+            identityService = makeTestIdentityService(),
+            networkParameters = testNetworkParameters(minimumPlatformVersion = 4)
+    )
 
     private val lenderIdentity = TestIdentity(CordaX500Name.parse("O=Lender,L=London,C=GB")).party
     private val borrowerIdentity = TestIdentity(CordaX500Name.parse("O=Borrower,L=London,C=GB")).party
@@ -56,69 +62,69 @@ class LoanContractTest {
     private fun testMembershipVerification(isExit: Boolean) {
         ledgerServices.ledger {
             val input = loanState
-            val cmd = if (isExit) LoanContract.Commands.Exit::class else LoanContract.Commands.Settle::class
+            val cmd = if (isExit) LoanContract.Commands.Exit::class.java else LoanContract.Commands.Settle::class.java
             val commandName = if (isExit) "exit" else "settlement"
             transaction {
                 input(LoanContract.CONTRACT_NAME, input)
-                if (isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
-                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.objectInstance!!)
+                if (!isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
+                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.getConstructor().newInstance())
                 this `fails with` "Loan $commandName transaction should have 2 reference states"
             }
             transaction {
                 input(LoanContract.CONTRACT_NAME, input)
-                if (isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
-                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.objectInstance!!)
+                if (!isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
+                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.getConstructor().newInstance())
                 reference(LoanContract.CONTRACT_NAME, input)
                 reference(LoanContract.CONTRACT_NAME, input.copy(amount = 15))
                 this `fails with` "Loan $commandName transaction should contain only reference MembershipStates"
             }
             transaction {
                 input(LoanContract.CONTRACT_NAME, input)
-                if (isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
-                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.objectInstance!!)
+                if (!isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
+                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.getConstructor().newInstance())
                 reference(LoanContract.CONTRACT_NAME, lenderMembership)
                 reference(LoanContract.CONTRACT_NAME, borrowerMembership.copy(networkId = "other-network-id"))
                 this `fails with` "Loan $commandName transaction should contain only reference membership states from Business Network with ${input.networkId} ID"
             }
             transaction {
                 input(LoanContract.CONTRACT_NAME, input)
-                if (isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
-                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.objectInstance!!)
+                if (!isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
+                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.getConstructor().newInstance())
                 reference(LoanContract.CONTRACT_NAME, borrowerMembership)
                 reference(LoanContract.CONTRACT_NAME, borrowerMembership)
                 this `fails with` "Loan $commandName transaction should have lender's reference membership state"
             }
             transaction {
                 input(LoanContract.CONTRACT_NAME, input)
-                if (isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
-                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.objectInstance!!)
+                if (!isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
+                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.getConstructor().newInstance())
                 reference(LoanContract.CONTRACT_NAME, lenderMembership)
                 reference(LoanContract.CONTRACT_NAME, lenderMembership)
                 this `fails with` "Loan $commandName transaction should have borrowers's reference membership state"
             }
             transaction {
                 input(LoanContract.CONTRACT_NAME, input)
-                if (isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
-                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.objectInstance!!)
+                if (!isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
+                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.getConstructor().newInstance())
                 reference(LoanContract.CONTRACT_NAME, borrowerMembership)
                 reference(LoanContract.CONTRACT_NAME, lenderMembership.copy(status = MembershipStatus.SUSPENDED))
                 this `fails with` "Lender should be active member of Business Network with ${input.networkId}"
             }
             transaction {
                 input(LoanContract.CONTRACT_NAME, input)
-                if (isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
-                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.objectInstance!!)
+                if (!isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
+                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.getConstructor().newInstance())
                 reference(LoanContract.CONTRACT_NAME, borrowerMembership.copy(status = MembershipStatus.SUSPENDED))
                 reference(LoanContract.CONTRACT_NAME, lenderMembership)
                 this `fails with` "Borrower should be active member of Business Network with ${input.networkId}"
             }
             transaction {
                 input(LoanContract.CONTRACT_NAME, input)
-                if (isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
-                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.objectInstance!!)
+                if (!isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
+                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.getConstructor().newInstance())
                 reference(LoanContract.CONTRACT_NAME, borrowerMembership)
                 reference(LoanContract.CONTRACT_NAME, lenderMembership)
-                this `fails with` "Borrower should be active member of Business Network with ${input.networkId}"
+                verifies()
             }
         }
     }
@@ -137,14 +143,14 @@ class LoanContractTest {
                 input(DummyContract.CONTRACT_NAME, input)
                 output(LoanContract.CONTRACT_NAME, input)
                 command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), LoanContract.Commands.Settle())
-                this `fails with` "Input state has to be validated by ${MembershipContract.CONTRACT_NAME}"
+                this `fails with` "Input state has to be validated by ${LoanContract.CONTRACT_NAME}"
             }
             transaction {
                 val input = loanState
                 input(LoanContract.CONTRACT_NAME, input)
                 output(DummyContract.CONTRACT_NAME, input)
                 command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), LoanContract.Commands.Settle())
-                this `fails with` "Output state has to be validated by ${MembershipContract.CONTRACT_NAME}"
+                this `fails with` "Output state has to be validated by ${LoanContract.CONTRACT_NAME}"
             }
             transaction {
                 val input = loanState.copy(amount = 0)
@@ -173,14 +179,14 @@ class LoanContractTest {
 
             val input = loanState
             transaction {
-                val output = loanState.copy(lender = borrowerIdentity)
+                val output = loanState.copy(lender = borrowerIdentity, participants = listOf(borrowerIdentity))
                 input(LoanContract.CONTRACT_NAME, input)
                 output(LoanContract.CONTRACT_NAME, output)
                 command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), LoanContract.Commands.Settle())
                 this `fails with` "Input and output state should have same lender"
             }
             transaction {
-                val output = loanState.copy(borrower = lenderIdentity)
+                val output = loanState.copy(borrower = lenderIdentity, participants = listOf(lenderIdentity))
                 input(LoanContract.CONTRACT_NAME, input)
                 output(LoanContract.CONTRACT_NAME, output)
                 command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), LoanContract.Commands.Settle())
@@ -212,7 +218,7 @@ class LoanContractTest {
                 input(LoanContract.CONTRACT_NAME, input)
                 output(LoanContract.CONTRACT_NAME, output)
                 command(listOf(lenderIdentity.owningKey), LoanContract.Commands.Settle())
-                this `fails with` "Transaction should be signed by all loan states' participants"
+                this `fails with` "Transaction should be signed by all loan states' participants only"
             }
         }
     }
@@ -222,7 +228,7 @@ class LoanContractTest {
         ledgerServices.ledger {
             val output = loanState
             transaction {
-                input(LoanContract.CONTRACT_NAME, output)
+                input(LoanContract.CONTRACT_NAME, output.run { copy(amount = amount + 1) })
                 output(LoanContract.CONTRACT_NAME, output)
                 command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), LoanContract.Commands.Issue())
                 this `fails with` "Loan issuance transaction shouldn't contain any inputs"
@@ -246,8 +252,8 @@ class LoanContractTest {
             val input = loanState
             transaction {
                 input(LoanContract.CONTRACT_NAME, input)
-                output(LoanContract.CONTRACT_NAME, input)
-                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), LoanContract.Commands.Issue())
+                output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
+                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), LoanContract.Commands.Exit())
                 this `fails with` "Loan exit transaction shouldn't contain any outputs"
             }
         }
