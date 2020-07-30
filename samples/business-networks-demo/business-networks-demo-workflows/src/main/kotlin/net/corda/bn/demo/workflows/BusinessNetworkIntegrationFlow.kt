@@ -1,6 +1,7 @@
 package net.corda.bn.demo.workflows
 
 import co.paralleluniverse.fibers.Suspendable
+import net.corda.bn.demo.contracts.BankIdentity
 import net.corda.bn.demo.contracts.LoanPermissions
 import net.corda.bn.flows.DatabaseService
 import net.corda.bn.states.MembershipState
@@ -35,8 +36,8 @@ abstract class BusinessNetworkIntegrationFlow<T> : FlowLogic<T>() {
     }
 
     /**
-     * Verifies that [lender] and [borrower] are members of Business Network with [networkId] ID, their memberships are active and
-     * that lender is authorised to issue the loan.
+     * Verifies that [lender] and [borrower] are members of Business Network with [networkId] ID, their memberships are active, contain
+     * business identity of [BankIdentity] type and that lender is authorised to issue the loan.
      *
      * @param networkId ID of the Business Network in which verification is performed.
      * @param lender Party issuing the loan.
@@ -53,11 +54,17 @@ abstract class BusinessNetworkIntegrationFlow<T> : FlowLogic<T>() {
             if (roles.find { LoanPermissions.CAN_ISSUE_LOAN in it.permissions } == null) {
                 throw FlowException("$lender is not authorised to issue loan in Business Network with $networkId ID")
             }
+            if (identity.businessIdentity !is BankIdentity) {
+                throw FlowException("$lender business identity should be BankIdentity")
+            }
         } ?: throw FlowException("$lender is not member of Business Network with $networkId ID")
 
         bnService.getMembership(networkId, borrower)?.state?.data?.apply {
             if (!isActive()) {
                 throw FlowException("$borrower is not active member of Business Network with $networkId ID")
+            }
+            if (identity.businessIdentity !is BankIdentity) {
+                throw FlowException("$borrower business identity should be BankIdentity")
             }
         } ?: throw FlowException("$borrower is not member of Business Network with $networkId ID")
     }

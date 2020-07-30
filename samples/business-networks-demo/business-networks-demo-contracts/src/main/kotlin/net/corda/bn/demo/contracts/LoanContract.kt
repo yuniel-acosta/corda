@@ -123,7 +123,13 @@ class LoanContract : Contract {
         val borrowerMembership = membershipReferenceStates.find { it.networkId == networkId && it.identity.cordaIdentity == borrower }
         "Loan $commandName transaction should have lender's reference membership state" using (lenderMembership != null)
         "Loan $commandName transaction should have borrowers's reference membership state" using (borrowerMembership != null)
-        "Lender should be active member of Business Network with ${lenderMembership!!.networkId}" using (lenderMembership.isActive())
-        "Borrower should be active member of Business Network with ${borrowerMembership!!.networkId}" using (borrowerMembership.isActive())
+        lenderMembership?.apply {
+            "Lender should be active member of Business Network with $networkId" using (isActive())
+            "Lender should have business identity of BankIdentity type" using (identity.businessIdentity is BankIdentity)
+        }
+        borrowerMembership?.apply {
+            "Borrower should be active member of Business Network with $networkId" using (isActive())
+            "Borrower should have business identity of BankIdentity type" using (identity.businessIdentity is BankIdentity)
+        }
     }
 }

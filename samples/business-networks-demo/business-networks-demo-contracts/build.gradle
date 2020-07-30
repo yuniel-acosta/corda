@@ -8,6 +8,9 @@ dependencies {
     cordaCompile project(':business-networks:business-networks-contracts')
     cordaCompile project(':core')
 
+    // https://mvnrepository.com/artifact/com.prowidesoftware/pw-swift-core
+    compile group: 'com.prowidesoftware', name: 'pw-swift-core', version: 'SRU2013-7.4'
+
     testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
 
     // Bring in the MockNode infrastructure for writing protocol unit tests.

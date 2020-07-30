@@ -1,5 +1,7 @@
 package net.corda.bn.demo.contracts
 
+import com.prowidesoftware.swift.model.BIC
+import net.corda.bn.states.BNIdentity
 import net.corda.bn.states.MembershipIdentity
 import net.corda.bn.states.MembershipState
 import net.corda.bn.states.MembershipStatus
@@ -7,12 +9,19 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.CordaX500Name
+import net.corda.core.serialization.internal._allEnabledSerializationEnvs
+import net.corda.core.serialization.internal._contextSerializationEnv
+import net.corda.core.serialization.internal._driverSerializationEnv
 import net.corda.core.transactions.LedgerTransaction
+import net.corda.coretesting.internal.createTestSerializationEnv
+import net.corda.serialization.djvm.createSandboxSerializationEnv
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
 import net.corda.testing.node.makeTestIdentityService
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 class DummyContract : Contract {
@@ -39,13 +48,13 @@ class LoanContractTest {
     private val borrowerIdentity = TestIdentity(CordaX500Name.parse("O=Borrower,L=London,C=GB")).party
 
     private val lenderMembership = MembershipState(
-            identity = MembershipIdentity(lenderIdentity),
+            identity = MembershipIdentity(lenderIdentity, BankIdentity(BIC("BANKGB00"))),
             networkId = "network-id",
             status = MembershipStatus.ACTIVE,
             participants = listOf(lenderIdentity, borrowerIdentity)
     )
     private val borrowerMembership = MembershipState(
-            identity = MembershipIdentity(borrowerIdentity),
+            identity = MembershipIdentity(borrowerIdentity, BankIdentity(BIC("BANKGB01"))),
             networkId = "network-id",
             status = MembershipStatus.ACTIVE,
             participants = listOf(lenderIdentity, borrowerIdentity)
@@ -114,9 +123,25 @@ class LoanContractTest {
                 input(LoanContract.CONTRACT_NAME, input)
                 if (!isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
                 command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.getConstructor().newInstance())
+                reference(LoanContract.CONTRACT_NAME, borrowerMembership)
+                reference(LoanContract.CONTRACT_NAME, lenderMembership.run { copy(identity = MembershipIdentity(identity.cordaIdentity)) })
+                this `fails with` "Lender should have business identity of BankIdentity type"
+            }
+            transaction {
+                input(LoanContract.CONTRACT_NAME, input)
+                if (!isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
+                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.getConstructor().newInstance())
                 reference(LoanContract.CONTRACT_NAME, borrowerMembership.copy(status = MembershipStatus.SUSPENDED))
                 reference(LoanContract.CONTRACT_NAME, lenderMembership)
                 this `fails with` "Borrower should be active member of Business Network with ${input.networkId}"
+            }
+            transaction {
+                input(LoanContract.CONTRACT_NAME, input)
+                if (!isExit) output(LoanContract.CONTRACT_NAME, input.run { copy(amount = amount - 1) })
+                command(listOf(lenderIdentity.owningKey, borrowerIdentity.owningKey), cmd.getConstructor().newInstance())
+                reference(LoanContract.CONTRACT_NAME, borrowerMembership)
+                reference(LoanContract.CONTRACT_NAME, lenderMembership.run { copy(identity = MembershipIdentity(identity.cordaIdentity, object : BNIdentity {})) })
+                this `fails with` "Borrower should have business identity of BankIdentity type"
             }
             transaction {
                 input(LoanContract.CONTRACT_NAME, input)
