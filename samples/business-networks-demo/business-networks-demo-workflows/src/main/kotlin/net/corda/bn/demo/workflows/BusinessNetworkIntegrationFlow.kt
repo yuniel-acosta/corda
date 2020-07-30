@@ -4,6 +4,9 @@ import co.paralleluniverse.fibers.Suspendable
 import net.corda.bn.demo.contracts.BankIdentity
 import net.corda.bn.demo.contracts.LoanPermissions
 import net.corda.bn.flows.DatabaseService
+import net.corda.bn.flows.IllegalMembershipStatusException
+import net.corda.bn.flows.MembershipAuthorisationException
+import net.corda.bn.flows.MembershipNotFoundException
 import net.corda.bn.states.MembershipState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowException
@@ -28,9 +31,9 @@ abstract class BusinessNetworkIntegrationFlow<T> : FlowLogic<T>() {
     protected fun businessNetworkPartialVerification(networkId: String, lender: Party, borrower: Party): LoanMemberships {
         val bnService = serviceHub.cordaService(DatabaseService::class.java)
         val lenderMembership = bnService.getMembership(networkId, lender)
-                ?: throw FlowException("Lender is not longer part of Business Network with $networkId ID")
+                ?: throw MembershipNotFoundException("Lender is not part of Business Network with $networkId ID")
         val borrowerMembership = bnService.getMembership(networkId, borrower)
-                ?: throw FlowException("Borrower is not longer part of Business Network with $networkId ID")
+                ?: throw MembershipNotFoundException("Borrower is not part of Business Network with $networkId ID")
 
         return LoanMemberships(lenderMembership, borrowerMembership)
     }
@@ -49,23 +52,23 @@ abstract class BusinessNetworkIntegrationFlow<T> : FlowLogic<T>() {
 
         bnService.getMembership(networkId, lender)?.state?.data?.apply {
             if (!isActive()) {
-                throw FlowException("$lender is not active member of Business Network with $networkId ID")
-            }
-            if (roles.find { LoanPermissions.CAN_ISSUE_LOAN in it.permissions } == null) {
-                throw FlowException("$lender is not authorised to issue loan in Business Network with $networkId ID")
+                throw IllegalMembershipStatusException("$lender is not active member of Business Network with $networkId ID")
             }
             if (identity.businessIdentity !is BankIdentity) {
-                throw FlowException("$lender business identity should be BankIdentity")
+                throw IllegalMembershipBusinessIdentityException("$lender business identity should be BankIdentity")
             }
-        } ?: throw FlowException("$lender is not member of Business Network with $networkId ID")
+            if (roles.find { LoanPermissions.CAN_ISSUE_LOAN in it.permissions } == null) {
+                throw MembershipAuthorisationException("$lender is not authorised to issue loan in Business Network with $networkId ID")
+            }
+        } ?: throw MembershipNotFoundException("$lender is not member of Business Network with $networkId ID")
 
         bnService.getMembership(networkId, borrower)?.state?.data?.apply {
             if (!isActive()) {
-                throw FlowException("$borrower is not active member of Business Network with $networkId ID")
+                throw IllegalMembershipStatusException("$borrower is not active member of Business Network with $networkId ID")
             }
             if (identity.businessIdentity !is BankIdentity) {
-                throw FlowException("$borrower business identity should be BankIdentity")
+                throw MembershipAuthorisationException("$borrower business identity should be BankIdentity")
             }
-        } ?: throw FlowException("$borrower is not member of Business Network with $networkId ID")
+        } ?: throw MembershipNotFoundException("$borrower is not member of Business Network with $networkId ID")
     }
 }

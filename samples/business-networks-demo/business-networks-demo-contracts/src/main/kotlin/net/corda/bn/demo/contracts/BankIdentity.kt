@@ -4,7 +4,6 @@ import com.prowidesoftware.swift.model.BIC
 import net.corda.bn.states.BNIdentity
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.serialization.SerializationCustomSerializer
-import net.corda.core.serialization.SerializationWhitelist
 
 /**
  * Business identity specific for banks. Uses Swift Business Identifier Code (BIC).
@@ -13,14 +12,6 @@ import net.corda.core.serialization.SerializationWhitelist
  */
 @CordaSerializable
 data class BankIdentity(val bic: BIC) : BNIdentity
-
-/**
- * [BIC] cannot be whitelisted with [CordaSerializable] annotation since it is external dependency so we need to create custom class
- * implementing [SerializationWhitelist].
- */
-class WhitelistBIC : SerializationWhitelist {
-    override val whitelist = listOf(BIC::class.java)
-}
 
 /**
  * Custom serializer used for serialization/deserialization of [BIC].

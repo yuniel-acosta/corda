@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import net.corda.bn.demo.contracts.LoanContract
 import net.corda.bn.demo.contracts.LoanState
 import net.corda.bn.flows.DatabaseService
+import net.corda.bn.flows.IllegalFlowArgumentException
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.CollectSignaturesFlow
@@ -40,13 +41,13 @@ class SettleLoanFlow(private val loanId: UniqueIdentifier, private val amountToS
         val inputState = serviceHub.vaultService.queryBy(LoanState::class.java, criteria).states.single()
 
         if (ourIdentity != inputState.state.data.borrower) {
-            throw FlowException("Only borrower can settle loan")
+            throw IllegalFlowInitiatorException("Only borrower can settle loan")
         }
         if (amountToSettle <= 0) {
-            throw FlowException("Settlement can only be done with positive amount")
+            throw IllegalFlowArgumentException("Settlement can only be done with positive amount")
         }
         if (inputState.state.data.amount - amountToSettle < 0) {
-            throw FlowException("Amount to settle is bigger than actual loan amount")
+            throw IllegalFlowArgumentException("Amount to settle is bigger than actual loan amount")
         }
 
         val (lenderMembership, borrowerMembership) = inputState.state.data.run {
