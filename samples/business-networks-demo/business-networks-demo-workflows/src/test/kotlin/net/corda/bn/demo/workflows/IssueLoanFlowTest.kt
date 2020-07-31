@@ -2,6 +2,7 @@ package net.corda.bn.demo.workflows
 
 import net.corda.bn.demo.contracts.LoanContract
 import net.corda.bn.demo.contracts.LoanState
+import net.corda.bn.flows.DatabaseService
 import net.corda.bn.flows.IllegalMembershipStatusException
 import net.corda.bn.flows.MembershipAuthorisationException
 import net.corda.bn.flows.MembershipNotFoundException
@@ -23,7 +24,9 @@ class IssueLoanFlowTest : LoanFlowTest(numberOfLenders = 1, numberOfBorrowers = 
         assertFailsWith<MembershipNotFoundException> { runIssueLoanFlow(lender, illegalNetworkId, borrower.identity(), 10) }
 
         // now only borrower is not member of a business network
-        val networkId = (runCreateBusinessNetworkFlow(lender).tx.outputStates.single() as MembershipState).networkId
+        val (networkId, membershipId) = (runCreateBusinessNetworkFlow(lender).tx.outputStates.single() as MembershipState).run { networkId to linearId }
+        runAssignBICFlow(lender, membershipId, "BANKGB00")
+        runAssignLoanIssuerRole(lender, networkId)
         assertFailsWith<MembershipNotFoundException> { runIssueLoanFlow(lender, networkId, borrower.identity(), 10) }
     }
 
@@ -33,7 +36,9 @@ class IssueLoanFlowTest : LoanFlowTest(numberOfLenders = 1, numberOfBorrowers = 
         val borrower = borrowers.first()
 
         // borrower's membership is in pending status
-        val networkId = (runCreateBusinessNetworkFlow(lender).tx.outputStates.single() as MembershipState).networkId
+        val (networkId, membershipId) = (runCreateBusinessNetworkFlow(lender).tx.outputStates.single() as MembershipState).run { networkId to linearId }
+        runAssignBICFlow(lender, membershipId, "BANKGB00")
+        runAssignLoanIssuerRole(lender, networkId)
         runRequestMembershipFlow(borrower, lender.identity(), networkId)
         assertFailsWith<IllegalMembershipStatusException> { runIssueLoanFlow(lender, networkId, borrower.identity(), 10) }
     }
@@ -54,6 +59,7 @@ class IssueLoanFlowTest : LoanFlowTest(numberOfLenders = 1, numberOfBorrowers = 
         // now only borrower doesn't have bank identity
         val bic = "BANKGB00"
         runAssignBICFlow(lender, membershipId, bic)
+        runAssignLoanIssuerRole(lender, networkId)
         assertFailsWith<IllegalMembershipBusinessIdentityException> { runIssueLoanFlow(lender, networkId, borrower.identity(), 10) }
     }
 
@@ -62,13 +68,14 @@ class IssueLoanFlowTest : LoanFlowTest(numberOfLenders = 1, numberOfBorrowers = 
         val lender = lenders.first()
         val borrower = borrowers.first()
 
-        val (networkId, membershipId) = (runCreateBusinessNetworkFlow(lender).tx.outputStates.single() as MembershipState).run { networkId to linearId }
-        runRequestMembershipFlow(borrower, lender.identity(), networkId).apply {
+        val (networkId, lenderMembershipId) = (runCreateBusinessNetworkFlow(lender).tx.outputStates.single() as MembershipState).run { networkId to linearId }
+        val borrowerMembershipId = runRequestMembershipFlow(borrower, lender.identity(), networkId).run {
             val membership = tx.outputStates.single() as MembershipState
             runActivateMembershipFlow(lender, membership.linearId)
+            membership.linearId
         }
         val bic = "BANKGB00"
-        listOf(lender, borrower).forEach { runAssignBICFlow(it, membershipId, bic) }
+        listOf(lenderMembershipId, borrowerMembershipId).forEach { runAssignBICFlow(lender, it, bic) }
 
         assertFailsWith<MembershipAuthorisationException> { runIssueLoanFlow(lender, networkId, borrower.identity(), 10) }
     }
@@ -78,14 +85,20 @@ class IssueLoanFlowTest : LoanFlowTest(numberOfLenders = 1, numberOfBorrowers = 
         val lender = lenders.first()
         val borrower = borrowers.first()
 
-        val (networkId, membershipId) = (runCreateBusinessNetworkFlow(lender).tx.outputStates.single() as MembershipState).run { networkId to linearId }
-        runRequestMembershipFlow(borrower, lender.identity(), networkId).apply {
+        val (networkId, lenderMembershipId) = (runCreateBusinessNetworkFlow(lender).tx.outputStates.single() as MembershipState).run { networkId to linearId }
+        val borrowerMembershipId = runRequestMembershipFlow(borrower, lender.identity(), networkId).run {
             val membership = tx.outputStates.single() as MembershipState
             runActivateMembershipFlow(lender, membership.linearId)
+            membership.linearId
         }
         val bic = "BANKGB00"
-        listOf(lender, borrower).forEach { runAssignBICFlow(it, membershipId, bic) }
+        listOf(lenderMembershipId, borrowerMembershipId).forEach { runAssignBICFlow(lender, it, bic) }
         runAssignLoanIssuerRole(lender, networkId)
+
+        val groupId = lender.services.cordaService(DatabaseService::class.java).run {
+            getAllBusinessNetworkGroups(networkId).single().state.data.linearId
+        }
+        runModifyGroupFlow(lender, groupId, setOf(lenderMembershipId, borrowerMembershipId))
 
         val (loan, command) = runIssueLoanFlow(lender, networkId, borrower.identity(), 10).run {
             assertTrue(tx.inputs.isEmpty())
@@ -93,14 +106,24 @@ class IssueLoanFlowTest : LoanFlowTest(numberOfLenders = 1, numberOfBorrowers = 
             tx.outputs.single() to tx.commands.single()
         }
 
-        loan.apply {
-            assertEquals(LoanContract.CONTRACT_NAME, loan.contract)
+        val loanState = loan.run {
+            assertEquals(LoanContract.CONTRACT_NAME, contract)
             assertTrue(data is LoanState)
             val data = data as LoanState
             assertEquals(lender.identity(), data.lender)
             assertEquals(borrower.identity(), data.borrower)
             assertEquals(10, data.amount)
             assertEquals(networkId, data.networkId)
+
+            data
+        }
+
+        // also check ledgers
+        listOf(lender, borrower).forEach { node ->
+            getAllLoansFromVault(node).apply {
+                assertEquals(1, size, "Vault size assertion failed for ${node.identity()}")
+                assertEquals(loanState, single(), "Expected persisted LoanState mismatch for ${node.identity()}")
+            }
         }
     }
 }

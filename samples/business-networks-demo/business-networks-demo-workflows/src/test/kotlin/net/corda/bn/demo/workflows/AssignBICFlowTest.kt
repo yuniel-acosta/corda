@@ -1,6 +1,5 @@
 package net.corda.bn.demo.workflows
 
-import com.prowidesoftware.swift.model.BIC
 import net.corda.bn.contracts.MembershipContract
 import net.corda.bn.demo.contracts.BankIdentity
 import net.corda.bn.flows.IllegalFlowArgumentException
@@ -38,7 +37,7 @@ class AssignBICFlowTest : LoanFlowTest(numberOfLenders = 1, numberOfBorrowers = 
             assertTrue(data is MembershipState)
             val data = data as MembershipState
             assertEquals(lender.identity(), data.identity.cordaIdentity)
-            assertEquals(BankIdentity(BIC(bic)), data.identity.businessIdentity)
+            assertEquals(BankIdentity(bic), data.identity.businessIdentity)
         }
         assertTrue(command.value is MembershipContract.Commands.ModifyBusinessIdentity)
     }

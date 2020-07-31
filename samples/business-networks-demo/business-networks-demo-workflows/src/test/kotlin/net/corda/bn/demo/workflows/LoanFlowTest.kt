@@ -1,11 +1,15 @@
 package net.corda.bn.demo.workflows
 
+import net.corda.bn.demo.contracts.LoanState
 import net.corda.bn.flows.ActivateMembershipFlow
 import net.corda.bn.flows.CreateBusinessNetworkFlow
+import net.corda.bn.flows.ModifyGroupFlow
 import net.corda.bn.flows.RequestMembershipFlow
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
+import net.corda.core.node.services.Vault
+import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.common.internal.testNetworkParameters
@@ -14,7 +18,6 @@ import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.MockNodeParameters
 import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.TestCordapp
-import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.After
 import org.junit.Before
 
@@ -71,6 +74,12 @@ abstract class LoanFlowTest(private val numberOfLenders: Int, private val number
         return future.getOrThrow()
     }
 
+    protected fun runModifyGroupFlow(initiator: StartedMockNode, groupId: UniqueIdentifier, participants: Set<UniqueIdentifier>): SignedTransaction {
+        val future = initiator.startFlow(ModifyGroupFlow(groupId, null, participants))
+        mockNetwork.runNetwork()
+        return future.getOrThrow()
+    }
+
     protected fun runAssignBICFlow(initiator: StartedMockNode, membershipId: UniqueIdentifier, bic: String, notary: Party? = null): SignedTransaction {
         val future = initiator.startFlow(AssignBICFlow(membershipId, bic, notary))
         mockNetwork.runNetwork()
@@ -93,6 +102,11 @@ abstract class LoanFlowTest(private val numberOfLenders: Int, private val number
         val future = initiator.startFlow(SettleLoanFlow(loanId, amountToSettle))
         mockNetwork.runNetwork()
         return future.getOrThrow()
+    }
+
+    protected fun getAllLoansFromVault(node: StartedMockNode): List<LoanState> {
+        val criteria = QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED)
+        return node.services.vaultService.queryBy(LoanState::class.java, criteria).states.map { it.state.data }
     }
 }
 

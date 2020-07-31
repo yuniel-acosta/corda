@@ -1,14 +1,10 @@
 package net.corda.bn.demo.workflows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.prowidesoftware.swift.model.BIC
 import net.corda.bn.demo.contracts.BankIdentity
-import net.corda.bn.flows.DatabaseService
 import net.corda.bn.flows.IllegalFlowArgumentException
-import net.corda.bn.flows.MembershipNotFoundException
 import net.corda.bn.flows.ModifyBusinessIdentityFlow
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party
@@ -27,11 +23,11 @@ class AssignBICFlow(private val membershipId: UniqueIdentifier, private val bic:
 
     @Suspendable
     override fun call(): SignedTransaction {
-        val bicObj = BIC(bic).apply {
-            if (!isValid) {
+        val bankIdentity = BankIdentity(bic).apply {
+            if (!isValid()) {
                 throw IllegalFlowArgumentException("$bic in not a valid BIC")
             }
         }
-        return subFlow(ModifyBusinessIdentityFlow(membershipId, BankIdentity(bicObj), notary))
+        return subFlow(ModifyBusinessIdentityFlow(membershipId, bankIdentity, notary))
     }
 }

@@ -5,7 +5,6 @@ import net.corda.bn.demo.contracts.LoanIssuerRole
 import net.corda.bn.flows.DatabaseService
 import net.corda.bn.flows.MembershipNotFoundException
 import net.corda.bn.flows.ModifyRolesFlow
-import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party

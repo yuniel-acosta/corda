@@ -1,6 +1,5 @@
 package net.corda.bn.demo.contracts
 
-import com.prowidesoftware.swift.model.BIC
 import net.corda.bn.states.BNIdentity
 import net.corda.bn.states.MembershipIdentity
 import net.corda.bn.states.MembershipState
@@ -13,13 +12,9 @@ import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
-import net.corda.testing.node.MockNetwork
-import net.corda.testing.node.MockNetworkParameters
-import net.corda.testing.node.StartedMockNode
-import net.corda.testing.node.internal.cordappWithPackages
+import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
-import org.junit.After
-import org.junit.Before
+import net.corda.testing.node.makeTestIdentityService
 import org.junit.Test
 
 class DummyContract : Contract {
@@ -38,20 +33,24 @@ class DummyIdentity : BNIdentity
 
 class LoanContractTest {
 
-    private lateinit var mockNetwork: MockNetwork
-    private lateinit var mockNode: StartedMockNode
+    private val ledgerServices = MockServices(
+            cordappPackages = listOf("net.corda.bn.demo.contracts"),
+            initialIdentityName = CordaX500Name.parse("O=Lender,L=London,C=GB"),
+            identityService = makeTestIdentityService(),
+            networkParameters = testNetworkParameters(minimumPlatformVersion = 4)
+    )
 
     private val lenderIdentity = TestIdentity(CordaX500Name.parse("O=Lender,L=London,C=GB")).party
     private val borrowerIdentity = TestIdentity(CordaX500Name.parse("O=Borrower,L=London,C=GB")).party
 
     private val lenderMembership = MembershipState(
-            identity = MembershipIdentity(lenderIdentity, BankIdentity(BIC("BANKGB00"))),
+            identity = MembershipIdentity(lenderIdentity, BankIdentity("BANKGB00")),
             networkId = "network-id",
             status = MembershipStatus.ACTIVE,
             participants = listOf(lenderIdentity, borrowerIdentity)
     )
     private val borrowerMembership = MembershipState(
-            identity = MembershipIdentity(borrowerIdentity, BankIdentity(BIC("BANKGB01"))),
+            identity = MembershipIdentity(borrowerIdentity, BankIdentity("BANKGB01")),
             networkId = "network-id",
             status = MembershipStatus.ACTIVE,
             participants = listOf(lenderIdentity, borrowerIdentity)
@@ -65,23 +64,9 @@ class LoanContractTest {
             participants = listOf(lenderIdentity, borrowerIdentity)
     )
 
-    @Before
-    fun setUp() {
-        mockNetwork = MockNetwork(MockNetworkParameters(
-                networkParameters = testNetworkParameters(minimumPlatformVersion = 4),
-                cordappsForAllNodes = listOf(cordappWithPackages("net.corda.bn.demo.contracts").signed())
-        ))
-        mockNode = mockNetwork.createPartyNode()
-        mockNetwork.runNetwork()
-    }
-
-    @After
-    fun tearDown() {
-        mockNetwork.stopNodes()
-    }
-
+    @Suppress("ComplexMethod")
     private fun testMembershipVerification(isExit: Boolean) {
-        mockNode.services.ledger {
+        ledgerServices.ledger {
             val input = loanState
             val cmd = if (isExit) LoanContract.Commands.Exit::class.java else LoanContract.Commands.Settle::class.java
             val commandName = if (isExit) "exit" else "settlement"
@@ -168,7 +153,7 @@ class LoanContractTest {
 
     @Test(timeout = 300_000)
     fun `test common contract verification`() {
-        mockNode.services.ledger {
+        ledgerServices.ledger {
             transaction {
                 val input = loanState
                 output(LoanContract.CONTRACT_NAME, input)
@@ -262,7 +247,7 @@ class LoanContractTest {
 
     @Test(timeout = 300_000)
     fun `test issue loan command contract verification`() {
-        mockNode.services.ledger {
+        ledgerServices.ledger {
             val output = loanState
             transaction {
                 input(LoanContract.CONTRACT_NAME, output.run { copy(amount = amount + 1) })
@@ -285,7 +270,7 @@ class LoanContractTest {
 
     @Test(timeout = 300_000)
     fun `test exit load command contract verification`() {
-        mockNode.services.ledger {
+        ledgerServices.ledger {
             val input = loanState
             transaction {
                 input(LoanContract.CONTRACT_NAME, input)

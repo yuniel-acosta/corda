@@ -9,7 +9,6 @@ import net.corda.bn.flows.MembershipAuthorisationException
 import net.corda.bn.flows.MembershipNotFoundException
 import net.corda.bn.states.MembershipState
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.Party
 
@@ -46,6 +45,7 @@ abstract class BusinessNetworkIntegrationFlow<T> : FlowLogic<T>() {
      * @param lender Party issuing the loan.
      * @param borrower Party paying of the loan.
      */
+    @Suppress("ThrowsCount")
     @Suspendable
     protected fun businessNetworkFullVerification(networkId: String, lender: Party, borrower: Party) {
         val bnService = serviceHub.cordaService(DatabaseService::class.java)
@@ -67,7 +67,7 @@ abstract class BusinessNetworkIntegrationFlow<T> : FlowLogic<T>() {
                 throw IllegalMembershipStatusException("$borrower is not active member of Business Network with $networkId ID")
             }
             if (identity.businessIdentity !is BankIdentity) {
-                throw MembershipAuthorisationException("$borrower business identity should be BankIdentity")
+                throw IllegalMembershipBusinessIdentityException("$borrower business identity should be BankIdentity")
             }
         } ?: throw MembershipNotFoundException("$borrower is not member of Business Network with $networkId ID")
     }

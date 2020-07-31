@@ -38,6 +38,7 @@ class LoanContract : Contract {
         class Exit : Commands()
     }
 
+    @Suppress("ComplexMethod")
     override fun verify(tx: LedgerTransaction) {
         val command = tx.commands.requireSingleCommand<Commands>()
         val input = if (tx.inputStates.isNotEmpty()) tx.inputs.single() else null

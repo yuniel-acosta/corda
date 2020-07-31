@@ -3,14 +3,12 @@ package net.corda.bn.demo.workflows
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.bn.demo.contracts.LoanContract
 import net.corda.bn.demo.contracts.LoanState
-import net.corda.bn.flows.DatabaseService
 import net.corda.bn.flows.IllegalFlowArgumentException
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.CollectSignaturesFlow
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowException
-import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatedBy
 import net.corda.core.flows.InitiatingFlow
@@ -38,7 +36,8 @@ class SettleLoanFlow(private val loanId: UniqueIdentifier, private val amountToS
     override fun call(): SignedTransaction {
         val criteria = QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED)
                 .and(QueryCriteria.LinearStateQueryCriteria(linearId = listOf(loanId)))
-        val inputState = serviceHub.vaultService.queryBy(LoanState::class.java, criteria).states.single()
+        val inputState = serviceHub.vaultService.queryBy(LoanState::class.java, criteria).states.firstOrNull()
+                ?: throw LoanNotFoundException("Loan with $loanId ID doesn't exist")
 
         if (ourIdentity != inputState.state.data.borrower) {
             throw IllegalFlowInitiatorException("Only borrower can settle loan")

@@ -1,6 +1,5 @@
 package net.corda.bn.demo.contracts
 
-import com.prowidesoftware.swift.model.BIC
 import net.corda.bn.states.BNIdentity
 import net.corda.bn.states.BNPermission
 import net.corda.bn.states.BNRole
@@ -10,8 +9,7 @@ import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
-import net.corda.core.serialization.SerializationCustomSerializer
-import net.corda.core.serialization.SerializationWhitelist
+import java.util.regex.Pattern
 
 /**
  * Represents loan between [lender] and [borrower] party on ledger.
@@ -49,4 +47,19 @@ enum class LoanPermissions : BNPermission {
 
     /** Enables Business Network member to issue [LoanState]s. **/
     CAN_ISSUE_LOAN
+}
+
+/**
+ * Business identity specific for banks. Uses Swift Business Identifier Code (BIC).
+ *
+ * @property bic Business Identifier Code of the bank.
+ */
+@CordaSerializable
+data class BankIdentity(val bic: String) : BNIdentity {
+    companion object {
+        private const val bicRegex = "^[a-zA-Z]{6}[0-9a-zA-Z]{2}([0-9a-zA-Z]{3})?$"
+    }
+
+    /** Checks whether provided BIC is valid. **/
+    fun isValid() = bic.matches(Pattern.compile(bicRegex).toRegex())
 }
