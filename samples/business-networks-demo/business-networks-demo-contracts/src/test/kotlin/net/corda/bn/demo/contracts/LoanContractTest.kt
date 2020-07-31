@@ -16,7 +16,7 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
-import net.corda.testing.node.TestCordapp
+import net.corda.testing.node.internal.cordappWithPackages
 import net.corda.testing.node.ledger
 import org.junit.After
 import org.junit.Before
@@ -69,7 +69,7 @@ class LoanContractTest {
     fun setUp() {
         mockNetwork = MockNetwork(MockNetworkParameters(
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4),
-                cordappsForAllNodes = listOf(TestCordapp.findCordapp("net.corda.bn.demo.contracts"))
+                cordappsForAllNodes = listOf(cordappWithPackages("net.corda.bn.demo.contracts").signed())
         ))
         mockNode = mockNetwork.createPartyNode()
         mockNetwork.runNetwork()

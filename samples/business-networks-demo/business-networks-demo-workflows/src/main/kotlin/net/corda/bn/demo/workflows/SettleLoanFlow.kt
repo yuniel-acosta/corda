@@ -85,8 +85,8 @@ class SettleLoanResponderFlow(private val session: FlowSession) : BusinessNetwor
                     throw FlowException("Only LoanContract.Commands.Settle or LoanContract.Commands.Exit commands are allowed")
                 }
 
-                val loanState = stx.tx.outputStates.single() as LoanState
-                loanState.apply {
+                val loanState = if (command.value is LoanContract.Commands.Settle) stx.tx.outputStates.single() as LoanState else null
+                loanState?.apply {
                     if (lender != ourIdentity) {
                         throw FlowException("Lender doesn't match receivers's identity")
                     }

@@ -14,6 +14,7 @@ import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.MockNodeParameters
 import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.TestCordapp
+import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.After
 import org.junit.Before
 
@@ -38,7 +39,7 @@ abstract class LoanFlowTest(private val numberOfLenders: Int, private val number
         lenders = (0..numberOfLenders).mapIndexed { idx, _ ->
             createNode(CordaX500Name.parse("O=Lender_$idx,L=New York,C=US"))
         }
-        borrowers = (0..numberOfLenders).mapIndexed { idx, _ ->
+        borrowers = (0..numberOfBorrowers).mapIndexed { idx, _ ->
             createNode(CordaX500Name.parse("O=Borrower_$idx,L=New York,C=US"))
         }
 
@@ -70,8 +71,8 @@ abstract class LoanFlowTest(private val numberOfLenders: Int, private val number
         return future.getOrThrow()
     }
 
-    protected fun runAssignBICFlow(initiator: StartedMockNode, networkId: String, bic: String, notary: Party? = null): SignedTransaction {
-        val future = initiator.startFlow(AssignBICFlow(networkId, bic, notary))
+    protected fun runAssignBICFlow(initiator: StartedMockNode, membershipId: UniqueIdentifier, bic: String, notary: Party? = null): SignedTransaction {
+        val future = initiator.startFlow(AssignBICFlow(membershipId, bic, notary))
         mockNetwork.runNetwork()
         return future.getOrThrow()
     }
