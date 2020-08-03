@@ -22,6 +22,7 @@ import java.time.Instant
 data class GroupState(
         val networkId: String,
         val name: String? = null,
+        val issuer: Party,
         val issued: Instant = Instant.now(),
         val modified: Instant = issued,
         override val linearId: UniqueIdentifier = UniqueIdentifier(),
@@ -29,7 +30,7 @@ data class GroupState(
 ) : LinearState, QueryableState {
 
     override fun generateMappedObject(schema: MappedSchema) = when (schema) {
-        is GroupStateSchemaV1 -> GroupStateSchemaV1.PersistentGroupState(networkId = networkId)
+        is GroupStateSchemaV1 -> GroupStateSchemaV1.PersistentGroupState(networkId = networkId, issuer = issuer)
         else -> throw IllegalArgumentException("Unrecognised schema $schema")
     }
 

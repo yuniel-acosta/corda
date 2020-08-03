@@ -12,6 +12,7 @@
             </column>
             <column name="corda_identity" type="varchar(255)"/>
             <column name="network_id" type="varchar(255)"/>
+            <column name="issuer" type="varchar(255)"/>
             <column name="status" type="integer"/>
         </createTable>
         <addPrimaryKey columnNames="output_index, transaction_id"

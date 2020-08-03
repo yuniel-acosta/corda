@@ -4,6 +4,7 @@ import net.corda.bn.contracts.MembershipContract
 import net.corda.bn.schemas.MembershipStateSchemaV1
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.LinearState
+import net.corda.core.contracts.PartyAndReference
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
@@ -28,6 +29,7 @@ data class MembershipState(
         val networkId: String,
         val status: MembershipStatus,
         val roles: Set<BNRole> = emptySet(),
+        val issuer: Party,
         val issued: Instant = Instant.now(),
         val modified: Instant = issued,
         override val linearId: UniqueIdentifier = UniqueIdentifier(),
@@ -38,6 +40,7 @@ data class MembershipState(
         is MembershipStateSchemaV1 -> MembershipStateSchemaV1.PersistentMembershipState(
                 cordaIdentity = identity.cordaIdentity,
                 networkId = networkId,
+                issuer = issuer,
                 status = status
         )
         else -> throw IllegalArgumentException("Unrecognised schema $schema")

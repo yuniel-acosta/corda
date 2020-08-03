@@ -1,6 +1,7 @@
 package net.corda.bn.schemas
 
 import net.corda.bn.states.GroupState
+import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.schemas.PersistentState
 import javax.persistence.Column
@@ -21,6 +22,8 @@ object GroupStateSchemaV1 : MappedSchema(schemaFamily = GroupState::class.java, 
     @Table(name = "group_state")
     class PersistentGroupState(
             @Column(name = "network_id")
-            val networkId: String
+            val networkId: String,
+            @Column(name = "issuer", nullable = false)
+            var issuer: Party
     ) : PersistentState()
 }
