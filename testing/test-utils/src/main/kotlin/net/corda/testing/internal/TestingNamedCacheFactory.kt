@@ -26,7 +26,6 @@ class TestingNamedCacheFactory private constructor(private val sizeOverride: Lon
         val configuredCaffeine = when (name) {
             "DBTransactionStorage_transactions" -> caffeine.maximumWeight(1.MB)
             "NodeAttachmentService_attachmentContent" -> caffeine.maximumWeight(1.MB)
-            "AttachmentsClassLoader_cache" -> caffeine.maximumSize(sizeOverride)
             else -> caffeine.maximumSize(sizeOverride)
         }
         return configuredCaffeine.build<K, V>(loader)
