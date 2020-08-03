@@ -39,7 +39,7 @@ fun <T: Any> createInstancesOfClassesImplementing(classloader: ClassLoader, claz
 @StubOutForDJVM
 fun <T: Any> getNamesOfClassesImplementing(classloader: ClassLoader, clazz: Class<T>,
                                            classVersionRange: IntRange? = null): Set<String> {
-    return ClassGraph().overrideClassLoaders(classloader)
+    return ClassGraph().setMaxBufferedJarRAMSize(1024 * 1024).overrideClassLoaders(classloader)
         .enableURLScheme(attachmentScheme)
         .ignoreParentClassLoaders()
         .enableClassInfo()

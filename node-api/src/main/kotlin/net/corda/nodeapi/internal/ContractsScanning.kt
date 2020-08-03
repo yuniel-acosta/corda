@@ -27,7 +27,7 @@ class ContractsJarFile(private val file: Path) : ContractsJar {
     override val hash: SecureHash by lazy(LazyThreadSafetyMode.NONE, file::hash)
 
     override fun scan(): List<ContractClassName> {
-        val scanResult = ClassGraph().overrideClasspath(singleton(file)).enableClassInfo().pooledScan()
+        val scanResult = ClassGraph().setMaxBufferedJarRAMSize(1024 * 1024).overrideClasspath(singleton(file)).enableClassInfo().pooledScan()
 
         return scanResult.use { result ->
             coreContractClasses

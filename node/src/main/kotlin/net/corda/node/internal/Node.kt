@@ -180,7 +180,7 @@ open class Node(configuration: NodeConfiguration,
         private val sameVmNodeCounter = AtomicInteger()
 
         // TODO: make this configurable.
-        const val MAX_RPC_MESSAGE_SIZE = 65536
+        const val MAX_RPC_MESSAGE_SIZE = 16384
 
         fun isInvalidJavaVersion(): Boolean {
             if (!hasMinimumJavaVersion()) {
@@ -343,7 +343,7 @@ open class Node(configuration: NodeConfiguration,
 
         network as P2PMessagingClient
 
-        System.setProperty("io.netty.allocator.numHeapArenas", min(8L, 4L).toString())
+        System.setProperty("io.netty.allocator.numHeapArenas", "2")
 
         // Construct security manager reading users data either from the 'security' config section
         // if present or from rpcUsers list if the former is missing from config.

@@ -330,7 +330,7 @@ class JarScanningCordappLoader private constructor(private val cordappJarPaths: 
     private fun scanCordapp(cordappJarPath: RestrictedURL): RestrictedScanResult {
         val cordappElement = cordappJarPath.url.toString()
         logger.info("Scanning CorDapp in $cordappElement")
-        val scanResult = ClassGraph()
+        val scanResult = ClassGraph().setMaxBufferedJarRAMSize(1024 * 1024)
             .filterClasspathElements { elt -> elt == cordappElement }
             .overrideClassLoaders(appClassLoader)
             .ignoreParentClassLoaders()
