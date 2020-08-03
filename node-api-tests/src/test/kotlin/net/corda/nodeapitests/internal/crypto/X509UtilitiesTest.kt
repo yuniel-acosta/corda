@@ -353,7 +353,7 @@ class X509UtilitiesTest {
         val peerChain = clientSocket.session.peerCertificates.x509
         val peerX500Principal = peerChain[0].subjectX500Principal
         assertEquals(MEGA_CORP.name.x500Principal, peerX500Principal)
-        X509Utilities.validateCertificateChain(rootCa.certificate, peerChain)
+        X509Utilities.validateCertificateChain(listOf(rootCa.certificate), peerChain)
         val output = DataOutputStream(clientSocket.outputStream)
         output.writeUTF("Hello World")
         var timeout = 0
@@ -426,7 +426,7 @@ class X509UtilitiesTest {
                 val peerChain = client.engine!!.session.peerCertificates.x509
                 val peerX500Principal = peerChain[0].subjectX500Principal
                 assertEquals(MEGA_CORP.name.x500Principal, peerX500Principal)
-                X509Utilities.validateCertificateChain(rootCa.certificate, peerChain)
+                X509Utilities.validateCertificateChain(listOf(rootCa.certificate), peerChain)
             }
         }
     }

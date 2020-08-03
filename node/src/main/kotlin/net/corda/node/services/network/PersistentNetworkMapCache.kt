@@ -256,7 +256,7 @@ open class PersistentNetworkMapCache(cacheFactory: NamedCacheFactory,
     }
 
     private fun verifyIdentities(node: NodeInfo): Boolean {
-        val failures = node.legalIdentitiesAndCerts.mapNotNull { Try.on { it.verify(identityService.trustAnchor) } as? Try.Failure }
+        val failures = node.legalIdentitiesAndCerts.mapNotNull { Try.on { it.verify(identityService.trustAnchors) } as? Try.Failure }
         if (failures.isNotEmpty()) {
             logger.warn("$node has ${failures.size} invalid identities:")
             failures.forEach { logger.warn("", it) }
