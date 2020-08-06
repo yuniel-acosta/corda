@@ -22,8 +22,6 @@ object GroupStateSchemaV1 : MappedSchema(schemaFamily = GroupState::class.java, 
     @Table(name = "group_state")
     class PersistentGroupState(
             @Column(name = "network_id")
-            val networkId: String,
-            @Column(name = "issuer", nullable = false)
-            var issuer: Party
+            val networkId: String
     ) : PersistentState()
 }

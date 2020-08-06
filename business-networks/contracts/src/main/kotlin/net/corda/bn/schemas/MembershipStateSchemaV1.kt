@@ -30,8 +30,6 @@ object MembershipStateSchemaV1 : MappedSchema(schemaFamily = MembershipState::cl
             val cordaIdentity: Party,
             @Column(name = "network_id")
             val networkId: String,
-            @Column(name = "issuer", nullable = false)
-            var issuer: Party,
             @Column(name = "status")
             val status: MembershipStatus
     ) : PersistentState()

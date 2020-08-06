@@ -20,6 +20,7 @@ import java.time.Instant
  * @property networkId Unique identifier of a Business Network membership belongs to.
  * @property status Status of the state (i.e. PENDING, ACTIVE, SUSPENDED).
  * @property roles Set of all the roles associated to the membership.
+ * @property issuer The [Party] issuer of this state.
  * @property issued Timestamp when the state has been issued.
  * @property modified Timestamp when the state has been modified last time.
  */
@@ -40,7 +41,6 @@ data class MembershipState(
         is MembershipStateSchemaV1 -> MembershipStateSchemaV1.PersistentMembershipState(
                 cordaIdentity = identity.cordaIdentity,
                 networkId = networkId,
-                issuer = issuer,
                 status = status
         )
         else -> throw IllegalArgumentException("Unrecognised schema $schema")
