@@ -34,3 +34,4 @@ cordapp {
 jar {
     baseName 'corda-attachment-demo-workflows'
 }
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

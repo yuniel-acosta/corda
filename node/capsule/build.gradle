@@ -131,3 +131,5 @@ publish {
     disableDefaultJar = true
     name  'corda'
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

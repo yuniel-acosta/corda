@@ -260,3 +260,5 @@ task notarise(type: JavaExec, dependsOn: jar) {
     classpath = sourceSets.main.runtimeClasspath
     main = 'net.corda.notarydemo.client.NotariseKt'
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

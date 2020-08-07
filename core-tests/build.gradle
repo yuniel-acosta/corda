@@ -156,3 +156,5 @@ quasar {
 artifacts {
     testArtifacts testJar
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

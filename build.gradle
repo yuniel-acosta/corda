@@ -774,3 +774,5 @@ distributedTesting {
         ':core-deterministic:testing:data:test'
     ]
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

@@ -22,3 +22,5 @@ dependencies {
 configurations {
     testArtifacts.extendsFrom testRuntimeClasspath
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

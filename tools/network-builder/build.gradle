@@ -95,3 +95,5 @@ publish {
     disableDefaultJar = true
     name 'corda-tools-network-builder'
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

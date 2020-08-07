@@ -9,3 +9,5 @@ dependencies {
     testImplementation "io.gitlab.arturbosch.detekt:detekt-test:$detekt_version"
     testImplementation "org.assertj:assertj-core:$assertj_version"
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

@@ -160,3 +160,5 @@ task runSeller(type: JavaExec, dependsOn: jar) {
     args '--role'
     args 'SELLER'
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

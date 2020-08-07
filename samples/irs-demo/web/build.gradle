@@ -170,3 +170,5 @@ task generateDockerCompose(dependsOn: [prepareDockerDir]) {
 
     outputs.file(outFile)
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

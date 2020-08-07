@@ -44,3 +44,5 @@ jar {
 publish {
     name 'corda-tools-network-bootstrapper'
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

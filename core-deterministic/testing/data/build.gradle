@@ -40,3 +40,5 @@ artifacts {
     archives file: testDataJar, type: 'jar', builtBy: test
     testData file: testDataJar, type: 'jar', builtBy: test
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

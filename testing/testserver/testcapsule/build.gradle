@@ -76,3 +76,5 @@ publish {
     disableDefaultJar = true
     name 'corda-testserver'
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

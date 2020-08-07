@@ -21,3 +21,4 @@ jar {
         attributes('Corda-Testing': true)
     }
 }
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

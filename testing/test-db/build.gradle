@@ -26,3 +26,4 @@ jar {
 publish {
     name jar.baseName
 }
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

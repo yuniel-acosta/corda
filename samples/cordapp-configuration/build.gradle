@@ -66,3 +66,5 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar', nodeTask, 
         extraConfig = ['h2Settings.address' : 'localhost:10013']
     }
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

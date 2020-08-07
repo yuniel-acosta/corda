@@ -21,3 +21,4 @@ cordapp {
 jar {
     baseName 'corda-network-verifier-contracts'
 }
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

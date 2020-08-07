@@ -68,3 +68,5 @@ jar {
 publish {
     name 'corda-tools-checkpoint-agent'
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

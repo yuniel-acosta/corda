@@ -120,3 +120,5 @@ artifactory {
         }
     }
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

@@ -18,3 +18,5 @@ dependencies {
     testCompile project(':node-driver')
     testCompile project(':test-utils')
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

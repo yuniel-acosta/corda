@@ -1,0 +1,67 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.github.oshi:oshi-core:5.2.2"
+    }
+}
+def long getUsedMemory(oshi.hardware.GlobalMemory memory) {
+    return memory.total - memory.available;
+}
+
+tasks.withType(Test) {
+    maxParallelForks = 1
+
+    def csvFile = new File("${project.rootDir}/build/reports/memoryUsage/report.csv")
+    def currentTest = ''
+    def startUsage = 0l
+    def memory = new oshi.SystemInfo().hardware.memory
+
+    def maxUsage = 0l
+    def running = true
+
+    def counter = new java.util.concurrent.atomic.AtomicInteger(0)
+
+    def monitorThread = new Thread({
+        while(running) {
+            Thread.sleep(100)
+            def usage = getUsedMemory(memory)
+            if(usage > maxUsage) {
+                maxUsage = usage
+            }
+        }
+    })
+
+    monitorThread.setDaemon(true)
+
+
+
+    addTestListener(new TestListener() {
+        void beforeTest(TestDescriptor testDescriptor) {
+            currentTest = testDescriptor.className +"." + testDescriptor.name
+            startUsage = getUsedMemory(memory)
+            maxUsage = startUsage;
+        }
+
+        void beforeSuite(TestDescriptor suite) {
+        }
+
+        void afterSuite(TestDescriptor suite, TestResult result) {
+        }
+
+        void afterTest(TestDescriptor testDescriptor, TestResult result) {
+            csvFile.append("${counter.incrementAndGet()},\"${currentTest.replace("\"", "\"\"")}\",$startUsage,$maxUsage,${getUsedMemory(memory)},${(result.getEndTime() - result.getStartTime())/ 1000.0},${result.resultType.name()}\n")
+        }
+    })
+    doFirst {
+        csvFile.parentFile.mkdirs()
+        if(!csvFile.exists()) {
+            csvFile.write("Index,Test,Used memory before start,Used memory after ends,Max used memry during,Duration (seconds),result\n")
+        }
+        monitorThread.start()
+    }
+    doLast {
+        running = false
+    }
+}

@@ -27,3 +27,5 @@ dependencies {
 tasks.named('jar', Jar) {
     enabled = false
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

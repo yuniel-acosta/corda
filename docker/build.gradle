@@ -100,3 +100,5 @@ task pushCorrettoLatestTag('type': DockerPushImage, dependsOn: [buildOfficialCor
 }
 
 task pushOfficialImages(dependsOn: [pushZuluTimeStampedTag, pushZuluLatestTag, pushCorrettoTimeStampedTag, pushCorrettoLatestTag])
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

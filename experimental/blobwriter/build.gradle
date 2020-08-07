@@ -25,3 +25,5 @@ jar {
         )
     }
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

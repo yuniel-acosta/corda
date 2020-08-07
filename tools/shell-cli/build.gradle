@@ -49,3 +49,5 @@ publish {
     disableDefaultJar = true
     name 'corda-tools-shell-cli'
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

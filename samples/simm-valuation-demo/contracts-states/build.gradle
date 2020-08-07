@@ -130,3 +130,5 @@ shrink.finalizedBy sign
 artifacts {
     shrinkArtifacts file: sign.outputJars.singleFile, name: project.name, type: 'jar', extension: 'jar', classifier: 'tiny', builtBy: sign
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

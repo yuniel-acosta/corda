@@ -224,3 +224,5 @@ task javapackage(dependsOn: distZip) {
         }
     }
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

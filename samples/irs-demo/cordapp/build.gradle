@@ -173,3 +173,5 @@ idea {
         downloadSources = true
     }
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

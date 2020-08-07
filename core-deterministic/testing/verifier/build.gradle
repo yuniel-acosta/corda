@@ -51,3 +51,5 @@ idea {
         }
     }
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

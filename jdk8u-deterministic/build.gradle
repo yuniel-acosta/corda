@@ -47,3 +47,5 @@ tasks.named('jar', Jar)  {
 artifacts {
     jdk file: file(rt_jar), type: 'jar', builtBy: copyJdk
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

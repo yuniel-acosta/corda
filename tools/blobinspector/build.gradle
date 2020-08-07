@@ -34,3 +34,5 @@ jar {
 publish {
     name 'corda-tools-blob-inspector'
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

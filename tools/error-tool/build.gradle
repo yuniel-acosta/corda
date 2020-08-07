@@ -27,3 +27,5 @@ shadowJar {
 artifacts {
     archives shadowJar
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

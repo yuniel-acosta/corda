@@ -151,3 +151,5 @@ cordapp {
         vendor "R3"
     }
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

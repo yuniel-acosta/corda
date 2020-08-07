@@ -44,3 +44,4 @@ dependencies {
 jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

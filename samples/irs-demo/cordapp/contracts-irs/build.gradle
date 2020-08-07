@@ -36,3 +36,5 @@ cordapp {
 jar {
     baseName 'corda-irs-demo-contracts'
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

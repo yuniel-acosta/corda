@@ -36,3 +36,5 @@ cordapp {
         licence "Open Source (Apache 2)"
     }
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"

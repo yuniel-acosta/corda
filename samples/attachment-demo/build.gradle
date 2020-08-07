@@ -144,3 +144,5 @@ task runRecipient(type: JavaExec, dependsOn: jar) {
     args '--role'
     args 'RECIPIENT'
 }
+
+apply from: "${project.rootDir}/memoryUsageMonitor.gradle"
