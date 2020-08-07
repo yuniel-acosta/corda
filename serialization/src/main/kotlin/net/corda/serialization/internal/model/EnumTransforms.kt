@@ -25,7 +25,7 @@ data class EnumTransforms(
         /**
          * Build a set of [EnumTransforms] from a [TransformsMap], and validate it against the supplied constants.
          */
-        fun build(source: TransformsMap, constants: Map<String, Int>): EnumTransforms {
+        fun build(source: TransformsMap, constants: Map<String, Int>, enumToStringOverrides: Map<String, String> = emptyMap()): EnumTransforms {
             val defaultTransforms = source[TransformTypes.EnumDefault]?.asSequence()
                     ?.filterIsInstance<EnumDefaultSchemaTransform>()
                     ?.toList() ?: emptyList()
@@ -45,7 +45,7 @@ data class EnumTransforms(
             }
 
             val defaults = defaultTransforms.associate { transform -> transform.new to transform.old }
-            val renames = renameTransforms.associate { transform -> transform.to to transform.from }
+            val renames = renameTransforms.associate { transform -> transform.to to transform.from } + enumToStringOverrides
             return EnumTransforms(defaults, renames, source).validate(constants)
         }
 

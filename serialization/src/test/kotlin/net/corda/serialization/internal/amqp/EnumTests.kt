@@ -2,8 +2,8 @@ package net.corda.serialization.internal.amqp
 
 import net.corda.core.serialization.ClassWhitelist
 import net.corda.core.serialization.CordaSerializable
+import net.corda.core.serialization.CordaSerializationTransformRename
 import net.corda.core.serialization.SerializedBytes
-import net.corda.core.serialization.deserialize
 import net.corda.serialization.internal.EmptyWhitelist
 import net.corda.serialization.internal.amqp.testutils.TestSerializationOutput
 import net.corda.serialization.internal.amqp.testutils.deserialize
@@ -184,7 +184,7 @@ class EnumTests {
         data class C(val a: OldBras2)
 
         // DO NOT CHANGE THIS, it's important we serialise with a value that doesn't
-        // change position in the upated enum class
+        // change position in the updated enum class
 
         // Original version of the class for the serialised version of this class
         //
@@ -291,6 +291,22 @@ class EnumTests {
 
         val factory2 = SerializerFactoryBuilder.build(EmptyWhitelist, ClassLoader.getSystemClassLoader())
         val output = DeserializationInput(factory2).deserialize(serialized)
+
+        assertEquals(input, output)
+        assertNotSame("Deserialized object should be brand new.", input, output)
+    }
+
+    @Test()//timeout = 300_000)
+    fun deserialisedEnumWithToStringOverride() {
+        val url = EnumTests::class.java.getResource("EnumTests.toStringOverride")
+
+        val sc2 = url.readBytes()
+
+        // This is what we serialised using the overriden toString
+        val input = CustomEnumWrapper(CustomEnum.ONE)
+
+        val factory2 = SerializerFactoryBuilder.build(EmptyWhitelist, ClassLoader.getSystemClassLoader())
+        val output = DeserializationInput(factory2).deserialize(SerializedBytes<CustomEnumWrapper>(sc2))
 
         assertEquals(input, output)
         assertNotSame("Deserialized object should be brand new.", input, output)

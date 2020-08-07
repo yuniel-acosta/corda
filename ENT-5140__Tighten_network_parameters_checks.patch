@@ -1,0 +1,410 @@
+Index: core/src/main/kotlin/net/corda/core/internal/DigitalSignatureWithCert.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- core/src/main/kotlin/net/corda/core/internal/DigitalSignatureWithCert.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ core/src/main/kotlin/net/corda/core/internal/DigitalSignatureWithCert.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -45,11 +45,14 @@
+ 
+ /** Similar to [SignedData] but instead of just attaching the public key, the certificate for the key is attached instead. */
+ @CordaSerializable
+-class SignedDataWithCert<T : Any>(val raw: SerializedBytes<T>, val sig: DigitalSignatureWithCert): NamedByHash {
+-    override val id: SecureHash get () = raw.hash
+-
+-    fun verified(): T {
++class SignedDataWithCert<T : Any>(private val raw: SerializedBytes<T>, val sig: DigitalSignatureWithCert): NamedByHash {
++    init {
+         sig.verify(raw)
+-        return uncheckedCast(raw.deserialize<Any>())
+     }
++
++    override val id: SecureHash get () = hash
++    val bytes = raw.bytes
++    val hash = raw.hash
++
++    fun deserialize(): T = uncheckedCast(raw.deserialize<Any>())
+ }
+\ No newline at end of file
+Index: node-api/src/main/kotlin/net/corda/nodeapi/internal/network/NetworkMap.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- node-api/src/main/kotlin/net/corda/nodeapi/internal/network/NetworkMap.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ node-api/src/main/kotlin/net/corda/nodeapi/internal/network/NetworkMap.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -63,7 +63,7 @@
+         sig.fullCertChain
+     }
+     X509Utilities.validateCertificateChain(rootCert, path)
+-    return verified()
++    return deserialize()
+ }
+ 
+ /** Verify that a Network Map certificate path and its [CertRole] is correct. */
+Index: node-api/src/main/kotlin/net/corda/nodeapi/internal/persistence/AttachmentVersionNumberMigration.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- node-api/src/main/kotlin/net/corda/nodeapi/internal/persistence/AttachmentVersionNumberMigration.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ node-api/src/main/kotlin/net/corda/nodeapi/internal/persistence/AttachmentVersionNumberMigration.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -8,7 +8,6 @@
+ import net.corda.core.internal.div
+ import net.corda.core.internal.readObject
+ import net.corda.core.node.NetworkParameters
+-import net.corda.core.serialization.deserialize
+ import net.corda.core.utilities.contextLogger
+ import net.corda.nodeapi.internal.network.NETWORK_PARAMS_FILE_NAME
+ import net.corda.nodeapi.internal.network.SignedNetworkParameters
+@@ -89,7 +88,7 @@
+     private fun getNetworkParametersFromFile(path: Path): NetworkParameters? {
+         return try {
+             val networkParametersBytes = path.readObject<SignedNetworkParameters>()
+-            networkParametersBytes.raw.deserialize()
++            networkParametersBytes.deserialize()
+         } catch (e: Exception) {
+             // This condition is logged in the calling function, so no need to do that here.
+             null
+Index: node/src/integration-test/kotlin/net/corda/node/services/network/NetworkMapTest.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- node/src/integration-test/kotlin/net/corda/node/services/network/NetworkMapTest.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ node/src/integration-test/kotlin/net/corda/node/services/network/NetworkMapTest.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -136,7 +136,7 @@
+             assertEquals(laterHash, networkMapServer.latestParametersAccepted(alice.nodeInfo.legalIdentities.first().owningKey))
+             networkMapServer.advertiseNewParameters()
+             val networkParameters = (alice.configuration.baseDirectory / NETWORK_PARAMS_UPDATE_FILE_NAME)
+-                    .readObject<SignedNetworkParameters>().verified()
++                    .readObject<SignedNetworkParameters>().deserialize()
+             assertEquals(networkParameters, laterParams)
+         }
+     }
+@@ -201,7 +201,7 @@
+     private fun assertDownloadedNetworkParameters(node: NodeHandle) {
+         val networkParameters = (node.baseDirectory / NETWORK_PARAMS_FILE_NAME)
+                 .readObject<SignedNetworkParameters>()
+-                .verified()
++                .deserialize()
+         // We use a random modified time above to make the network parameters unqiue so that we're sure they came
+         // from the server
+         assertEquals(networkMapServer.networkParameters, networkParameters)
+Index: node/src/main/kotlin/net/corda/node/internal/AbstractNode.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- node/src/main/kotlin/net/corda/node/internal/AbstractNode.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ node/src/main/kotlin/net/corda/node/internal/AbstractNode.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -507,7 +507,7 @@
+         services.start(nodeInfo, netParams)
+         networkMapUpdater.start(
+                 trustRoot,
+-                signedNetParams.raw.hash,
++                signedNetParams.hash,
+                 signedNodeInfo,
+                 netParams,
+                 keyManagementService,
+Index: node/src/main/kotlin/net/corda/node/internal/DBNetworkParametersStorage.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- node/src/main/kotlin/net/corda/node/internal/DBNetworkParametersStorage.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ node/src/main/kotlin/net/corda/node/internal/DBNetworkParametersStorage.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -51,7 +51,7 @@
+                         )
+                     },
+                     toPersistentEntity = { key: SecureHash, value: SignedDataWithCert<NetworkParameters> ->
+-                        PersistentNetworkParameters(key.toString(), value.verified().epoch, value.raw.bytes, value.sig.bytes, value.sig.by.encoded,
++                        PersistentNetworkParameters(key.toString(), value.deserialize().epoch, value.bytes, value.sig.bytes, value.sig.by.encoded,
+                                 X509Utilities.buildCertPath(value.sig.parentCertsChain).encoded)
+                     },
+                     persistentEntityClass = PersistentNetworkParameters::class.java
+@@ -62,7 +62,7 @@
+     override fun setCurrentParameters(currentSignedParameters: SignedDataWithCert<NetworkParameters>, trustRoot: X509Certificate) {
+         this.trustRoot = trustRoot
+         saveParameters(currentSignedParameters)
+-        _currentHash = currentSignedParameters.raw.hash
++        _currentHash = currentSignedParameters.hash
+     }
+ 
+     private lateinit var _currentHash: SecureHash
+@@ -73,7 +73,7 @@
+     private val hashToParameters = createParametersMap(cacheFactory)
+ 
+     override fun lookup(hash: SecureHash): NetworkParameters? {
+-        return database.transaction { hashToParameters[hash]?.raw?.deserialize() } ?: tryDownloadUnknownParameters(hash)
++        return database.transaction { hashToParameters[hash]?.deserialize() } ?: tryDownloadUnknownParameters(hash)
+     }
+ 
+     override fun getEpochFromHash(hash: SecureHash): Int? = lookup(hash)?.epoch
+@@ -87,7 +87,7 @@
+     override fun saveParameters(signedNetworkParameters: SignedNetworkParameters) {
+         log.trace { "Saving new network parameters to network parameters storage." }
+         val networkParameters = signedNetworkParameters.verifiedNetworkMapCert(trustRoot)
+-        val hash = signedNetworkParameters.raw.hash
++        val hash = signedNetworkParameters.hash
+         log.trace { "Parameters to save $networkParameters with hash $hash" }
+         database.transaction {
+             hashToParameters.addWithDuplicatesAllowed(hash, signedNetworkParameters, false)
+@@ -120,7 +120,7 @@
+         val inCurrentParams = currentParameters.notaries.singleOrNull { it.identity == party }
+         if (inCurrentParams != null) return inCurrentParams
+         return hashToParameters.allPersisted.use {
+-            it.flatMap { (_, signedNetParams) -> signedNetParams.raw.deserialize().notaries.stream() }
++            it.flatMap { (_, signedNetParams) -> signedNetParams.deserialize().notaries.stream() }
+                     .filter { it.identity == party }
+                     .findFirst()
+                     .orElse(null)
+Index: node/src/main/kotlin/net/corda/node/internal/NetworkParametersReader.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- node/src/main/kotlin/net/corda/node/internal/NetworkParametersReader.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ node/src/main/kotlin/net/corda/node/internal/NetworkParametersReader.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -55,10 +55,10 @@
+             //  you get them from network map, but you have to run the approval step.
+             if (signedParametersFromFile == null) { // Node joins for the first time.
+                 downloadParameters(advertisedParametersHash)
+-            } else if (signedParametersFromFile.raw.hash == advertisedParametersHash) { // Restarted with the same parameters.
++            } else if (signedParametersFromFile.hash == advertisedParametersHash) { // Restarted with the same parameters.
+                 signedParametersFromFile
+             } else { // Update case.
+-                readParametersUpdate(advertisedParametersHash, signedParametersFromFile.raw.hash)
++                readParametersUpdate(advertisedParametersHash, signedParametersFromFile.hash)
+             }
+         } else { // No compatibility zone configured. Node should proceed with parameters from file.
+             signedParametersFromFile ?: throw Error.ParamsNotConfigured()
+@@ -73,7 +73,7 @@
+             throw Error.OldParams(previousParametersHash, advertisedParametersHash)
+         }
+         val signedUpdatedParameters = parametersUpdateFile.readObject<SignedNetworkParameters>()
+-        if (signedUpdatedParameters.raw.hash != advertisedParametersHash) {
++        if (signedUpdatedParameters.hash != advertisedParametersHash) {
+             throw Error.OldParamsAndUpdate()
+         }
+         parametersUpdateFile.moveTo(networkParamsFile, StandardCopyOption.REPLACE_EXISTING)
+@@ -86,6 +86,7 @@
+         logger.info("No network-parameters file found. Expecting network parameters to be available from the network map.")
+         networkMapClient ?: throw Error.NetworkMapNotConfigured()
+         val signedParams = networkMapClient.getNetworkParameters(parametersHash)
++        signedParams.verifiedNetworkParametersCert(trustRoot)
+         signedParams.serialize().open().copyTo(baseDirectory / NETWORK_PARAMS_FILE_NAME)
+         return signedParams
+     }
+Index: node/src/main/kotlin/net/corda/node/migration/MigrationServicesForResolution.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- node/src/main/kotlin/net/corda/node/migration/MigrationServicesForResolution.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ node/src/main/kotlin/net/corda/node/migration/MigrationServicesForResolution.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -13,7 +13,6 @@
+ import net.corda.core.node.services.IdentityService
+ import net.corda.core.node.services.NetworkParametersService
+ import net.corda.core.node.services.TransactionStorage
+-import net.corda.core.serialization.deserialize
+ import net.corda.core.serialization.internal.AttachmentsClassLoaderBuilder
+ import net.corda.core.transactions.ContractUpgradeLedgerTransaction
+ import net.corda.core.transactions.NotaryChangeLedgerTransaction
+@@ -95,25 +94,25 @@
+ 
+         private val filedParams = getNetworkParametersFromFile()
+ 
+-        override val defaultHash: SecureHash = filedParams?.raw?.hash ?: SecureHash.getZeroHash()
++        override val defaultHash: SecureHash = filedParams?.hash ?: SecureHash.getZeroHash()
+         override val currentHash: SecureHash = cordaDB.transaction {
+             storage.allPersisted.use {
+-                it.max(comparingInt { it.second.verified().epoch }).map { it.first }.orElse(defaultHash)
++                it.max(comparingInt { it.second.deserialize().epoch }).map { it.first }.orElse(defaultHash)
+             }
+         }
+ 
+         override fun lookup(hash: SecureHash): NetworkParameters? {
+             // Note that the parameters in any file shouldn't be put into the database - this will be done by the node on startup.
+-            return if (hash == filedParams?.raw?.hash) {
+-                filedParams.raw.deserialize()
++            return if (hash == filedParams?.hash) {
++                filedParams.deserialize()
+             } else {
+-                cordaDB.transaction { storage[hash]?.verified() }
++                cordaDB.transaction { storage[hash]?.deserialize() }
+             }
+         }
+     }
+ 
+     override val networkParameters: NetworkParameters = networkParametersService.lookup(networkParametersService.currentHash)
+-            ?: getNetworkParametersFromFile()?.raw?.deserialize()
++            ?: getNetworkParametersFromFile()?.deserialize()
+             ?: defaultNetworkParameters()
+ 
+     private fun extractStateFromTx(tx: WireTransaction, stateIndices: Collection<Int>): List<TransactionState<ContractState>> {
+Index: node/src/main/kotlin/net/corda/node/services/network/NetworkMapUpdater.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- node/src/main/kotlin/net/corda/node/services/network/NetworkMapUpdater.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ node/src/main/kotlin/net/corda/node/services/network/NetworkMapUpdater.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -164,7 +164,7 @@
+ 
+     fun trackParametersUpdate(): DataFeed<ParametersUpdateInfo?, ParametersUpdateInfo> {
+         val currentUpdateInfo = newNetworkParameters?.let {
+-            ParametersUpdateInfo(it.first.newParametersHash, it.second.verified(), it.first.description, it.first.updateDeadline)
++            ParametersUpdateInfo(it.first.newParametersHash, it.second.deserialize(), it.first.description, it.first.updateDeadline)
+         }
+         return DataFeed(currentUpdateInfo, parametersUpdatesTrack)
+     }
+@@ -242,7 +242,7 @@
+ 
+     private fun exitOnParametersMismatch(networkMap: NetworkMap) {
+         val updatesFile = baseDirectory / NETWORK_PARAMS_UPDATE_FILE_NAME
+-        val acceptedHash = if (updatesFile.exists()) updatesFile.readObject<SignedNetworkParameters>().raw.hash else null
++        val acceptedHash = if (updatesFile.exists()) updatesFile.readObject<SignedNetworkParameters>().hash else null
+         val exitCode = if (acceptedHash == networkMap.networkParameterHash) {
+             logger.info("Flag day occurred. Network map switched to the new network parameters: " +
+                     "${networkMap.networkParameterHash}. Node will shutdown now and needs to be started again.")
+@@ -292,7 +292,7 @@
+         val (update, signedNewNetParams) = requireNotNull(newNetworkParameters) { "Couldn't find parameters update for the hash: $parametersHash" }
+         // We should check that we sign the right data structure hash.
+         val newNetParams = signedNewNetParams.verifiedNetworkParametersCert(trustRoot)
+-        val newParametersHash = signedNewNetParams.raw.hash
++        val newParametersHash = signedNewNetParams.hash
+         if (parametersHash == newParametersHash) {
+             // The latest parameters have priority.
+             signedNewNetParams.serialize()
+Index: node/src/test/kotlin/net/corda/node/migration/VaultStateMigrationTest.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- node/src/test/kotlin/net/corda/node/migration/VaultStateMigrationTest.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ node/src/test/kotlin/net/corda/node/migration/VaultStateMigrationTest.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -149,7 +149,7 @@
+             val persistentParams = DBNetworkParametersStorage.PersistentNetworkParameters(
+                     SecureHash.allOnesHash.toString(),
+                     params.epoch,
+-                    signedParams.raw.bytes,
++                    signedParams.bytes,
+                     signedParams.sig.bytes,
+                     signedParams.sig.by.encoded,
+                     X509Utilities.buildCertPath(signedParams.sig.parentCertsChain).encoded
+Index: node/src/test/kotlin/net/corda/node/services/network/DBNetworkParametersStorageTest.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- node/src/test/kotlin/net/corda/node/services/network/DBNetworkParametersStorageTest.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ node/src/test/kotlin/net/corda/node/services/network/DBNetworkParametersStorageTest.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -49,9 +49,9 @@
+         netParams1 = certKeyPair.sign(testNetworkParameters(minimumPlatformVersion = 1))
+         netParams2 = certKeyPair.sign(testNetworkParameters(minimumPlatformVersion = 2))
+         incorrectParams = createDevNetworkMapCa(DEV_INTERMEDIATE_CA).sign(testNetworkParameters(minimumPlatformVersion = 3))
+-        hash1 = netParams1.raw.hash
+-        hash2 = netParams2.raw.hash
+-        hash3 = incorrectParams.raw.hash
++        hash1 = netParams1.hash
++        hash2 = netParams2.hash
++        hash3 = incorrectParams.hash
+         database = configureDatabase(
+                 MockServices.makeTestDataSourceProperties(),
+                 DatabaseConfig(),
+@@ -74,7 +74,7 @@
+     @Test(timeout=300_000)
+ 	fun `set current parameters`() {
+         assertThat(networkParametersService.currentHash).isEqualTo(hash1)
+-        assertThat(networkParametersService.lookup(hash1)).isEqualTo(netParams1.verified())
++        assertThat(networkParametersService.lookup(hash1)).isEqualTo(netParams1.deserialize())
+     }
+ 
+     @Test(timeout=300_000)
+Index: node/src/test/kotlin/net/corda/node/services/network/NetworkMapClientTest.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- node/src/test/kotlin/net/corda/node/services/network/NetworkMapClientTest.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ node/src/test/kotlin/net/corda/node/services/network/NetworkMapClientTest.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -109,7 +109,7 @@
+ 	fun `download NetworkParameters correctly`() {
+         // The test server returns same network parameter for any hash.
+         val parametersHash = server.networkParameters.serialize().hash
+-        val networkParameters = networkMapClient.getNetworkParameters(parametersHash).verified()
++        val networkParameters = networkMapClient.getNetworkParameters(parametersHash).deserialize()
+         assertEquals(server.networkParameters, networkParameters)
+     }
+ 
+@@ -129,8 +129,8 @@
+         assertEquals(networkMap.networkParameterHash, originalNetworkParameterHash)
+         assertEquals(networkMap.parametersUpdate?.description, description)
+         assertEquals(networkMap.parametersUpdate?.newParametersHash, nextNetworkParameterHash)
+-        assertEquals(networkMapClient.getNetworkParameters(originalNetworkParameterHash).verified(), server.networkParameters)
+-        assertEquals(networkMapClient.getNetworkParameters(nextNetworkParameterHash).verified(), nextParameters)
++        assertEquals(networkMapClient.getNetworkParameters(originalNetworkParameterHash).deserialize(), server.networkParameters)
++        assertEquals(networkMapClient.getNetworkParameters(nextNetworkParameterHash).deserialize(), nextParameters)
+         val keyPair = Crypto.generateKeyPair()
+         val signedHash = nextNetworkParameterHash.serialize().sign(keyPair)
+         networkMapClient.ackNetworkParametersUpdate(signedHash)
+Index: node/src/test/kotlin/net/corda/node/services/network/NetworkParametersReaderTest.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- node/src/test/kotlin/net/corda/node/services/network/NetworkParametersReaderTest.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ node/src/test/kotlin/net/corda/node/services/network/NetworkParametersReaderTest.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -82,6 +82,6 @@
+         assertNotNull(inputStream)
+         val inByteArray: ByteArray = inputStream.readBytes()
+         val parameters = inByteArray.deserialize<SignedNetworkParameters>()
+-        assertThat(parameters.verified().eventHorizon).isEqualTo(Int.MAX_VALUE.days)
++        assertThat(parameters.deserialize().eventHorizon).isEqualTo(Int.MAX_VALUE.days)
+     }
+ }
+\ No newline at end of file
+Index: testing/node-driver/src/main/kotlin/net/corda/testing/node/internal/MockNetworkParametersService.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- testing/node-driver/src/main/kotlin/net/corda/testing/node/internal/MockNetworkParametersService.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ testing/node-driver/src/main/kotlin/net/corda/testing/node/internal/MockNetworkParametersService.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -49,8 +49,8 @@
+     override fun lookup(hash: SecureHash): NetworkParameters? = hashToParametersMap[hash]
+     override fun getEpochFromHash(hash: SecureHash): Int? = lookup(hash)?.epoch
+     override fun saveParameters(signedNetworkParameters: SignedDataWithCert<NetworkParameters>) {
+-        val networkParameters = signedNetworkParameters.verified()
+-        val hash = signedNetworkParameters.raw.hash
++        val networkParameters = signedNetworkParameters.deserialize()
++        val hash = signedNetworkParameters.hash
+         hashToParametersMap[hash] = networkParameters
+         hashToSignedParametersMap[hash] = signedNetworkParameters
+     }
+Index: testing/node-driver/src/main/kotlin/net/corda/testing/node/internal/network/NetworkMapServer.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- testing/node-driver/src/main/kotlin/net/corda/testing/node/internal/network/NetworkMapServer.kt	(revision 6bae99ef1009b9a64218396d458af9c5c22a4058)
++++ testing/node-driver/src/main/kotlin/net/corda/testing/node/internal/network/NetworkMapServer.kt	(revision 96f58bc670cfd5e1d40767f10e0639b4440b2732)
+@@ -169,7 +169,7 @@
+         }
+ 
+         private fun networkMapResponse(nodeInfoHashes: List<SecureHash>): Response {
+-            val networkMap = NetworkMap(nodeInfoHashes, signedNetParams.raw.hash, parametersUpdate)
++            val networkMap = NetworkMap(nodeInfoHashes, signedNetParams.hash, parametersUpdate)
+             val signedNetworkMap = networkMapCertAndKeyPair.sign(networkMap)
+             return Response.ok(signedNetworkMap.serialize().bytes).header("Cache-Control", "max-age=${pollInterval.seconds}").build()
+         }
+@@ -210,7 +210,7 @@
+         @Produces(MediaType.APPLICATION_OCTET_STREAM)
+         fun getNetworkParameter(@PathParam("var") hash: String): Response {
+             val requestedHash = SecureHash.parse(hash)
+-            val requestedParameters = if (requestedHash == signedNetParams.raw.hash) {
++            val requestedParameters = if (requestedHash == signedNetParams.hash) {
+                 signedNetParams
+             } else if (requestedHash == nextNetworkParameters?.serialize()?.hash) {
+                 nextNetworkParameters?.let { networkMapCertAndKeyPair.sign(it) }

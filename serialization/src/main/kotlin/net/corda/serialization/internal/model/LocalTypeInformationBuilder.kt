@@ -115,11 +115,12 @@ internal data class LocalTypeInformationBuilder(val lookup: LocalTypeLookup,
             baseTypes.mapClass.isAssignableFrom(type) -> AMap(type, typeIdentifier, Unknown, Unknown)
             type === baseTypes.stringClass -> Atomic(type, typeIdentifier)
             type.kotlin.javaPrimitiveType != null -> Atomic(type, typeIdentifier)
-            baseTypes.isEnum.test(type) -> baseTypes.enumConstantNames.apply(type).let { enumConstantNames ->
+            baseTypes.isEnum.test(type) -> baseTypes.enumConstantNames.apply(type).let { (enumConstantNames, enumToStringOverrides) ->
                 AnEnum(
                     type,
                     typeIdentifier,
                     enumConstantNames,
+                    enumToStringOverrides,
                     buildInterfaceInformation(type),
                     getEnumTransforms(type, enumConstantNames)
                 )

@@ -156,16 +156,20 @@ class DefaultEvolutionSerializerFactory(
         val transforms = if (remoteTransforms.size > localTransforms.size) remoteTransforms else localTransforms
 
         val localOrdinals = localTypeInformation.members.asSequence().mapIndexed { ord, member -> member to ord }.toMap()
+        val localOverrides = localTypeInformation.toString.asSequence().mapIndexed { ord, member -> member to ord }.toMap()
         val remoteOrdinals = members.asSequence().mapIndexed { ord, member -> member to ord }.toMap()
         val rules = transforms.defaults + transforms.renames
 
         // We just trust our transformation rules not to contain cycles here.
         tailrec fun findLocal(remote: String): String =
-            if (remote in localOrdinals) remote
-            else findLocal(rules[remote] ?: throw EvolutionSerializationException(
-                    this,
-                    "Cannot resolve local enum member $remote to a member of ${localOrdinals.keys} using rules $rules"
-            ))
+                when (remote) {
+                    in localOrdinals -> remote
+                    in localOverrides -> localTypeInformation.members[localOverrides[remote] ?: error("")]
+                    else -> findLocal(rules[remote] ?: throw EvolutionSerializationException(
+                            this,
+                            "Cannot resolve local enum member $remote to a member of ${localOrdinals.keys} using rules $rules"
+                    ))
+                }
 
         val conversions = members.associate { it to findLocal(it) }
         val convertedOrdinals = remoteOrdinals.asSequence().map { (member, ord) -> ord to conversions[member]!! }.toMap()

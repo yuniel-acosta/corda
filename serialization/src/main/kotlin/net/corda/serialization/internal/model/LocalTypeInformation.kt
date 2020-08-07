@@ -171,13 +171,14 @@ sealed class LocalTypeInformation {
      * Represents an `enum`
      *
      * @param members The string names of the members of the enum.
-     * @param superclass [LocalTypeInformation] for the superclass of the type (as enums can inherit from other types).
+     * @param toString The toString names of the members of the enum (in case they're overridden).
      * @param interfaces [LocalTypeInformation] for each interface implemented by the type.
      */
     data class AnEnum(
             override val observedType: Class<*>,
             override val typeIdentifier: TypeIdentifier,
             val members: List<String>,
+            val toString: List<String>,
             val interfaces: List<LocalTypeInformation>,
             val transforms: EnumTransforms): LocalTypeInformation()
 
