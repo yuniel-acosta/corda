@@ -180,7 +180,7 @@ open class Node(configuration: NodeConfiguration,
         private val sameVmNodeCounter = AtomicInteger()
 
         // TODO: make this configurable.
-        const val MAX_RPC_MESSAGE_SIZE = 16384
+        const val MAX_RPC_MESSAGE_SIZE = 10485760
 
         fun isInvalidJavaVersion(): Boolean {
             if (!hasMinimumJavaVersion()) {
