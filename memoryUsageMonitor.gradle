@@ -43,7 +43,6 @@ tasks.withType(Test) {
         void beforeTest(TestDescriptor testDescriptor) {
             startUsage = getUsedMemory(memory)
             maxUsage = startUsage;
-            println("Starting...")
         }
 
         void beforeSuite(TestDescriptor suite) {
@@ -55,7 +54,7 @@ tasks.withType(Test) {
         void afterTest(TestDescriptor testDescriptor, TestResult result) {
             def gc = Runtime.getRuntime().exec("jcmd GradleWorkerMain GC.run")
             gc.waitFor()
-            Thread.sleep(10000)
+            Thread.sleep(1000)
 
             def currentTest = (testDescriptor.className +"." + testDescriptor.name).replace("\"", "\"\"")
             def endUsage = getUsedMemory(memory)
