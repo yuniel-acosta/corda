@@ -17,7 +17,6 @@ import net.corda.nodeapi.internal.config.toConfig
 import net.corda.nodeapi.internal.persistence.DatabaseConfig
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
-import java.util.Properties
 
 /**
  * This is a subset of FullNodeConfiguration, containing only those configs which we need. The node uses corda-reference.conf
