@@ -12,9 +12,11 @@ def long getUsedMemory(oshi.hardware.GlobalMemory memory) {
 
 tasks.withType(Test) {
     maxParallelForks = 1
+    forkEvery = 0
+    ignoreFailures = true
+
 
     def csvFile = new File("${project.rootDir}/build/reports/memoryUsage/report.csv")
-    def currentTest = ''
     def startUsage = 0l
     def memory = new oshi.SystemInfo().hardware.memory
 
@@ -39,9 +41,9 @@ tasks.withType(Test) {
 
     addTestListener(new TestListener() {
         void beforeTest(TestDescriptor testDescriptor) {
-            currentTest = testDescriptor.className +"." + testDescriptor.name
             startUsage = getUsedMemory(memory)
             maxUsage = startUsage;
+            println("Starting...")
         }
 
         void beforeSuite(TestDescriptor suite) {
@@ -51,7 +53,16 @@ tasks.withType(Test) {
         }
 
         void afterTest(TestDescriptor testDescriptor, TestResult result) {
-            csvFile.append("${counter.incrementAndGet()},\"${currentTest.replace("\"", "\"\"")}\",$startUsage,$maxUsage,${getUsedMemory(memory)},${(result.getEndTime() - result.getStartTime())/ 1000.0},${result.resultType.name()}\n")
+            def gc = Runtime.getRuntime().exec("jcmd GradleWorkerMain GC.run")
+            gc.waitFor()
+            Thread.sleep(10000)
+
+            def currentTest = (testDescriptor.className +"." + testDescriptor.name).replace("\"", "\"\"")
+            def endUsage = getUsedMemory(memory)
+            if(endUsage > maxUsage) {
+                maxUsage = endUsage
+            }
+            csvFile.append("${counter.incrementAndGet()},\"${currentTest}\",$startUsage,$maxUsage,$endUsage,${(result.getEndTime() - result.getStartTime())/ 1000.0},${result.resultType.name()}\n")
         }
     })
     doFirst {
