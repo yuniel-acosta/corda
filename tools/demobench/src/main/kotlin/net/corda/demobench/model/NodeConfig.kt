@@ -14,6 +14,7 @@ import net.corda.core.internal.div
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.nodeapi.internal.config.User
 import net.corda.nodeapi.internal.config.toConfig
+import net.corda.nodeapi.internal.persistence.DatabaseConfig
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.util.Properties
@@ -34,8 +35,7 @@ data class NodeConfig(
         /** This is an extra config used by the Cash app. */
         val issuableCurrencies: List<String> = emptyList(),
         /** Pass-through for generating node.conf with external DB */
-        val dataSourceProperties: Properties? = null,
-        val database: Properties? = null,
+        val database: DatabaseConfig = DatabaseConfig(),
         val systemProperties: Map<String, Any?>,
         private val devMode: Boolean = true,
         private val detectPublicIp: Boolean = false,

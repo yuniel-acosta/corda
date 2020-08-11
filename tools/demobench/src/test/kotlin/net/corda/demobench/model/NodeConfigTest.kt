@@ -141,7 +141,7 @@ class NodeConfigTest {
                 p2pPort = 10001,
                 rpcPort = 10002,
                 rpcAdminPort = 10003,
-                database = Properties().apply { setProperty("schema", "sa") },
+                database = DatabaseConfig(schema = "sa"),
                 webPort = 10004,
                 h2port = 10005,
                 notary = NotaryService(validating = false)
@@ -155,7 +155,7 @@ class NodeConfigTest {
             p2pPort: Int = -1,
             rpcPort: Int = -1,
             rpcAdminPort: Int = -1,
-            database: Properties? = null,
+            database: DatabaseConfig = DatabaseConfig(),
             webPort: Int = -1,
             h2port: Int = -1,
             notary: NotaryService?,
