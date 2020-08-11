@@ -7,10 +7,13 @@ import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.node.services.config.parseAsNodeConfiguration
 import net.corda.nodeapi.internal.config.User
 import net.corda.nodeapi.internal.config.toProperties
+import net.corda.nodeapi.internal.persistence.DatabaseConfig
 import net.corda.webserver.WebServerConfig
 import org.junit.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -130,12 +133,29 @@ class NodeConfigTest {
         assertEquals("cordacadevpass", webConfig.keyStorePassword)
     }
 
+    @Test(timeout=300_000)
+    fun `ensure schema property doesn't throw exception`() {
+        assertDoesNotThrow {
+            createConfig(
+                legalName = myLegalName,
+                p2pPort = 10001,
+                rpcPort = 10002,
+                rpcAdminPort = 10003,
+                database = Properties().apply { setProperty("schema", "sa") },
+                webPort = 10004,
+                h2port = 10005,
+                notary = NotaryService(validating = false)
+            )
+        }
+    }
+
     @Suppress("LongParameterList")
     private fun createConfig(
             legalName: CordaX500Name = CordaX500Name(organisation = "Unknown", locality = "Nowhere", country = "GB"),
             p2pPort: Int = -1,
             rpcPort: Int = -1,
             rpcAdminPort: Int = -1,
+            database: Properties? = null,
             webPort: Int = -1,
             h2port: Int = -1,
             notary: NotaryService?,
@@ -150,6 +170,7 @@ class NodeConfigTest {
                         address = localPort(rpcPort),
                         adminAddress = localPort(rpcAdminPort)
                 ),
+                database = database,
                 webAddress = localPort(webPort),
                 h2port = h2port,
                 notary = notary,
