@@ -1,3 +1,5 @@
+import java.util.concurrent.atomic.AtomicInteger
+
 buildscript {
     repositories {
         mavenCentral()
@@ -17,13 +19,14 @@ tasks.withType(Test) {
 
 
     def csvFile = new File("${project.rootDir}/build/reports/memoryUsage/report.csv")
+    def logFile = new File("${project.rootDir}/build/logs/memory.usage.log")
     def startUsage = 0l
     def memory = new oshi.SystemInfo().hardware.memory
 
     def maxUsage = 0l
     def running = true
 
-    def counter = new java.util.concurrent.atomic.AtomicInteger(0)
+    def counter = new AtomicInteger(0)
 
     def monitorThread = new Thread({
         while(running) {
@@ -38,40 +41,64 @@ tasks.withType(Test) {
     monitorThread.setDaemon(true)
 
 
-
     addTestListener(new TestListener() {
         void beforeTest(TestDescriptor testDescriptor) {
+            logFile.append("Starting test ${testDescriptor.className}.${testDescriptor.name}\n")
+
             startUsage = getUsedMemory(memory)
             maxUsage = startUsage;
         }
 
         void beforeSuite(TestDescriptor suite) {
+            logFile.append("Starting suite ${suite.name}\n")
         }
 
         void afterSuite(TestDescriptor suite, TestResult result) {
+            logFile.append("Ended suite ${suite.name}\n")
         }
 
         void afterTest(TestDescriptor testDescriptor, TestResult result) {
-            def gc = Runtime.getRuntime().exec("jcmd GradleWorkerMain GC.run")
-            gc.waitFor()
+            logFile.append("Ended test ${testDescriptor.className}.${testDescriptor.name} ${result.resultType.name()}\n")
+            if(result.exception != null) {
+                logFile.withPrintWriter {
+                    result.exception.printStackTrace(it)
+                }
+            }
+
+            def jpsProcess = Runtime.getRuntime().exec("jps")
+            jpsProcess.inputStream.readLines().forEach {
+                def pidNamePair = it.split()
+                if((pidNamePair.length >= 2) && (pidNamePair[1].equals("GradleWorkerMain"))) {
+                    def pid = pidNamePair[0]
+                    logFile.append("Running GC on $it\n")
+                    def jmapProcess = Runtime.getRuntime().exec("jmap -histo:live $pid\n")
+                    jmapProcess.inputStream.readLines()
+                    jmapProcess.waitFor()
+                    logFile.append("\t Done... ${jmapProcess.exitValue()} \n")
+                }
+            }
             Thread.sleep(1000)
+            logFile.append("Slept\n")
 
             def currentTest = (testDescriptor.className +"." + testDescriptor.name).replace("\"", "\"\"")
             def endUsage = getUsedMemory(memory)
             if(endUsage > maxUsage) {
                 maxUsage = endUsage
             }
-            csvFile.append("${counter.incrementAndGet()},\"${currentTest}\",$startUsage,$maxUsage,$endUsage,${(result.getEndTime() - result.getStartTime())/ 1000.0},${result.resultType.name()}\n")
+            csvFile.append("${counter.incrementAndGet()},\"${currentTest}\",$startUsage,$endUsage,$maxUsage,${(result.getEndTime() - result.getStartTime())/ 1000.0},${result.resultType.name()}\n")
         }
     })
     doFirst {
+        logFile.parentFile.mkdirs()
         csvFile.parentFile.mkdirs()
+        logFile.append("Starting test task ${project.name} $name\n")
         if(!csvFile.exists()) {
-            csvFile.write("Index,Test,Used memory before start,Used memory after ends,Max used memry during,Duration (seconds),result\n")
+            csvFile.write("Index,Test,Used memory before start,Used memory after ends,Max used memory during,Duration (seconds),result\n")
         }
         monitorThread.start()
     }
     doLast {
+        logFile.append("Ended test task ${project.name} $name\n")
         running = false
     }
 }
