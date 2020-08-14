@@ -725,8 +725,9 @@ class DBCheckpointStorage(
         val progressStep: String?,
         val ioRequestType: String?,
         val compatible: Boolean,
-        val wasHospitalized: Boolean
+        exception: String?
     ) {
+        val wasHospitalized = exception != null
         fun toSerializedCheckpoint(): Checkpoint.Serialized {
             return Checkpoint.Serialized(
                 serializedCheckpointState = SerializedBytes(checkpoint),
