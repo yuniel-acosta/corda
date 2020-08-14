@@ -456,12 +456,8 @@ internal class SingleThreadedStateMachineManager(
             innerState.withLock { if (id in flows) return@Checkpoints }
             val checkpoint = tryDeserializeCheckpoint(serializedCheckpoint, id)?.also {
                 if (it.status == Checkpoint.FlowStatus.HOSPITALIZED) {
-                    if (checkpointStorage.removeFlowException(id)) {
-                        checkpointStorage.updateStatus(id, Checkpoint.FlowStatus.RUNNABLE)
-                    } else {
-                        logger.error("Unable to remove database exception for flow $id. Something is very wrong. The flow will not be loaded and run.")
-                        return@Checkpoints
-                    }
+                    checkpointStorage.removeFlowException(id)
+                    checkpointStorage.updateStatus(id, Checkpoint.FlowStatus.RUNNABLE)
                 }
             } ?: return@Checkpoints
             val flow = flowCreator.createFlowFromCheckpoint(id, checkpoint)
@@ -507,12 +503,8 @@ internal class SingleThreadedStateMachineManager(
 
                 tryDeserializeCheckpoint(serializedCheckpoint, flowId)?.also {
                     if (it.status == Checkpoint.FlowStatus.HOSPITALIZED) {
-                        if (checkpointStorage.removeFlowException(flowId)) {
-                            checkpointStorage.updateStatus(flowId, Checkpoint.FlowStatus.RUNNABLE)
-                        } else {
-                            logger.error("Unable to remove database exception for flow $flowId. Something is very wrong. The flow will not be loaded and run.")
-                            return@transaction null
-                        }
+                        checkpointStorage.removeFlowException(flowId)
+                        checkpointStorage.updateStatus(flowId, Checkpoint.FlowStatus.RUNNABLE)
                     }
                 } ?: return@transaction null
             } ?: return
