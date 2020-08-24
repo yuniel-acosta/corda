@@ -93,8 +93,7 @@ open class SharedNodeCmdLineOptions {
                 Unable to load the node config file from '$configFile'.
                 ${cause?.message?.let { "Cause: $it" } ?: ""}
                 
-                Ensure that the [COMMAND] precedes all options. Alternatively, try
-                setting the --base-directory flag to change which directory the node
+                Try setting the --base-directory flag to change which directory the node
                 is looking in, or use the --config-file flag to specify it explicitly.
             """.trimIndent()
     }
