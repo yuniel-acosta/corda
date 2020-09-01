@@ -28,8 +28,8 @@ import net.corda.node.internal.subcommands.ValidateConfigurationCli.Companion.lo
 import net.corda.node.services.config.NodeConfiguration
 import net.corda.node.services.config.shouldStartLocalShell
 import net.corda.node.services.config.shouldStartSSHDaemon
-import net.corda.node.utilities.JVMAgentUtil.getJvmAgentProperties
 import net.corda.node.utilities.registration.NodeRegistrationException
+import net.corda.nodeapi.internal.JVMAgentUtilities
 import net.corda.nodeapi.internal.addShutdownHook
 import net.corda.nodeapi.internal.persistence.CouldNotCreateDataSourceException
 import net.corda.nodeapi.internal.persistence.DatabaseIncompatibleException
@@ -76,10 +76,18 @@ open class NodeStartupCli : CordaCliWrapper("corda", "Runs a Corda Node") {
     private val justGenerateRpcSslCertsCli by lazy { GenerateRpcSslCertsCli(startup) }
     private val initialRegistrationCli by lazy { InitialRegistrationCli(startup) }
     private val validateConfigurationCli by lazy { ValidateConfigurationCli() }
+    private val runMigrationScriptsCli by lazy { RunMigrationScriptsCli(startup) }
+    private val synchroniseAppSchemasCli by lazy { SynchroniseSchemasCli(startup) }
 
     override fun initLogging(): Boolean = this.initLogging(cmdLineOptions.baseDirectory)
 
-    override fun additionalSubCommands() = setOf(networkCacheCli, justGenerateNodeInfoCli, justGenerateRpcSslCertsCli, initialRegistrationCli, validateConfigurationCli)
+    override fun additionalSubCommands() = setOf(networkCacheCli,
+            justGenerateNodeInfoCli,
+            justGenerateRpcSslCertsCli,
+            initialRegistrationCli,
+            validateConfigurationCli,
+            runMigrationScriptsCli,
+            synchroniseAppSchemasCli)
 
     override fun call(): Int {
         if (!validateBaseDirectory()) {
@@ -112,6 +120,7 @@ open class NodeStartupCli : CordaCliWrapper("corda", "Runs a Corda Node") {
                 requireNotNull(cmdLineOptions.networkRootTrustStorePassword) { "Network root trust store password must be provided in registration mode using --network-root-truststore-password." }
                 initialRegistrationCli.networkRootTrustStorePassword = cmdLineOptions.networkRootTrustStorePassword!!
                 initialRegistrationCli.networkRootTrustStorePathParameter = cmdLineOptions.networkRootTrustStorePathParameter
+                initialRegistrationCli.skipSchemaCreation = cmdLineOptions.skipSchemaCreation
                 initialRegistrationCli.cmdLineOptions.copyFrom(cmdLineOptions)
                 initialRegistrationCli.runProgram()
             }
@@ -145,6 +154,8 @@ open class NodeStartup : NodeStartupLogging {
         const val LOGS_DIRECTORY_NAME = "logs"
         const val LOGS_CAN_BE_FOUND_IN_STRING = "Logs can be found in"
         const val ERROR_CODE_RESOURCE_LOCATION = "error-codes"
+
+
     }
 
     lateinit var cmdLineOptions: SharedNodeCmdLineOptions
@@ -201,7 +212,7 @@ open class NodeStartup : NodeStartupLogging {
 
     protected open fun preNetworkRegistration(conf: NodeConfiguration) = Unit
 
-    open fun createNode(conf: NodeConfiguration, versionInfo: VersionInfo): Node = Node(conf, versionInfo)
+    open fun createNode(conf: NodeConfiguration, versionInfo: VersionInfo): Node = Node(conf, versionInfo, allowHibernateToManageAppSchema = cmdLineOptions.allowHibernateToManageAppSchema)
 
     fun startNode(node: Node, startTime: Long) {
         if (node.configuration.devMode) {
@@ -261,10 +272,10 @@ open class NodeStartup : NodeStartupLogging {
         logger.info("VM ${info.vmName} ${info.vmVendor} ${info.vmVersion}")
         logger.info("Machine: ${lookupMachineNameAndMaybeWarn()}")
         logger.info("Working Directory: ${cmdLineOptions.baseDirectory}")
-        val agentProperties = getJvmAgentProperties(logger)
-        if (agentProperties.containsKey("sun.jdwp.listenerAddress")) {
-            logger.info("Debug port: ${agentProperties.getProperty("sun.jdwp.listenerAddress")}")
+        JVMAgentUtilities.parseDebugPort(info.inputArguments) ?.let {
+            logger.info("Debug port: $it")
         }
+
         var nodeStartedMessage = "Starting as node on ${conf.p2pAddress}"
         if (conf.extraNetworkMapKeys.isNotEmpty()) {
             nodeStartedMessage = "$nodeStartedMessage with additional Network Map keys ${conf.extraNetworkMapKeys.joinToString(prefix = "[", postfix = "]", separator = ", ")}"

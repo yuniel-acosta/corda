@@ -8,6 +8,7 @@ import net.corda.common.validation.internal.Validated.Companion.invalid
 import net.corda.common.validation.internal.Validated.Companion.valid
 import net.corda.node.services.config.*
 import net.corda.node.services.config.NodeConfigurationImpl.Defaults
+import net.corda.node.services.config.NodeConfigurationImpl.Defaults.reloadCheckpointAfterSuspend
 import net.corda.node.services.config.schema.parsers.*
 
 internal object V1NodeConfigurationSpec : Configuration.Specification<NodeConfiguration>("NodeConfiguration") {
@@ -67,6 +68,7 @@ internal object V1NodeConfigurationSpec : Configuration.Specification<NodeConfig
     private val flowExternalOperationThreadPoolSize by int().optional().withDefaultValue(Defaults.flowExternalOperationThreadPoolSize)
     private val quasarExcludePackages by string().list().optional().withDefaultValue(Defaults.quasarExcludePackages)
     private val networkParametersPath by string().mapValid(::toPath).optional()
+    private val reloadCheckpointAfterSuspend by boolean().optional().withDefaultValue(Defaults.reloadCheckpointAfterSuspend)
     @Suppress("unused")
     private val custom by nestedObject().optional()
     @Suppress("unused")
@@ -134,7 +136,8 @@ internal object V1NodeConfigurationSpec : Configuration.Specification<NodeConfig
                     networkParameterAcceptanceSettings = config[networkParameterAcceptanceSettings],
                     configurationWithOptions = ConfigurationWithOptions(configuration, Configuration.Options.defaults),
                     flowExternalOperationThreadPoolSize = config[flowExternalOperationThreadPoolSize],
-                    quasarExcludePackages = config[quasarExcludePackages]
+                    quasarExcludePackages = config[quasarExcludePackages],
+                    reloadCheckpointAfterSuspend = config[reloadCheckpointAfterSuspend]
             ))
         } catch (e: Exception) {
             return when (e) {

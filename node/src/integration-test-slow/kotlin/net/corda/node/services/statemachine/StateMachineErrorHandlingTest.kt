@@ -62,30 +62,49 @@ abstract class StateMachineErrorHandlingTest {
         }
     }
 
-    internal fun DriverDSL.createBytemanNode(
-        providedName: CordaX500Name,
+    internal fun DriverDSL.createBytemanNode(nodeProvidedName: CordaX500Name): Pair<NodeHandle, Int> {
+        val port = nextPort()
+        val bytemanNodeHandle = (this as InternalDriverDSL).startNode(
+            NodeParameters(
+                providedName = nodeProvidedName,
+                rpcUsers = listOf(rpcUser)
+            ),
+            bytemanPort = port
+        )
+        return bytemanNodeHandle.getOrThrow() to port
+    }
+
+    internal fun DriverDSL.createNode(nodeProvidedName: CordaX500Name): NodeHandle {
+        return (this as InternalDriverDSL).startNode(
+            NodeParameters(
+                providedName = nodeProvidedName,
+                rpcUsers = listOf(rpcUser)
+            )
+        ).getOrThrow()
+    }
+
+    internal fun DriverDSL.createNodeAndBytemanNode(
+        nodeProvidedName: CordaX500Name,
+        bytemanNodeProvidedName: CordaX500Name,
         additionalCordapps: Collection<TestCordapp> = emptyList()
-    ): Pair<NodeHandle, Int> {
+    ): Triple<NodeHandle, NodeHandle, Int> {
         val port = nextPort()
         val nodeHandle = (this as InternalDriverDSL).startNode(
             NodeParameters(
-                providedName = providedName,
+                providedName = nodeProvidedName,
+                rpcUsers = listOf(rpcUser),
+                additionalCordapps = additionalCordapps
+            )
+        )
+        val bytemanNodeHandle = startNode(
+            NodeParameters(
+                providedName = bytemanNodeProvidedName,
                 rpcUsers = listOf(rpcUser),
                 additionalCordapps = additionalCordapps
             ),
             bytemanPort = port
-        ).getOrThrow()
-        return nodeHandle to port
-    }
-
-    internal fun DriverDSL.createNode(providedName: CordaX500Name, additionalCordapps: Collection<TestCordapp> = emptyList()): NodeHandle {
-        return startNode(
-            NodeParameters(
-                providedName = providedName,
-                rpcUsers = listOf(rpcUser),
-                additionalCordapps = additionalCordapps
-            )
-        ).getOrThrow()
+        )
+        return Triple(nodeHandle.getOrThrow(), bytemanNodeHandle.getOrThrow(), port)
     }
 
     internal fun submitBytemanRules(rules: String, port: Int) {
@@ -93,11 +112,10 @@ abstract class StateMachineErrorHandlingTest {
         submit.addScripts(listOf(ScriptText("Test script", rules)))
     }
 
-    internal fun getBytemanOutput(nodeHandle: NodeHandle): List<String> {
-        return nodeHandle.baseDirectory
-            .list()
-            .first { it.toString().contains("net.corda.node.Corda") && it.toString().contains("stdout.log") }
-            .readAllLines()
+    private fun NodeHandle.getBytemanOutput(): List<String> {
+        return baseDirectory.list()
+            .filter { "net.corda.node.Corda" in it.toString() && "stdout.log" in it.toString() }
+            .flatMap { it.readAllLines() }
     }
 
     internal fun OutOfProcessImpl.stop(timeout: Duration): Boolean {
@@ -105,6 +123,10 @@ abstract class StateMachineErrorHandlingTest {
             destroy()
             waitFor(timeout.seconds, TimeUnit.SECONDS)
         }.also { onStopCallback() }
+    }
+
+    internal fun NodeHandle.assertBytemanOutput(string: String, count: Int) {
+        assertEquals(count, getBytemanOutput().filter { string in it }.size)
     }
 
     @Suppress("LongParameterList")
@@ -227,6 +249,7 @@ abstract class StateMachineErrorHandlingTest {
     // Internal use for testing only!!
     @StartableByRPC
     class GetHospitalCountersFlow : FlowLogic<HospitalCounts>() {
+        @Suspendable
         override fun call(): HospitalCounts =
             HospitalCounts(
                 serviceHub.cordaService(HospitalCounter::class.java).dischargedCounter,

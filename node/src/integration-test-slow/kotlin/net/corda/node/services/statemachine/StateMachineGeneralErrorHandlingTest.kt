@@ -1,15 +1,21 @@
 package net.corda.node.services.statemachine
 
+import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.CordaRuntimeException
+import net.corda.core.flows.FlowException
+import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.StartableByRPC
 import net.corda.core.messaging.startFlow
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.seconds
 import net.corda.node.services.api.CheckpointStorage
 import net.corda.node.services.messaging.DeduplicationHandler
+import net.corda.node.services.statemachine.transitions.StartedFlowTransition
 import net.corda.node.services.statemachine.transitions.TopLevelTransition
 import net.corda.testing.core.ALICE_NAME
 import net.corda.testing.core.CHARLIE_NAME
 import net.corda.testing.core.singleIdentity
+import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.Test
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -35,8 +41,7 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
     @Test(timeout = 300_000)
     fun `error during transition with SendInitial action is retried 3 times and kept for observation if error persists`() {
         startDriver {
-            val charlie = createNode(CHARLIE_NAME)
-            val (alice, port) = createBytemanNode(ALICE_NAME)
+            val (charlie, alice, port) = createNodeAndBytemanNode(CHARLIE_NAME, ALICE_NAME)
 
             val rules = """
                 RULE Create Counter
@@ -87,8 +92,7 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
     @Test(timeout = 300_000)
     fun `error during transition with SendInitial action that does not persist will retry and complete successfully`() {
         startDriver {
-            val charlie = createNode(CHARLIE_NAME)
-            val (alice, port) = createBytemanNode(ALICE_NAME)
+            val (charlie, alice, port) = createNodeAndBytemanNode(CHARLIE_NAME, ALICE_NAME)
 
             val rules = """
                 RULE Create Counter
@@ -135,8 +139,7 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
     @Test(timeout = 300_000)
     fun `error during transition with AcknowledgeMessages action is swallowed and flow completes successfully`() {
         startDriver {
-            val charlie = createNode(CHARLIE_NAME)
-            val (alice, port) = createBytemanNode(ALICE_NAME)
+            val (charlie, alice, port) = createNodeAndBytemanNode(CHARLIE_NAME, ALICE_NAME)
 
             val rules = """
                 RULE Set flag when inside executeAcknowledgeMessages
@@ -209,7 +212,7 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
                 alice.rpc.startFlow(StateMachineErrorHandlingTest::ThrowAnErrorFlow).returnValue.getOrThrow(60.seconds)
             }
 
-            alice.rpc.assertNumberOfCheckpoints(failed = 1)
+            alice.rpc.assertNumberOfCheckpointsAllZero()
             alice.rpc.assertHospitalCounts(
                 propagated = 1,
                 propagatedRetry = 3
@@ -230,8 +233,7 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
     @Test(timeout = 300_000)
     fun `error during flow retry when executing retryFlowFromSafePoint the flow is able to retry and recover`() {
         startDriver {
-            val charlie = createNode(CHARLIE_NAME)
-            val (alice, port) = createBytemanNode(ALICE_NAME)
+            val (charlie, alice, port) = createNodeAndBytemanNode(CHARLIE_NAME, ALICE_NAME)
 
             val rules = """
                 RULE Set flag when executing first suspend
@@ -296,8 +298,7 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
     @Test(timeout = 300_000)
     fun `error during transition with CommitTransaction action that occurs after the first suspend will retry and complete successfully`() {
         startDriver {
-            val charlie = createNode(CHARLIE_NAME)
-            val (alice, port) = createBytemanNode(ALICE_NAME)
+            val (charlie, alice, port) = createNodeAndBytemanNode(CHARLIE_NAME, ALICE_NAME)
 
             // seems to be restarting the flow from the beginning every time
             val rules = """
@@ -362,8 +363,7 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
     @Test(timeout = 300_000)
     fun `error during transition with CommitTransaction action that occurs when completing a flow and deleting its checkpoint will retry and complete successfully`() {
         startDriver {
-            val charlie = createNode(CHARLIE_NAME)
-            val (alice, port) = createBytemanNode(ALICE_NAME)
+            val (charlie, alice, port) = createNodeAndBytemanNode(CHARLIE_NAME, ALICE_NAME)
 
             // seems to be restarting the flow from the beginning every time
             val rules = """
@@ -419,8 +419,7 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
     @Test(timeout = 300_000)
     fun `error during transition with CommitTransaction action and ConstraintViolationException that occurs when completing a flow will retry and be kept for observation if error persists`() {
         startDriver {
-            val charlie = createNode(CHARLIE_NAME)
-            val (alice, port) = createBytemanNode(ALICE_NAME)
+            val (charlie, alice, port) = createNodeAndBytemanNode(CHARLIE_NAME, ALICE_NAME)
 
             val rules = """
                 RULE Create Counter
@@ -488,15 +487,14 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
     @Test(timeout = 300_000)
     fun `flow can be retried when there is a transient connection error to the database`() {
         startDriver {
-            val charlie = createNode(CHARLIE_NAME)
-            val (alice, port) = createBytemanNode(ALICE_NAME)
+            val (charlie, alice, port) = createNodeAndBytemanNode(CHARLIE_NAME, ALICE_NAME)
 
             val rules = """
                 RULE Create Counter
                 CLASS $actionExecutorClassName
                 METHOD executeCommitTransaction
                 AT ENTRY
-                IF createCounter("counter", $counter) 
+                IF createCounter("counter", $counter) && createCounter("counter_2", $counter) 
                 DO traceln("Counter created")
                 ENDRULE
 
@@ -512,8 +510,16 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
                 INTERFACE ${CheckpointStorage::class.java.name}
                 METHOD getCheckpoint
                 AT ENTRY
+                IF readCounter("counter_2") < 3
+                DO incrementCounter("counter_2"); traceln("Throwing exception getting checkpoint"); throw new java.sql.SQLTransientConnectionException("Connection is not available")
+                ENDRULE
+                
+                RULE Log external start flow event
+                CLASS $stateMachineManagerClassName
+                METHOD onExternalStartFlow
+                AT ENTRY
                 IF true
-                DO traceln("Throwing exception getting checkpoint"); throw new java.sql.SQLTransientConnectionException("Connection is not available")
+                DO traceln("External start flow event")
                 ENDRULE
             """.trimIndent()
 
@@ -529,7 +535,7 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
             alice.rpc.assertNumberOfCheckpointsAllZero()
             alice.rpc.assertHospitalCounts(
                 discharged = 3,
-                observation = 0
+                dischargedRetry = 1
             )
             assertEquals(0, alice.rpc.stateMachinesSnapshot().size)
         }
@@ -552,15 +558,14 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
     @Test(timeout = 300_000)
     fun `flow can be retried when there is a transient connection error to the database goes to observation if error persists`() {
         startDriver {
-            val charlie = createNode(CHARLIE_NAME)
-            val (alice, port) = createBytemanNode(ALICE_NAME)
+            val (charlie, alice, port) = createNodeAndBytemanNode(CHARLIE_NAME, ALICE_NAME)
 
             val rules = """
                 RULE Create Counter
                 CLASS $actionExecutorClassName
                 METHOD executeCommitTransaction
                 AT ENTRY
-                IF createCounter("counter", $counter) 
+                IF createCounter("counter", $counter) && createCounter("counter_2", $counter) 
                 DO traceln("Counter created")
                 ENDRULE
 
@@ -576,8 +581,8 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
                 INTERFACE ${CheckpointStorage::class.java.name}
                 METHOD getCheckpoint
                 AT ENTRY
-                IF true
-                DO traceln("Throwing exception getting checkpoint"); throw new java.sql.SQLTransientConnectionException("Connection is not available")
+                IF readCounter("counter_2") < 3
+                DO incrementCounter("counter_2"); traceln("Throwing exception getting checkpoint"); throw new java.sql.SQLTransientConnectionException("Connection is not available")
                 ENDRULE
             """.trimIndent()
 
@@ -593,7 +598,8 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
             alice.rpc.assertNumberOfCheckpoints(hospitalized = 1)
             alice.rpc.assertHospitalCounts(
                 discharged = 3,
-                observation = 1
+                observation = 1,
+                dischargedRetry = 1
             )
             assertEquals(1, alice.rpc.stateMachinesSnapshot().size)
         }
@@ -610,8 +616,7 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
     @Test(timeout = 300_000)
     fun `responding flow - error during transition with CommitTransaction action that occurs when completing a flow and deleting its checkpoint will retry and complete successfully`() {
         startDriver {
-            val (charlie, port) = createBytemanNode(CHARLIE_NAME)
-            val alice = createNode(ALICE_NAME)
+            val (alice, charlie, port) = createNodeAndBytemanNode(ALICE_NAME, CHARLIE_NAME)
 
             val rules = """
                 RULE Create Counter
@@ -656,6 +661,52 @@ class StateMachineGeneralErrorHandlingTest : StateMachineErrorHandlingTest() {
             charlie.rpc.assertHospitalCounts(discharged = 3)
             assertEquals(0, alice.rpc.stateMachinesSnapshot().size)
             assertEquals(0, charlie.rpc.stateMachinesSnapshot().size)
+        }
+    }
+
+    /**
+     * Throws an exception when creating a transition.
+     *
+     * The exception is thrown back to the flow, who catches it and returns a different exception, showing the exception returns to user
+     * code and can be caught if needed.
+     */
+    @Test(timeout = 300_000)
+    fun `error during creation of transition that occurs after the first suspend will throw error into flow`() {
+        startDriver {
+            val (alice, port) = createBytemanNode(ALICE_NAME)
+
+            val rules = """
+                RULE Throw exception when creating transition
+                CLASS ${StartedFlowTransition::class.java.name}
+                METHOD sleepTransition
+                AT ENTRY
+                IF true
+                DO traceln("Throwing exception"); throw new java.lang.IllegalStateException("die dammit die")
+                ENDRULE
+            """.trimIndent()
+
+            submitBytemanRules(rules, port)
+
+            assertThatExceptionOfType(FlowException::class.java).isThrownBy {
+                alice.rpc.startFlow(::SleepCatchAndRethrowFlow).returnValue.getOrThrow(30.seconds)
+            }.withMessage("java.lang.IllegalStateException: die dammit die")
+
+            alice.rpc.assertNumberOfCheckpointsAllZero()
+            alice.rpc.assertHospitalCounts(propagated = 1)
+            assertEquals(0, alice.rpc.stateMachinesSnapshot().size)
+        }
+    }
+
+    @StartableByRPC
+    class SleepCatchAndRethrowFlow : FlowLogic<String>() {
+        @Suspendable
+        override fun call(): String {
+            try {
+                sleep(5.seconds)
+            } catch (e: IllegalStateException) {
+                throw FlowException(e)
+            }
+            return "cant get here"
         }
     }
 }

@@ -39,11 +39,12 @@ class MigrationServicesForResolution(
         private val transactions: TransactionStorage,
         private val cordaDB: CordaPersistence,
         cacheFactory: MigrationNamedCacheFactory
-): ServicesForResolution {
+) : ServicesForResolution {
 
     companion object {
         val logger = contextLogger()
     }
+
     override val cordappProvider: CordappProvider
         get() = object : CordappProvider {
 
@@ -60,8 +61,8 @@ class MigrationServicesForResolution(
     private val cordappLoader = SchemaMigration.loader.get()
 
     private val attachmentTrustCalculator = NodeAttachmentTrustCalculator(
-        attachments,
-        cacheFactory
+            attachments,
+            cacheFactory
     )
 
     private val attachmentsClassLoaderCache: AttachmentsClassLoaderCache = AttachmentsClassLoaderCacheImpl(cacheFactory)
@@ -84,8 +85,8 @@ class MigrationServicesForResolution(
 
     private fun getNetworkParametersFromFile(): SignedNetworkParameters? {
         return try {
-            val dir = System.getProperty(SchemaMigration.NODE_BASE_DIR_KEY)
-            val path = Paths.get(dir) / NETWORK_PARAMS_FILE_NAME
+            val dir = System.getProperty(SchemaMigration.NODE_NET_PARAMS_PATH_KEY)
+            val path = Paths.get(dir)
             path.readObject()
         } catch (e: Exception) {
             logger.info("Couldn't find network parameters file: ${e.message}. This is expected if the node is starting for the first time.")
@@ -122,7 +123,7 @@ class MigrationServicesForResolution(
 
     private fun extractStateFromTx(tx: WireTransaction, stateIndices: Collection<Int>): List<TransactionState<ContractState>> {
         return try {
-            val txAttachments = tx.attachments.mapNotNull { attachments.openAttachment(it)}
+            val txAttachments = tx.attachments.mapNotNull { attachments.openAttachment(it) }
             val states = AttachmentsClassLoaderBuilder.withAttachmentsClassloaderContext(
                     txAttachments,
                     networkParameters,
@@ -132,12 +133,12 @@ class MigrationServicesForResolution(
                     attachmentsClassLoaderCache) {
                 deserialiseComponentGroup(tx.componentGroups, TransactionState::class, ComponentGroupEnum.OUTPUTS_GROUP, forceDeserialize = true)
             }
-            states.filterIndexed {index, _ -> stateIndices.contains(index)}.toList()
+            states.filterIndexed { index, _ -> stateIndices.contains(index) }.toList()
         } catch (e: Exception) {
             // If there is no attachment that allows the state class to be deserialised correctly, then carpent a state class anyway. It
             // might still be possible to access the participants depending on how the state class was serialised.
             logger.debug("Could not use attachments to deserialise transaction output states for transaction ${tx.id}")
-            tx.outputs.filterIndexed { index, _ -> stateIndices.contains(index)}
+            tx.outputs.filterIndexed { index, _ -> stateIndices.contains(index) }
         }
     }
 
@@ -162,7 +163,7 @@ class MigrationServicesForResolution(
                 is NotaryChangeLedgerTransaction -> it.value.map { stateRef -> StateAndRef(baseTx.outputs[stateRef.index], stateRef) }
                 is ContractUpgradeLedgerTransaction -> it.value.map { stateRef -> StateAndRef(baseTx.outputs[stateRef.index], stateRef) }
                 is WireTransaction -> extractStateFromTx(baseTx, it.value.map { stateRef -> stateRef.index })
-                        .mapIndexed {index, state -> StateAndRef(state, StateRef(baseTx.id, index)) }
+                        .mapIndexed { index, state -> StateAndRef(state, StateRef(baseTx.id, index)) }
                 else -> throw MigrationException("Unknown transaction type ${baseTx::class.qualifiedName} found when loading a state")
             }
             stateList

@@ -105,18 +105,18 @@ sealed class Event {
      * @param progressStep the current progress tracker step.
      */
     data class Suspend(
-            val ioRequest: FlowIORequest<*>,
-            val maySkipCheckpoint: Boolean,
-            val fiber: SerializedBytes<FlowStateMachineImpl<*>>,
-            var progressStep: ProgressTracker.Step?
+        val ioRequest: FlowIORequest<*>,
+        val maySkipCheckpoint: Boolean,
+        val fiber: SerializedBytes<FlowStateMachineImpl<*>>,
+        var progressStep: ProgressTracker.Step?
     ) : Event() {
         override fun toString() =
-                "Suspend(" +
-                        "ioRequest=$ioRequest, " +
-                        "maySkipCheckpoint=$maySkipCheckpoint, " +
-                        "fiber=${fiber.hash}, " +
-                        "currentStep=${progressStep?.label}" +
-                        ")"
+            "Suspend(" +
+                    "ioRequest=$ioRequest, " +
+                    "maySkipCheckpoint=$maySkipCheckpoint, " +
+                    "fiber=${fiber.hash}, " +
+                    "currentStep=${progressStep?.label}" +
+                    ")"
     }
 
     /**
@@ -139,7 +139,7 @@ sealed class Event {
     data class AsyncOperationCompletion(val returnValue: Any?) : Event()
 
     /**
-     * Signals the faiure of a [FlowAsyncOperation].
+     * Signals the failure of a [FlowAsyncOperation].
      *
      * Scheduling is triggered by the service that completes the future returned by the async operation.
      *
@@ -148,10 +148,19 @@ sealed class Event {
     data class AsyncOperationThrows(val throwable: Throwable) : Event()
 
     /**
-     * Retry a flow from the last checkpoint, or if there is no checkpoint, restart the flow with the same invocation details.
+     * Retry a flow from its last checkpoint, or if there is no checkpoint, restart the flow with the same invocation details.
      */
     object RetryFlowFromSafePoint : Event() {
         override fun toString() = "RetryFlowFromSafePoint"
+    }
+
+    /**
+     * Reload a flow from its last checkpoint, or if there is no checkpoint, restart the flow with the same invocation details.
+     * This is separate from [RetryFlowFromSafePoint] which is used for error handling within the state machine.
+     * [ReloadFlowFromCheckpointAfterSuspend] is only used when [NodeConfiguration.reloadCheckpointAfterSuspend] is true.
+     */
+    object ReloadFlowFromCheckpointAfterSuspend : Event() {
+        override fun toString() = "ReloadFlowFromCheckpointAfterSuspend"
     }
 
     /**
@@ -168,6 +177,13 @@ sealed class Event {
      */
     object WakeUpFromSleep : Event() {
         override fun toString() = "WakeUpSleepyFlow"
+    }
+
+    /**
+     * Pause the flow.
+     */
+    object Pause: Event() {
+        override fun toString() = "Pause"
     }
 
     /**

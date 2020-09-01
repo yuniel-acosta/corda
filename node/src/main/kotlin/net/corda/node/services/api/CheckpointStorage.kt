@@ -4,6 +4,7 @@ import net.corda.core.flows.StateMachineRunId
 import net.corda.core.serialization.SerializedBytes
 import net.corda.node.services.statemachine.Checkpoint
 import net.corda.node.services.statemachine.CheckpointState
+import net.corda.node.services.statemachine.FlowResultMetadata
 import net.corda.node.services.statemachine.FlowState
 import java.util.stream.Stream
 
@@ -14,14 +15,30 @@ interface CheckpointStorage {
     /**
      * Add a checkpoint for a new id to the store. Will throw if there is already a checkpoint for this id
      */
-    fun addCheckpoint(id: StateMachineRunId, checkpoint: Checkpoint, serializedFlowState: SerializedBytes<FlowState>,
-                      serializedCheckpointState: SerializedBytes<CheckpointState>)
+    fun addCheckpoint(
+        id: StateMachineRunId, checkpoint: Checkpoint,
+        serializedFlowState: SerializedBytes<FlowState>?,
+        serializedCheckpointState: SerializedBytes<CheckpointState>
+    )
 
     /**
      * Update an existing checkpoint. Will throw if there is not checkpoint for this id.
      */
-    fun updateCheckpoint(id: StateMachineRunId, checkpoint: Checkpoint, serializedFlowState: SerializedBytes<FlowState>?,
-                         serializedCheckpointState: SerializedBytes<CheckpointState>)
+    fun updateCheckpoint(
+        id: StateMachineRunId, checkpoint: Checkpoint,
+        serializedFlowState: SerializedBytes<FlowState>?,
+        serializedCheckpointState: SerializedBytes<CheckpointState>
+    )
+
+    /**
+     * Update an existing checkpoints status ([Checkpoint.status]).
+     */
+    fun updateStatus(runId: StateMachineRunId, flowStatus: Checkpoint.FlowStatus)
+
+    /**
+     * Update an existing checkpoints compatibility flag ([Checkpoint.compatible]).
+     */
+    fun updateCompatible(runId: StateMachineRunId, compatible: Boolean)
 
     /**
      * Update all persisted checkpoints with status [Checkpoint.FlowStatus.RUNNABLE] or [Checkpoint.FlowStatus.HOSPITALIZED],
@@ -31,9 +48,12 @@ interface CheckpointStorage {
 
     /**
      * Remove existing checkpoint from the store.
+     *
+     * [mayHavePersistentResults] is used for optimization. If set to [false] it will not attempt to delete the database result or the database exception.
+     * Please note that if there is a doubt on whether a flow could be finished or not [mayHavePersistentResults] should be set to [true].
      * @return whether the id matched a checkpoint that was removed.
      */
-    fun removeCheckpoint(id: StateMachineRunId): Boolean
+    fun removeCheckpoint(id: StateMachineRunId, mayHavePersistentResults: Boolean = true): Boolean
 
     /**
      * Load an existing checkpoint from the store.
@@ -64,7 +84,21 @@ interface CheckpointStorage {
      * until the underlying database connection is closed, so any processing should happen before it is closed.
      * This method does not fetch [Checkpoint.Serialized.serializedFlowState] to save memory.
      */
-    fun getPausedCheckpoints(): Stream<Pair<StateMachineRunId, Checkpoint.Serialized>>
+    fun getPausedCheckpoints(): Stream<Triple<StateMachineRunId, Checkpoint.Serialized, Boolean>>
 
-    fun updateStatus(runId: StateMachineRunId, flowStatus: Checkpoint.FlowStatus)
+    fun getFinishedFlowsResultsMetadata(): Stream<Pair<StateMachineRunId, FlowResultMetadata>>
+
+    /**
+     * Load a flow result from the store. If [throwIfMissing] is true then it throws an [IllegalStateException]
+     * if the flow result is missing in the database.
+     */
+    fun getFlowResult(id: StateMachineRunId, throwIfMissing: Boolean = false): Any?
+
+    /**
+     * Load a flow exception from the store. If [throwIfMissing] is true then it throws an [IllegalStateException]
+     * if the flow exception is missing in the database.
+     */
+    fun getFlowException(id: StateMachineRunId, throwIfMissing: Boolean = false): Any?
+
+    fun removeFlowException(id: StateMachineRunId): Boolean
 }

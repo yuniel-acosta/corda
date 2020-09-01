@@ -29,39 +29,31 @@ class KilledFlowTransition(
                 startingState.checkpoint.checkpointState.sessions,
                 errorMessages
             )
-            val newCheckpoint = startingState.checkpoint.setSessions(sessions = newSessions)
-            currentState = currentState.copy(checkpoint = newCheckpoint)
-            actions.add(
-                Action.PropagateErrors(
-                    errorMessages,
-                    initiatedSessions,
-                    startingState.senderUUID
-                )
-            )
-
-            if (!startingState.isFlowResumed) {
-                actions.add(Action.CreateTransaction)
-            }
-            // The checkpoint and soft locks are also removed directly in [StateMachineManager.killFlow]
-            if (startingState.isAnyCheckpointPersisted) {
-                actions.add(Action.RemoveCheckpoint(context.id))
-            }
-            actions.addAll(
-                arrayOf(
-                    Action.PersistDeduplicationFacts(currentState.pendingDeduplicationHandlers),
-                    Action.ReleaseSoftLocks(context.id.uuid),
-                    Action.CommitTransaction,
-                    Action.AcknowledgeMessages(currentState.pendingDeduplicationHandlers),
-                    Action.RemoveSessionBindings(currentState.checkpoint.checkpointState.sessions.keys)
-                )
-            )
-
             currentState = currentState.copy(
+                checkpoint = startingState.checkpoint.setSessions(sessions = newSessions),
                 pendingDeduplicationHandlers = emptyList(),
                 isRemoved = true
             )
+            actions += Action.PropagateErrors(
+                errorMessages,
+                initiatedSessions,
+                startingState.senderUUID
+            )
 
-            actions.add(Action.RemoveFlow(context.id, createKilledRemovalReason(killedFlowError), currentState))
+            if (!startingState.isFlowResumed) {
+                actions += Action.CreateTransaction
+            }
+            // The checkpoint and soft locks are also removed directly in [StateMachineManager.killFlow]
+            if (startingState.isAnyCheckpointPersisted) {
+                actions += Action.RemoveCheckpoint(context.id, mayHavePersistentResults = true)
+            }
+            actions += Action.PersistDeduplicationFacts(startingState.pendingDeduplicationHandlers)
+            actions += Action.ReleaseSoftLocks(context.id.uuid)
+            actions += Action.CommitTransaction(currentState)
+            actions += Action.AcknowledgeMessages(startingState.pendingDeduplicationHandlers)
+            actions += Action.RemoveSessionBindings(startingState.checkpoint.checkpointState.sessions.keys)
+            actions += Action.RemoveFlow(context.id, createKilledRemovalReason(killedFlowError), currentState)
+
             FlowContinuation.Abort
         }
     }
@@ -105,8 +97,9 @@ class KilledFlowTransition(
                 sessionState
             }
         }
+        // if we have already received error message from the other side, we don't include that session in the list to avoid propagating errors.
         val initiatedSessions = sessions.values.mapNotNull { session ->
-            if (session is SessionState.Initiated && session.errors.isEmpty()) {
+            if (session is SessionState.Initiated && !session.otherSideErrored) {
                 session
             } else {
                 null

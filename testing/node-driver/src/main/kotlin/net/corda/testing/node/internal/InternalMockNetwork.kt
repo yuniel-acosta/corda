@@ -110,7 +110,7 @@ interface TestStartedNode {
     val services: StartedNodeServices
     val smm: StateMachineManager
     val attachments: NodeAttachmentService
-    val rpcOps: CordaRPCOps
+    val rpcOpsList: List<RPCOps>
     val network: MockNodeMessagingService
     val database: CordaPersistence
     val notaryService: NotaryService?
@@ -136,6 +136,9 @@ interface TestStartedNode {
     fun <T : FlowLogic<*>> registerInitiatedFlow(initiatedFlowClass: Class<T>, track: Boolean = false): Observable<T>
 
     fun <T : FlowLogic<*>> registerInitiatedFlow(initiatingFlowClass: Class<out FlowLogic<*>>, initiatedFlowClass: Class<T>, track: Boolean = false): Observable<T>
+
+    val cordaRPCOps: CordaRPCOps
+        get() = rpcOpsList.mapNotNull { it as? CordaRPCOps }.single()
 }
 
 open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
@@ -280,14 +283,19 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
         }
     }
 
-    open class MockNode(args: MockNodeArgs, private val mockFlowManager: MockNodeFlowManager = args.flowManager) : AbstractNode<TestStartedNode>(
+    open class MockNode(
+            args: MockNodeArgs,
+            private val mockFlowManager: MockNodeFlowManager = args.flowManager,
+            allowAppSchemaUpgradeWithCheckpoints: Boolean = false) : AbstractNode<TestStartedNode>(
             args.config,
             TestClock(Clock.systemUTC()),
             DefaultNamedCacheFactory(),
             args.version,
             mockFlowManager,
             args.network.getServerThread(args.id),
-            args.network.busyLatch
+            args.network.busyLatch,
+            allowHibernateToManageAppSchema = true,
+            allowAppSchemaUpgradeWithCheckpoints = allowAppSchemaUpgradeWithCheckpoints
     ) {
         companion object {
             private val staticLog = contextLogger()
@@ -302,7 +310,7 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
                 override val info: NodeInfo,
                 override val smm: StateMachineManager,
                 override val database: CordaPersistence,
-                override val rpcOps: CordaRPCOps,
+                override val rpcOpsList: List<RPCOps>,
                 override val notaryService: NotaryService?) : TestStartedNode {
 
             override fun dispose() = internals.stop()
@@ -317,6 +325,8 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
                 return smm.changes.filter { it is StateMachineManager.Change.Add }.map { it.logic }.ofType(initiatedFlowClass)
             }
         }
+
+        override val runMigrationScripts: Boolean = true
 
         val mockNet = args.network
         val id = args.id
@@ -341,7 +351,7 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
 
         override val started: TestStartedNode? get() = super.started
 
-        override fun createStartedNode(nodeInfo: NodeInfo, rpcOps: CordaRPCOps, notaryService: NotaryService?): TestStartedNode {
+        override fun createStartedNode(nodeInfo: NodeInfo, rpcOps: List<RPCOps>, notaryService: NotaryService?): TestStartedNode {
             return TestStartedNodeImpl(
                     this,
                     attachments,
@@ -374,7 +384,7 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
             return MockNodeMessagingService(configuration, serverThread).closeOnStop()
         }
 
-        override fun startMessagingService(rpcOps: RPCOps,
+        override fun startMessagingService(rpcOps: List<RPCOps>,
                                            nodeInfo: NodeInfo,
                                            myNotaryIdentity: PartyAndCertificate?,
                                            networkParameters: NetworkParameters) {
@@ -531,7 +541,8 @@ open class InternalMockNetwork(cordappPackages: List<String> = emptyList(),
     }
 
     private fun pumpAll(): Boolean {
-        val transferredMessages = messagingNetwork.endpoints.map { it.pumpReceive(false) }
+        val transferredMessages = messagingNetwork.endpoints.filter { it.active }
+                .map { it.pumpReceive(false) }
         return transferredMessages.any { it != null }
     }
 
@@ -640,6 +651,7 @@ private fun mockNodeConfiguration(certificatesDirectory: Path): NodeConfiguratio
         doReturn(NetworkParameterAcceptanceSettings()).whenever(it).networkParameterAcceptanceSettings
         doReturn(rigorousMock<ConfigurationWithOptions>()).whenever(it).configurationWithOptions
         doReturn(2).whenever(it).flowExternalOperationThreadPoolSize
+        doReturn(false).whenever(it).reloadCheckpointAfterSuspend
     }
 }
 

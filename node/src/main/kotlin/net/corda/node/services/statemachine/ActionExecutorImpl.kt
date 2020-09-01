@@ -61,12 +61,14 @@ internal class ActionExecutorImpl(
             is Action.RemoveFlow -> executeRemoveFlow(action)
             is Action.CreateTransaction -> executeCreateTransaction()
             is Action.RollbackTransaction -> executeRollbackTransaction()
-            is Action.CommitTransaction -> executeCommitTransaction()
+            is Action.CommitTransaction -> executeCommitTransaction(action)
             is Action.ExecuteAsyncOperation -> executeAsyncOperation(fiber, action)
             is Action.ReleaseSoftLocks -> executeReleaseSoftLocks(action)
             is Action.RetryFlowFromSafePoint -> executeRetryFlowFromSafePoint(action)
             is Action.ScheduleFlowTimeout -> scheduleFlowTimeout(action)
             is Action.CancelFlowTimeout -> cancelFlowTimeout(action)
+            is Action.MoveFlowToPaused -> executeMoveFlowToPaused(action)
+            is Action.UpdateFlowStatus -> executeUpdateFlowStatus(action)
         }
     }
     private fun executeReleaseSoftLocks(action: Action.ReleaseSoftLocks) {
@@ -83,7 +85,7 @@ internal class ActionExecutorImpl(
         val checkpoint = action.checkpoint
         val flowState = checkpoint.flowState
         val serializedFlowState = when(flowState) {
-            FlowState.Completed -> null
+            FlowState.Finished -> null
             // upon implementing CORDA-3816: If we have errored or hospitalized then we don't need to serialize the flowState as it will not get saved in the DB
             else -> flowState.checkpointSerialize(checkpointSerializationContext)
         }
@@ -92,13 +94,15 @@ internal class ActionExecutorImpl(
         if (action.isCheckpointUpdate) {
             checkpointStorage.updateCheckpoint(action.id, checkpoint, serializedFlowState, serializedCheckpointState)
         } else {
-            if (flowState is FlowState.Completed) {
-                throw IllegalStateException("A new checkpoint cannot be created with a Completed FlowState.")
-            }
-            checkpointStorage.addCheckpoint(action.id, checkpoint, serializedFlowState!!, serializedCheckpointState)
+            checkpointStorage.addCheckpoint(action.id, checkpoint, serializedFlowState, serializedCheckpointState)
         }
     }
 
+    @Suspendable
+    private fun executeUpdateFlowStatus(action: Action.UpdateFlowStatus) {
+        checkpointStorage.updateStatus(action.id, action.status)
+    }
+    
     @Suspendable
     private fun executePersistDeduplicationIds(action: Action.PersistDeduplicationFacts) {
         for (handle in action.deduplicationHandlers) {
@@ -130,13 +134,9 @@ internal class ActionExecutorImpl(
             log.warn("Propagating error", exception)
         }
         for (sessionState in action.sessions) {
-            // We cannot propagate if the session isn't live.
-            if (sessionState.initiatedState !is InitiatedSessionState.Live) {
-                continue
-            }
             // Don't propagate errors to the originating session
             for (errorMessage in action.errorMessages) {
-                val sinkSessionId = sessionState.initiatedState.peerSinkSessionId
+                val sinkSessionId = sessionState.peerSinkSessionId
                 val existingMessage = ExistingSessionMessage(sinkSessionId, errorMessage)
                 val deduplicationId = DeduplicationId.createForError(errorMessage.errorId, sinkSessionId)
                 flowMessaging.sendSessionMessage(sessionState.peerParty, existingMessage, SenderDeduplicationId(deduplicationId, action.senderUUID))
@@ -155,7 +155,7 @@ internal class ActionExecutorImpl(
 
     @Suspendable
     private fun executeRemoveCheckpoint(action: Action.RemoveCheckpoint) {
-        checkpointStorage.removeCheckpoint(action.id)
+        checkpointStorage.removeCheckpoint(action.id, action.mayHavePersistentResults)
     }
 
     @Suspendable
@@ -196,6 +196,11 @@ internal class ActionExecutorImpl(
     }
 
     @Suspendable
+    private fun executeMoveFlowToPaused(action: Action.MoveFlowToPaused) {
+        stateMachineManager.moveFlowToPaused(action.currentState)
+    }
+
+    @Suspendable
     @Throws(SQLException::class)
     private fun executeCreateTransaction() {
         if (contextTransactionOrNull != null) {
@@ -214,13 +219,14 @@ internal class ActionExecutorImpl(
 
     @Suspendable
     @Throws(SQLException::class)
-    private fun executeCommitTransaction() {
+    private fun executeCommitTransaction(action: Action.CommitTransaction) {
         try {
             contextTransaction.commit()
         } finally {
             contextTransaction.close()
             contextTransactionOrNull = null
         }
+        action.currentState.run { numberOfCommits = checkpoint.checkpointState.numberOfCommits }
     }
 
     @Suppress("TooGenericExceptionCaught")

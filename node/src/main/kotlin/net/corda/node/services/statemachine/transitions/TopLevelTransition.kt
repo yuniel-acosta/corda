@@ -5,6 +5,7 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.internal.FlowIORequest
 import net.corda.core.serialization.deserialize
 import net.corda.core.utilities.Try
+import net.corda.core.utilities.contextLogger
 import net.corda.node.services.messaging.DeduplicationHandler
 import net.corda.node.services.statemachine.Action
 import net.corda.node.services.statemachine.Checkpoint
@@ -18,7 +19,6 @@ import net.corda.node.services.statemachine.FlowRemovalReason
 import net.corda.node.services.statemachine.FlowSessionImpl
 import net.corda.node.services.statemachine.FlowState
 import net.corda.node.services.statemachine.InitialSessionMessage
-import net.corda.node.services.statemachine.InitiatedSessionState
 import net.corda.node.services.statemachine.SenderDeduplicationId
 import net.corda.node.services.statemachine.SessionId
 import net.corda.node.services.statemachine.SessionMessage
@@ -38,30 +38,42 @@ class TopLevelTransition(
         val event: Event
 ) : Transition {
 
-    @Suppress("ComplexMethod")
+    private companion object {
+        val log = contextLogger()
+    }
+
+    @Suppress("ComplexMethod", "TooGenericExceptionCaught")
     override fun transition(): TransitionResult {
+        return try {
+            if (startingState.isKilled) {
+                return KilledFlowTransition(context, startingState, event).transition()
+            }
 
-        if (startingState.isKilled) {
-            return KilledFlowTransition(context, startingState, event).transition()
-        }
-
-        return when (event) {
-            is Event.DoRemainingWork -> DoRemainingWorkTransition(context, startingState).transition()
-            is Event.DeliverSessionMessage -> DeliverSessionMessageTransition(context, startingState, event).transition()
-            is Event.Error -> errorTransition(event)
-            is Event.TransactionCommitted -> transactionCommittedTransition(event)
-            is Event.SoftShutdown -> softShutdownTransition()
-            is Event.StartErrorPropagation -> startErrorPropagationTransition()
-            is Event.EnterSubFlow -> enterSubFlowTransition(event)
-            is Event.LeaveSubFlow -> leaveSubFlowTransition()
-            is Event.Suspend -> suspendTransition(event)
-            is Event.FlowFinish -> flowFinishTransition(event)
-            is Event.InitiateFlow -> initiateFlowTransition(event)
-            is Event.AsyncOperationCompletion -> asyncOperationCompletionTransition(event)
-            is Event.AsyncOperationThrows -> asyncOperationThrowsTransition(event)
-            is Event.RetryFlowFromSafePoint -> retryFlowFromSafePointTransition(startingState)
-            is Event.OvernightObservation -> overnightObservationTransition()
-            is Event.WakeUpFromSleep -> wakeUpFromSleepTransition()
+            when (event) {
+                is Event.DoRemainingWork -> DoRemainingWorkTransition(context, startingState).transition()
+                is Event.DeliverSessionMessage -> DeliverSessionMessageTransition(context, startingState, event).transition()
+                is Event.Error -> errorTransition(event)
+                is Event.TransactionCommitted -> transactionCommittedTransition(event)
+                is Event.SoftShutdown -> softShutdownTransition()
+                is Event.StartErrorPropagation -> startErrorPropagationTransition()
+                is Event.EnterSubFlow -> enterSubFlowTransition(event)
+                is Event.LeaveSubFlow -> leaveSubFlowTransition()
+                is Event.Suspend -> suspendTransition(event)
+                is Event.FlowFinish -> flowFinishTransition(event)
+                is Event.InitiateFlow -> initiateFlowTransition(event)
+                is Event.AsyncOperationCompletion -> asyncOperationCompletionTransition(event)
+                is Event.AsyncOperationThrows -> asyncOperationThrowsTransition(event)
+                is Event.RetryFlowFromSafePoint -> retryFlowFromSafePointTransition()
+                is Event.ReloadFlowFromCheckpointAfterSuspend -> reloadFlowFromCheckpointAfterSuspendTransition()
+                is Event.OvernightObservation -> overnightObservationTransition()
+                is Event.WakeUpFromSleep -> wakeUpFromSleepTransition()
+                is Event.Pause -> pausedFlowTransition()
+            }
+        } catch (t: Throwable) {
+            // All errors coming from the transition should be sent back to the flow
+            // Letting the flow re-enter standard error handling
+            log.error("Error occurred while creating transition for event: $event", t)
+            builder { resumeFlowLogic(t) }
         }
     }
 
@@ -177,15 +189,16 @@ class TopLevelTransition(
 
     private fun suspendTransition(event: Event.Suspend): TransitionResult {
         return builder {
-            val newCheckpoint = currentState.checkpoint.run {
-                val newCheckpointState = if (checkpointState.invocationContext.arguments.isNotEmpty()) {
-                    checkpointState.copy(
-                        invocationContext = checkpointState.invocationContext.copy(arguments = emptyList()),
-                        numberOfSuspends = checkpointState.numberOfSuspends + 1
-                    )
-                } else {
-                    checkpointState.copy(numberOfSuspends = checkpointState.numberOfSuspends + 1)
-                }
+            val newCheckpoint = startingState.checkpoint.run {
+                val newCheckpointState = checkpointState.copy(
+                   invocationContext = if (checkpointState.invocationContext.arguments!!.isNotEmpty()) {
+                       checkpointState.invocationContext.copy(arguments = emptyList())
+                   } else {
+                       checkpointState.invocationContext
+                   },
+                   numberOfSuspends = checkpointState.numberOfSuspends + 1,
+                   numberOfCommits = checkpointState.numberOfCommits + 1
+                )
                 copy(
                     flowState = FlowState.Started(event.ioRequest, event.fiber),
                     checkpointState = newCheckpointState,
@@ -194,29 +207,26 @@ class TopLevelTransition(
                 )
             }
             if (event.maySkipCheckpoint) {
-                actions.addAll(arrayOf(
-                        Action.CommitTransaction,
-                        Action.ScheduleEvent(Event.DoRemainingWork)
-                ))
-                currentState = currentState.copy(
-                        checkpoint = newCheckpoint,
-                        isFlowResumed = false
+                currentState = startingState.copy(
+                    checkpoint = newCheckpoint,
+                    isFlowResumed = false
                 )
+                actions += Action.CommitTransaction(currentState)
+                actions += Action.ScheduleEvent(Event.DoRemainingWork)
             } else {
-                actions.addAll(arrayOf(
-                        Action.PersistCheckpoint(context.id, newCheckpoint, isCheckpointUpdate = currentState.isAnyCheckpointPersisted),
-                        Action.PersistDeduplicationFacts(currentState.pendingDeduplicationHandlers),
-                        Action.CommitTransaction,
-                        Action.AcknowledgeMessages(currentState.pendingDeduplicationHandlers),
-                        Action.ScheduleEvent(Event.DoRemainingWork)
-                ))
-                currentState = currentState.copy(
-                        checkpoint = newCheckpoint,
-                        pendingDeduplicationHandlers = emptyList(),
-                        isFlowResumed = false,
-                        isAnyCheckpointPersisted = true
+                currentState = startingState.copy(
+                    checkpoint = newCheckpoint,
+                    pendingDeduplicationHandlers = emptyList(),
+                    isFlowResumed = false,
+                    isAnyCheckpointPersisted = true
                 )
+                actions += Action.PersistCheckpoint(context.id, newCheckpoint, isCheckpointUpdate = startingState.isAnyCheckpointPersisted)
+                actions += Action.PersistDeduplicationFacts(startingState.pendingDeduplicationHandlers)
+                actions += Action.CommitTransaction(currentState)
+                actions += Action.AcknowledgeMessages(startingState.pendingDeduplicationHandlers)
+                actions += Action.ScheduleEvent(Event.DoRemainingWork)
             }
+
             FlowContinuation.ProcessEvents
         }
     }
@@ -226,32 +236,40 @@ class TopLevelTransition(
             val checkpoint = currentState.checkpoint
             when (checkpoint.errorState) {
                 ErrorState.Clean -> {
-                    val pendingDeduplicationHandlers = currentState.pendingDeduplicationHandlers
-                    currentState = currentState.copy(
-                            checkpoint = checkpoint.copy(
-                                checkpointState = checkpoint.checkpointState.copy(
-                                        numberOfSuspends = checkpoint.checkpointState.numberOfSuspends + 1
-                                ),
-                                flowState = FlowState.Completed,
-                                result = event.returnValue,
-                                status = Checkpoint.FlowStatus.COMPLETED
+                    currentState = startingState.copy(
+                        checkpoint = checkpoint.copy(
+                            checkpointState = checkpoint.checkpointState.copy(
+                                numberOfSuspends = checkpoint.checkpointState.numberOfSuspends + 1,
+                                numberOfCommits = checkpoint.checkpointState.numberOfCommits + 1
                             ),
-                            pendingDeduplicationHandlers = emptyList(),
-                            isFlowResumed = false,
-                            isRemoved = true
+                            flowState = FlowState.Finished,
+                            result = event.returnValue,
+                            status = Checkpoint.FlowStatus.COMPLETED
+                        ),
+                        pendingDeduplicationHandlers = emptyList(),
+                        isFlowResumed = false,
+                        isRemoved = true
                     )
-                    val allSourceSessionIds = checkpoint.checkpointState.sessions.keys
-                    if (currentState.isAnyCheckpointPersisted) {
-                        actions.add(Action.RemoveCheckpoint(context.id))
+
+                    if (startingState.checkpoint.checkpointState.invocationContext.clientId == null) {
+                        if (startingState.isAnyCheckpointPersisted) {
+                            actions += Action.RemoveCheckpoint(context.id)
+                        }
+                    } else {
+                        actions += Action.PersistCheckpoint(
+                            context.id,
+                            currentState.checkpoint,
+                            isCheckpointUpdate = startingState.isAnyCheckpointPersisted
+                        )
                     }
-                    actions.addAll(arrayOf(
-                        Action.PersistDeduplicationFacts(pendingDeduplicationHandlers),
-                            Action.ReleaseSoftLocks(event.softLocksId),
-                            Action.CommitTransaction,
-                            Action.AcknowledgeMessages(pendingDeduplicationHandlers),
-                            Action.RemoveSessionBindings(allSourceSessionIds),
-                            Action.RemoveFlow(context.id, FlowRemovalReason.OrderlyFinish(event.returnValue), currentState)
-                    ))
+
+                    actions += Action.PersistDeduplicationFacts(startingState.pendingDeduplicationHandlers)
+                    actions += Action.ReleaseSoftLocks(event.softLocksId)
+                    actions += Action.CommitTransaction(currentState)
+                    actions += Action.AcknowledgeMessages(startingState.pendingDeduplicationHandlers)
+                    actions += Action.RemoveSessionBindings(startingState.checkpoint.checkpointState.sessions.keys)
+                    actions += Action.RemoveFlow(context.id, FlowRemovalReason.OrderlyFinish(event.returnValue), currentState)
+
                     sendEndMessages()
                     // Resume to end fiber
                     FlowContinuation.Resume(null)
@@ -267,8 +285,8 @@ class TopLevelTransition(
 
     private fun TransitionBuilder.sendEndMessages() {
         val sendEndMessageActions = currentState.checkpoint.checkpointState.sessions.values.mapIndexed { index, state ->
-            if (state is SessionState.Initiated && state.initiatedState is InitiatedSessionState.Live) {
-                val message = ExistingSessionMessage(state.initiatedState.peerSinkSessionId, EndSessionMessage)
+            if (state is SessionState.Initiated) {
+                val message = ExistingSessionMessage(state.peerSinkSessionId, EndSessionMessage)
                 val deduplicationId = DeduplicationId.createForNormal(currentState.checkpoint, index, state)
                 Action.SendExisting(state.peerParty, message, SenderDeduplicationId(deduplicationId, currentState.senderUUID))
             } else {
@@ -316,27 +334,40 @@ class TopLevelTransition(
         }
     }
 
-    private fun retryFlowFromSafePointTransition(startingState: StateMachineState): TransitionResult {
+    private fun retryFlowFromSafePointTransition(): TransitionResult {
         return builder {
             // Need to create a flow from the prior checkpoint or flow initiation.
-            actions.add(Action.RetryFlowFromSafePoint(startingState))
+            actions.add(Action.RetryFlowFromSafePoint(currentState))
+            FlowContinuation.Abort
+        }
+    }
+
+    private fun reloadFlowFromCheckpointAfterSuspendTransition(): TransitionResult {
+        return builder {
+            currentState = currentState.copy(reloadCheckpointAfterSuspendCount = currentState.reloadCheckpointAfterSuspendCount!! + 1)
+            actions.add(Action.RetryFlowFromSafePoint(currentState))
             FlowContinuation.Abort
         }
     }
 
     private fun overnightObservationTransition(): TransitionResult {
         return builder {
-            val flowStartEvents = currentState.pendingDeduplicationHandlers.filter(::isFlowStartEvent)
+            val flowStartEvents = startingState.pendingDeduplicationHandlers.filter(::isFlowStartEvent)
             val newCheckpoint = startingState.checkpoint.copy(status = Checkpoint.FlowStatus.HOSPITALIZED)
+            currentState = startingState.copy(
+                checkpoint = startingState.checkpoint.copy(
+                    status = Checkpoint.FlowStatus.HOSPITALIZED,
+                    checkpointState = startingState.checkpoint.checkpointState.copy(
+                        numberOfCommits = startingState.checkpoint.checkpointState.numberOfCommits + 1
+                    )
+                ),
+                pendingDeduplicationHandlers = startingState.pendingDeduplicationHandlers - flowStartEvents
+            )
             actions += Action.CreateTransaction
             actions += Action.PersistDeduplicationFacts(flowStartEvents)
-            actions += Action.PersistCheckpoint(context.id, newCheckpoint, isCheckpointUpdate = currentState.isAnyCheckpointPersisted)
-            actions += Action.CommitTransaction
+            actions += Action.PersistCheckpoint(context.id, newCheckpoint, isCheckpointUpdate = startingState.isAnyCheckpointPersisted)
+            actions += Action.CommitTransaction(currentState)
             actions += Action.AcknowledgeMessages(flowStartEvents)
-            currentState = currentState.copy(
-                checkpoint = startingState.checkpoint.copy(status = Checkpoint.FlowStatus.HOSPITALIZED),
-                pendingDeduplicationHandlers = currentState.pendingDeduplicationHandlers - flowStartEvents
-            )
             FlowContinuation.ProcessEvents
         }
     }
@@ -356,6 +387,18 @@ class TopLevelTransition(
     private fun wakeUpFromSleepTransition(): TransitionResult {
         return builder {
             resumeFlowLogic(Unit)
+        }
+    }
+
+    private fun pausedFlowTransition(): TransitionResult {
+        return builder {
+            if (!startingState.isFlowResumed) {
+                actions += Action.CreateTransaction
+            }
+            actions += Action.UpdateFlowStatus(context.id, Checkpoint.FlowStatus.PAUSED)
+            actions += Action.CommitTransaction(currentState)
+            actions += Action.MoveFlowToPaused(currentState)
+            FlowContinuation.Abort
         }
     }
 }

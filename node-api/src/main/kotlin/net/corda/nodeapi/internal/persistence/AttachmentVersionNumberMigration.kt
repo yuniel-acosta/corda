@@ -1,18 +1,15 @@
 package net.corda.nodeapi.internal.persistence
 
-import  liquibase.change.custom.CustomTaskChange
+import liquibase.change.custom.CustomTaskChange
 import liquibase.database.Database
 import liquibase.database.jvm.JdbcConnection
 import liquibase.exception.ValidationErrors
 import liquibase.resource.ResourceAccessor
-import net.corda.core.internal.div
 import net.corda.core.internal.readObject
 import net.corda.core.node.NetworkParameters
 import net.corda.core.serialization.deserialize
 import net.corda.core.utilities.contextLogger
-import net.corda.nodeapi.internal.network.NETWORK_PARAMS_FILE_NAME
 import net.corda.nodeapi.internal.network.SignedNetworkParameters
-import net.corda.nodeapi.internal.persistence.SchemaMigration.Companion.NODE_BASE_DIR_KEY
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -27,23 +24,23 @@ class AttachmentVersionNumberMigration : CustomTaskChange {
 
         try {
             logger.info("Start executing...")
-            var networkParameters: NetworkParameters?
-            val baseDir = System.getProperty(SchemaMigration.NODE_BASE_DIR_KEY)
+            val networkParameters: NetworkParameters?
+            val netparamsPath = System.getProperty(SchemaMigration.NODE_NET_PARAMS_PATH_KEY)
             val availableAttachments = getAttachmentsWithDefaultVersion(connection)
-            if (baseDir != null) {
-                val path = Paths.get(baseDir) / NETWORK_PARAMS_FILE_NAME
-                networkParameters = getNetworkParametersFromFile(path)
+            if (netparamsPath != null) {
+                val resolvedPath = Paths.get(netparamsPath)
+                networkParameters = getNetworkParametersFromFile(resolvedPath)
                 if (networkParameters != null) {
-                    logger.info("$msg using network parameters from $path, whitelistedContractImplementations: ${networkParameters.whitelistedContractImplementations}.")
+                    logger.info("$msg using network parameters from $resolvedPath, whitelistedContractImplementations: ${networkParameters.whitelistedContractImplementations}.")
                 } else if (availableAttachments.isEmpty()){
-                    logger.info("$msg skipped, network parameters not found in $path, but there are no available attachments to migrate.")
+                    logger.info("$msg skipped, network parameters not found in $resolvedPath, but there are no available attachments to migrate.")
                     return
                 } else {
-                    logger.warn("$msg skipped, network parameters not found in $path.")
+                    logger.warn("$msg skipped, network parameters not found in $resolvedPath.")
                     return
                 }
             } else {
-                logger.error("$msg skipped, network parameters not retrieved, could not determine node base directory due to system property $NODE_BASE_DIR_KEY being not set.")
+                logger.error("$msg skipped, network parameters not retrieved, could not determine node base directory due to system property ${SchemaMigration.NODE_NET_PARAMS_PATH_KEY} being not set.")
                 return
             }
 

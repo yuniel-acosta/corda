@@ -15,6 +15,7 @@ import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.internal.CheckpointSerializationContext
 import net.corda.core.serialization.internal.checkpointDeserialize
 import net.corda.core.serialization.internal.checkpointSerialize
+import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.contextLogger
 import net.corda.node.services.api.CheckpointStorage
 import net.corda.node.services.api.ServiceHubInternal
@@ -23,33 +24,46 @@ import net.corda.node.services.statemachine.transitions.StateMachine
 import net.corda.node.utilities.isEnabledTimedFlow
 import net.corda.nodeapi.internal.persistence.CordaPersistence
 import org.apache.activemq.artemis.utils.ReusableLatch
+import org.apache.commons.lang3.reflect.FieldUtils
+import java.lang.reflect.Field
 import java.security.SecureRandom
+import java.util.concurrent.Semaphore
 
 class Flow<A>(val fiber: FlowStateMachineImpl<A>, val resultFuture: OpenFuture<Any?>)
 
-class NonResidentFlow(val runId: StateMachineRunId, val checkpoint: Checkpoint) {
-    val externalEvents = mutableListOf<Event.DeliverSessionMessage>()
+data class NonResidentFlow(
+    val runId: StateMachineRunId,
+    var checkpoint: Checkpoint,
+    val resultFuture: OpenFuture<Any?> = openFuture(),
+    val resumable: Boolean = true,
+    val hospitalized: Boolean = false,
+    val progressTracker: ProgressTracker? = null
+) {
+    val events = mutableListOf<ExternalEvent>()
 
-    fun addExternalEvent(message: Event.DeliverSessionMessage) {
-        externalEvents.add(message)
+    fun addExternalEvent(message: ExternalEvent) {
+        events.add(message)
     }
 }
 
+@Suppress("TooManyFunctions")
 class FlowCreator(
-    val checkpointSerializationContext: CheckpointSerializationContext,
+    private val checkpointSerializationContext: CheckpointSerializationContext,
     private val checkpointStorage: CheckpointStorage,
-    val scheduler: FiberScheduler,
-    val database: CordaPersistence,
-    val transitionExecutor: TransitionExecutor,
-    val actionExecutor: ActionExecutor,
-    val secureRandom: SecureRandom,
-    val serviceHub: ServiceHubInternal,
-    val unfinishedFibers: ReusableLatch,
-    val resetCustomTimeout: (StateMachineRunId, Long) -> Unit) {
+    private val scheduler: FiberScheduler,
+    private val database: CordaPersistence,
+    private val transitionExecutor: TransitionExecutor,
+    private val actionExecutor: ActionExecutor,
+    private val secureRandom: SecureRandom,
+    private val serviceHub: ServiceHubInternal,
+    private val unfinishedFibers: ReusableLatch,
+    private val resetCustomTimeout: (StateMachineRunId, Long) -> Unit) {
 
     companion object {
         private val logger = contextLogger()
     }
+
+    private val reloadCheckpointAfterSuspend = serviceHub.configuration.reloadCheckpointAfterSuspend
 
     fun createFlowFromNonResidentFlow(nonResidentFlow: NonResidentFlow): Flow<*>? {
         // As for paused flows we don't extract the serialized flow state we need to re-extract the checkpoint from the database.
@@ -62,19 +76,56 @@ class FlowCreator(
             }
             else -> nonResidentFlow.checkpoint
         }
-        return createFlowFromCheckpoint(nonResidentFlow.runId, checkpoint)
+        return createFlowFromCheckpoint(
+            nonResidentFlow.runId,
+            checkpoint,
+            resultFuture = nonResidentFlow.resultFuture,
+            progressTracker = nonResidentFlow.progressTracker
+        )
     }
 
-    fun createFlowFromCheckpoint(runId: StateMachineRunId, oldCheckpoint: Checkpoint): Flow<*>? {
-        val checkpoint = oldCheckpoint.copy(status = Checkpoint.FlowStatus.RUNNABLE)
-        val fiber = checkpoint.getFiberFromCheckpoint(runId) ?: return null
-        val resultFuture = openFuture<Any?>()
-        fiber.transientValues = TransientReference(createTransientValues(runId, resultFuture))
+    @Suppress("LongParameterList")
+    fun createFlowFromCheckpoint(
+        runId: StateMachineRunId,
+        oldCheckpoint: Checkpoint,
+        reloadCheckpointAfterSuspendCount: Int? = null,
+        lock: Semaphore = Semaphore(1),
+        resultFuture: OpenFuture<Any?> = openFuture(),
+        firstRestore: Boolean = true,
+        progressTracker: ProgressTracker? = null
+    ): Flow<*>? {
+        val fiber = oldCheckpoint.getFiberFromCheckpoint(runId, firstRestore)
+        var checkpoint = oldCheckpoint
+        if (fiber == null) {
+            updateCompatibleInDb(runId, false)
+            return null
+        } else if (!oldCheckpoint.compatible) {
+            updateCompatibleInDb(runId, true)
+            checkpoint = checkpoint.copy(compatible = true)
+        }
+
+        checkpoint = checkpoint.copy(status = Checkpoint.FlowStatus.RUNNABLE)
+
         fiber.logic.stateMachine = fiber
         verifyFlowLogicIsSuspendable(fiber.logic)
-        val state = createStateMachineState(checkpoint, fiber, true)
-        fiber.transientState = TransientReference(state)
+        fiber.transientValues = createTransientValues(runId, resultFuture)
+        fiber.transientState = createStateMachineState(
+            checkpoint = checkpoint,
+            fiber = fiber,
+            anyCheckpointPersisted = true,
+            reloadCheckpointAfterSuspendCount = reloadCheckpointAfterSuspendCount
+                ?: if (reloadCheckpointAfterSuspend) checkpoint.checkpointState.numberOfSuspends else null,
+            numberOfCommits = checkpoint.checkpointState.numberOfCommits,
+            lock = lock
+        )
+        injectOldProgressTracker(progressTracker, fiber.logic)
         return Flow(fiber, resultFuture)
+    }
+
+    private fun updateCompatibleInDb(runId: StateMachineRunId, compatible: Boolean) {
+        database.transaction {
+            checkpointStorage.updateCompatible(runId, compatible)
+        }
     }
 
     @Suppress("LongParameterList")
@@ -91,7 +142,7 @@ class FlowCreator(
         // have access to the fiber (and thereby the service hub)
         val flowStateMachineImpl = FlowStateMachineImpl(flowId, flowLogic, scheduler)
         val resultFuture = openFuture<Any?>()
-        flowStateMachineImpl.transientValues = TransientReference(createTransientValues(flowId, resultFuture))
+        flowStateMachineImpl.transientValues = createTransientValues(flowId, resultFuture)
         flowLogic.stateMachine = flowStateMachineImpl
         val frozenFlowLogic = (flowLogic as FlowLogic<*>).checkpointSerialize(context = checkpointSerializationContext)
         val flowCorDappVersion = FlowStateMachineImpl.createSubFlowVersion(
@@ -108,36 +159,55 @@ class FlowCreator(
         ).getOrThrow()
 
         val state = createStateMachineState(
-            checkpoint,
-            flowStateMachineImpl,
-            existingCheckpoint != null,
-             deduplicationHandler,
-             senderUUID)
-        flowStateMachineImpl.transientState = TransientReference(state)
+            checkpoint = checkpoint,
+            fiber = flowStateMachineImpl,
+            anyCheckpointPersisted = existingCheckpoint != null,
+            reloadCheckpointAfterSuspendCount = if (reloadCheckpointAfterSuspend) 0 else null,
+            numberOfCommits = existingCheckpoint?.checkpointState?.numberOfCommits ?: 0,
+            lock = Semaphore(1),
+            deduplicationHandler = deduplicationHandler,
+            senderUUID = senderUUID
+        )
+        flowStateMachineImpl.transientState = state
         return  Flow(flowStateMachineImpl, resultFuture)
     }
 
-    private fun Checkpoint.getFiberFromCheckpoint(runId: StateMachineRunId): FlowStateMachineImpl<*>? {
-        return when (this.flowState) {
-            is FlowState.Unstarted -> {
-                val logic = tryCheckpointDeserialize(this.flowState.frozenFlowLogic, runId) ?: return null
-                FlowStateMachineImpl(runId, logic, scheduler)
+    @Suppress("TooGenericExceptionCaught")
+    private fun Checkpoint.getFiberFromCheckpoint(runId: StateMachineRunId, firstRestore: Boolean): FlowStateMachineImpl<*>? {
+        try {
+            return when(flowState) {
+                is FlowState.Unstarted -> {
+                    val logic = deserializeFlowState(flowState.frozenFlowLogic)
+                    FlowStateMachineImpl(runId, logic, scheduler)
+                }
+                is FlowState.Started -> deserializeFlowState(flowState.frozenFiber)
+                // Places calling this function is rely on it to return null if the flow cannot be created from the checkpoint.
+                else -> return null
             }
-            is FlowState.Started -> tryCheckpointDeserialize(this.flowState.frozenFiber, runId) ?: return null
-            // Places calling this function is rely on it to return null if the flow cannot be created from the checkpoint.
-            else -> {
+        } catch (e: Exception) {
+            if (reloadCheckpointAfterSuspend && FlowStateMachineImpl.currentStateMachine() != null) {
+                logger.error(
+                        "Unable to deserialize checkpoint for flow $runId. [reloadCheckpointAfterSuspend] is turned on, throwing exception",
+                        e
+                )
+                throw ReloadFlowFromCheckpointException(e)
+            } else {
+                logSerializationError(firstRestore, runId, e)
                 return null
             }
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
-    private inline fun <reified T : Any> tryCheckpointDeserialize(bytes: SerializedBytes<T>, flowId: StateMachineRunId): T? {
-        return try {
-            bytes.checkpointDeserialize(context = checkpointSerializationContext)
-        } catch (e: Exception) {
-            logger.error("Unable to deserialize checkpoint for flow $flowId. Something is very wrong and this flow will be ignored.", e)
-            null
+    private inline fun <reified T : Any> deserializeFlowState(bytes: SerializedBytes<T>): T {
+        return bytes.checkpointDeserialize(context = checkpointSerializationContext)
+    }
+
+    private fun logSerializationError(firstRestore: Boolean, flowId: StateMachineRunId, exception: Exception) {
+        if (firstRestore) {
+            logger.warn("Flow with id $flowId could not be restored from its checkpoint. Normally this means that a CorDapp has been" +
+                    " upgraded without draining the node. To run this flow restart the node after downgrading the CorDapp.", exception)
+        } else {
+            logger.error("Unable to deserialize fiber for flow $flowId. Something is very wrong and this flow will be ignored.", exception)
         }
     }
 
@@ -169,12 +239,17 @@ class FlowCreator(
         )
     }
 
+    @Suppress("LongParameterList")
     private fun createStateMachineState(
-            checkpoint: Checkpoint,
-            fiber: FlowStateMachineImpl<*>,
-            anyCheckpointPersisted: Boolean,
-            deduplicationHandler: DeduplicationHandler? = null,
-            senderUUID: String? = null): StateMachineState {
+        checkpoint: Checkpoint,
+        fiber: FlowStateMachineImpl<*>,
+        anyCheckpointPersisted: Boolean,
+        reloadCheckpointAfterSuspendCount: Int?,
+        numberOfCommits: Int,
+        lock: Semaphore,
+        deduplicationHandler: DeduplicationHandler? = null,
+        senderUUID: String? = null
+    ): StateMachineState {
         return StateMachineState(
             checkpoint = checkpoint,
             pendingDeduplicationHandlers = deduplicationHandler?.let { listOf(it) } ?: emptyList(),
@@ -186,6 +261,68 @@ class FlowCreator(
             isRemoved = false,
             isKilled = false,
             flowLogic = fiber.logic,
-            senderUUID = senderUUID)
+            senderUUID = senderUUID,
+            reloadCheckpointAfterSuspendCount = reloadCheckpointAfterSuspendCount,
+            numberOfCommits = numberOfCommits,
+            lock = lock
+        )
+    }
+
+    /**
+     * The flow de-serialized from the checkpoint will contain a new instance of the progress tracker, which means that
+     * any existing flow observers would be lost. We need to replace it with the old progress tracker to ensure progress
+     * updates are correctly sent out after the flow is retried.
+     *
+     * If the new tracker contains any child trackers from sub-flows, we need to attach those to the old tracker as well.
+     */
+    private fun injectOldProgressTracker(oldTracker: ProgressTracker?, newFlowLogic: FlowLogic<*>) {
+        if (oldTracker != null) {
+            val newTracker = newFlowLogic.progressTracker
+            if (newTracker != null) {
+                attachNewChildren(oldTracker, newTracker)
+                replaceTracker(newFlowLogic, oldTracker)
+            }
+        }
+    }
+
+    private fun attachNewChildren(oldTracker: ProgressTracker, newTracker: ProgressTracker) {
+        oldTracker.currentStep = newTracker.currentStep
+        oldTracker.steps.forEachIndexed { index, step ->
+            val newStep = newTracker.steps[index]
+            val newChildTracker = newTracker.getChildProgressTracker(newStep)
+            newChildTracker?.let { child ->
+                oldTracker.setChildProgressTracker(step, child)
+            }
+        }
+        resubscribeToChildren(oldTracker)
+    }
+
+    /**
+     * Re-subscribes to child tracker observables. When a nested progress tracker is deserialized from a checkpoint,
+     * it retains the child links, but does not automatically re-subscribe to the child changes.
+     */
+    private fun resubscribeToChildren(tracker: ProgressTracker) {
+        tracker.steps.forEach {
+            val childTracker = tracker.getChildProgressTracker(it)
+            if (childTracker != null) {
+                tracker.setChildProgressTracker(it, childTracker)
+                resubscribeToChildren(childTracker)
+            }
+        }
+    }
+
+    /** Replaces the deserialized [ProgressTracker] in the [newFlowLogic] with the old one to retain old subscribers. */
+    private fun replaceTracker(newFlowLogic: FlowLogic<*>, oldProgressTracker: ProgressTracker?) {
+        val field = getProgressTrackerField(newFlowLogic)
+        field?.apply {
+            isAccessible = true
+            set(newFlowLogic, oldProgressTracker)
+        }
+    }
+
+    private fun getProgressTrackerField(newFlowLogic: FlowLogic<*>): Field? {
+        // The progress tracker field may have been overridden in an abstract superclass, so we have to traverse up
+        // the hierarchy.
+        return FieldUtils.getAllFieldsList(newFlowLogic::class.java).find { it.name == "progressTracker" }
     }
 }

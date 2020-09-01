@@ -4,27 +4,25 @@ import co.paralleluniverse.fibers.Suspendable
 import co.paralleluniverse.strands.Strand
 import net.corda.core.CordaInternal
 import net.corda.core.DeleteForDJVM
-import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.identity.PartyAndCertificate
-import net.corda.core.internal.FlowAsyncOperation
 import net.corda.core.internal.FlowIORequest
 import net.corda.core.internal.FlowStateMachine
 import net.corda.core.internal.ServiceHubCoreInternal
 import net.corda.core.internal.WaitForStateConsumption
 import net.corda.core.internal.abbreviate
 import net.corda.core.internal.checkPayloadIs
-import net.corda.core.internal.concurrent.asCordaFuture
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.messaging.DataFeed
 import net.corda.core.node.NodeInfo
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.utilities.NonEmptySet
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.UntrustworthyData
 import net.corda.core.utilities.debug
@@ -33,8 +31,6 @@ import org.slf4j.Logger
 import java.time.Duration
 import java.util.HashMap
 import java.util.LinkedHashMap
-import java.util.concurrent.CompletableFuture
-import java.util.function.Supplier
 
 /**
  * A sub-class of [FlowLogic<T>] implements a flow using direct, straight line blocking code. Thus you
@@ -379,6 +375,22 @@ abstract class FlowLogic<out T> {
     }
 
     /**
+     * Closes the provided sessions and performs cleanup of any resources tied to these sessions.
+     *
+     * Note that sessions are closed automatically when the corresponding top-level flow terminates.
+     * So, it's beneficial to eagerly close them in long-lived flows that might have many open sessions that are not needed anymore and consume resources (e.g. memory, disk etc.).
+     * A closed session cannot be used anymore, e.g. to send or receive messages. So, you have to ensure you are calling this method only when the provided sessions are not going to be used anymore.
+     * As a result, any operations on a closed session will fail with an [UnexpectedFlowEndException].
+     * When a session is closed, the other side is informed and the session is closed there too eventually.
+     * To prevent misuse of the API, if there is an attempt to close an uninitialised session the invocation will fail with an [IllegalStateException].
+     */
+    @Suspendable
+    fun close(sessions: NonEmptySet<FlowSession>) {
+        val request = FlowIORequest.CloseSessions(sessions)
+        stateMachine.suspend(request, false)
+    }
+
+    /**
      * Invokes the given subflow. This function returns once the subflow completes successfully with the result
      * returned by that subflow's [call] method. If the subflow has a progress tracker, it is attached to the
      * current step in this flow's progress tracker.
@@ -635,38 +647,6 @@ abstract class FlowLogic<out T> {
             val message = lazyMessage()
             throw KilledFlowException(runId, message.toString())
         }
-    }
-}
-
-/**
- * [WrappedFlowExternalAsyncOperation] is added to allow jackson to properly reference the data stored within the wrapped
- * [FlowExternalAsyncOperation].
- */
-private class WrappedFlowExternalAsyncOperation<R : Any>(val operation: FlowExternalAsyncOperation<R>) : FlowAsyncOperation<R> {
-    override fun execute(deduplicationId: String): CordaFuture<R> {
-        return operation.execute(deduplicationId).asCordaFuture()
-    }
-}
-
-/**
- * [WrappedFlowExternalOperation] is added to allow jackson to properly reference the data stored within the wrapped
- * [FlowExternalOperation].
- *
- * The reference to [ServiceHub] is also needed by Kryo to properly keep a reference to [ServiceHub] so that
- * [FlowExternalOperation] can be run from the [ServiceHubCoreInternal.externalOperationExecutor] without causing errors when retrying a
- * flow. A [NullPointerException] is thrown if [FlowLogic.serviceHub] is accessed from [FlowLogic.await] when retrying a flow.
- */
-private class WrappedFlowExternalOperation<R : Any>(
-    val serviceHub: ServiceHubCoreInternal,
-    val operation: FlowExternalOperation<R>
-) : FlowAsyncOperation<R> {
-    override fun execute(deduplicationId: String): CordaFuture<R> {
-        // Using a [CompletableFuture] allows unhandled exceptions to be thrown inside the background operation
-        // the exceptions will be set on the future by [CompletableFuture.AsyncSupply.run]
-        return CompletableFuture.supplyAsync(
-            Supplier { this.operation.execute(deduplicationId) },
-            serviceHub.externalOperationExecutor
-        ).asCordaFuture()
     }
 }
 
