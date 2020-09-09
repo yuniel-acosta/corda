@@ -96,6 +96,8 @@ class DBTransactionStorage(private val database: CordaPersistence, cacheFactory:
     }
 
     internal companion object {
+        const val TRANSACTION_ALREADY_IN_PROGRESS_WARNING = "trackTransaction is called with an already existing, open DB transaction. As a result, there might be transactions missing from the returned data feed, because of race conditions."
+
         // Rough estimate for the average of a public key and the transaction metadata - hard to get exact figures here,
         // as public keys can vary in size a lot, and if someone else is holding a reference to the key, it won't add
         // to the memory pressure at all here.
@@ -140,6 +142,8 @@ class DBTransactionStorage(private val database: CordaPersistence, cacheFactory:
             val actTx = tx.peekableValue ?: return 0
             return actTx.sigs.sumBy { it.size + transactionSignatureOverheadEstimate } + actTx.txBits.size
         }
+
+        private val log = contextLogger()
     }
 
     private val txStorage = ThreadBox(createTransactionsMap(cacheFactory, clock))
@@ -219,6 +223,25 @@ class DBTransactionStorage(private val database: CordaPersistence, cacheFactory:
     }
 
     override fun trackTransaction(id: SecureHash): CordaFuture<SignedTransaction> {
+        val (transaction, warning) = trackTransactionInternal(id)
+        warning?.also { log.warn(it) }
+        return transaction
+    }
+
+    /**
+     * @return a pair of the signed transaction, and a string containing any warning.
+     */
+    internal fun trackTransactionInternal(id: SecureHash): Pair<CordaFuture<SignedTransaction>, String?> {
+        val warning: String? = if (contextTransactionOrNull != null) {
+            TRANSACTION_ALREADY_IN_PROGRESS_WARNING
+        } else {
+            null
+        }
+
+        return Pair(trackTransactionWithNoWarning(id), warning)
+    }
+
+    override fun trackTransactionWithNoWarning(id: SecureHash): CordaFuture<SignedTransaction> {
         val updateFuture = updates.filter { it.id == id }.toFuture()
         return database.transaction {
             txStorage.locked {

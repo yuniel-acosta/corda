@@ -70,7 +70,7 @@ internal class ActionFutureExecutor(
         cancelFutureIfRunning(fiber, action.currentState)
         val instance = fiber.instanceId
         log.debug { "Suspending flow ${instance.runId} until transaction ${action.hash} is committed" }
-        val future = services.validatedTransactions.trackTransaction(action.hash)
+        val future = services.validatedTransactions.trackTransactionWithNoWarning(action.hash)
         future.thenMatch(
             success = { transaction -> scheduleWakeUpEvent(instance, Event.TransactionCommitted(transaction)) },
             failure = { exception -> scheduleWakeUpEvent(instance, Event.Error(exception)) }

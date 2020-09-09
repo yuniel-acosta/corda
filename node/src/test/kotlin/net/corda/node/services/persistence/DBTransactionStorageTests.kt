@@ -373,6 +373,23 @@ class DBTransactionStorageTests {
         assertThat(result?.get(20, TimeUnit.SECONDS)?.id).isEqualTo(signedTransaction.id)
     }
 
+    @Test(timeout=300_000)
+    fun `race condition - transaction warning`() {
+
+        // Arrange
+        val signedTransaction =  newTransaction()
+
+        // Act
+        val warning = database.transaction {
+            val (result, warning) = transactionStorage.trackTransactionInternal(signedTransaction.id)
+            result.cancel(false)
+            warning
+        }
+
+        // Assert
+        assertThat(warning).isEqualTo(DBTransactionStorage.TRANSACTION_ALREADY_IN_PROGRESS_WARNING)
+    }
+
     private fun newTransactionStorage(cacheSizeBytesOverride: Long? = null, clock: CordaClock = SimpleClock(Clock.systemUTC())) {
         transactionStorage = DBTransactionStorage(database, TestingNamedCacheFactory(cacheSizeBytesOverride
                 ?: 1024), clock)
